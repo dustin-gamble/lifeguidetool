@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Feelings Helper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Using a more kid-friendly font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2 {
+            font-family: 'Fredoka One', cursive;
+        }
+        /* Custom styles for a softer look */
+        .btn-feeling {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-feeling:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+        /* Style for active (selected) feeling buttons */
+        .btn-feeling.active {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            background-color: #d8906d; /* --primary-color */
+            color: white;
+        }
+        .color-palette button.active-color {
+            border-color: #1f2937; /* gray-800 */
+            transform: scale(1.2);
+        }
+        /* Breathing Animation */
+        #breathing-circle {
+            transition: transform 4s ease-in-out;
+        }
+        #breathing-circle.grow {
+            transform: scale(1.5);
+        }
+    </style>
+</head>
+<body class="bg-[#fff6f2] text-[#473144]">
+
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl text-[#d8906d]">My Feelings Helper</h1>
+        </header>
+
+        <main>
+            <section class="mb-8 p-6 bg-white/70 rounded-2xl shadow-sm">
+                <h2 class="text-2xl text-[#d8906d] text-center mb-6">How are you feeling right now?</h2>
+                <p class="text-center text-gray-600 mb-6 -mt-4">You can pick more than one!</p>
+                <div class="flex flex-wrap justify-center gap-4" id="feelings-buttons">
+                    <!-- Feelings buttons are generated here -->
+                </div>
+                <div id="feeling-response" class="mt-8 p-4 bg-white rounded-lg text-center text-lg hidden border-l-4 border-[#d8906d]">
+                    <!-- Combined feelings response appears here -->
+                </div>
+            </section>
+
+            <section class="mb-8 p-6 bg-white/70 rounded-2xl shadow-sm">
+                <h2 class="text-2xl text-[#d8906d] text-center mb-6">What would you like to do?</h2>
+                <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
+                    <button onclick="showTool('breathing-tool')" class="btn-tool bg-[#ffd6a3] hover:bg-[#ffe2c6] text-[#473144] font-bold py-3 px-6 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">Breathing Helper</button>
+                    <button onclick="showTool('calm-tips-list')" class="btn-tool bg-[#ffd6a3] hover:bg-[#ffe2c6] text-[#473144] font-bold py-3 px-6 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">Calm-Down Tools</button>
+                    <button onclick="showTool('draw-area')" class="btn-tool bg-[#ffd6a3] hover:bg-[#ffe2c6] text-[#473144] font-bold py-3 px-6 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">Draw My Feeling</button>
+                    <button onclick="showTool('affirmation-display')" class="btn-tool bg-[#ffd6a3] hover:bg-[#ffe2c6] text-[#473144] font-bold py-3 px-6 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">A Kind Reminder</button>
+                    <button onclick="showTool('quote-display')" class="btn-tool bg-[#ffd6a3] hover:bg-[#ffe2c6] text-[#473144] font-bold py-3 px-6 rounded-lg shadow-sm transition-transform transform hover:-translate-y-1">A Fun Quote</button>
+                </div>
+                
+                <div id="calm-tips-list" class="tool-content hidden mt-6 text-lg">
+                     <ul class="list-disc list-inside space-y-2">
+                        <li><b>Belly Breaths:</b> Put your hand on your belly and take 3 slow, deep breaths. Feel it go up and down.</li>
+                        <li><b>Hug a Favorite Toy:</b> Squeeze it tight!</li>
+                        <li><b>Listen to Music or a Story:</b> Let your mind relax.</li>
+                        <li><b>Ask for a Hug or Talk to Someone:</b> It's okay to ask for help.</li>
+                    </ul>
+                </div>
+                
+                <div id="affirmation-display" class="tool-content hidden mt-6 text-center text-2xl font-bold p-4 text-[#d8906d]">
+                    <!-- Random affirmation appears here -->
+                </div>
+
+                <div id="quote-display" class="tool-content hidden mt-6 text-center p-4 text-[#d8906d]">
+                    <!-- Random quote appears here -->
+                </div>
+
+                <div id="breathing-tool" class="tool-content hidden mt-6 text-center">
+                    <div class="relative w-48 h-48 mx-auto mb-4 flex items-center justify-center">
+                        <div id="breathing-circle" class="w-32 h-32 bg-[#8ac6d0] rounded-full"></div>
+                        <div id="breathing-text" class="absolute text-white font-bold text-xl">Ready?</div>
+                    </div>
+                    <div id="breathing-timer" class="text-lg font-bold mb-4">Time left: 32s</div>
+                    <button id="breathing-toggle-btn" onclick="toggleBreathingExercise()" class="bg-[#5aa469] hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg">Start</button>
+                </div>
+            </section>
+
+            <section id="draw-area" class="tool-content hidden p-6 bg-white/70 rounded-2xl shadow-sm">
+                <h2 class="text-2xl text-[#d8906d] text-center mb-4">Draw Your Feeling</h2>
+                <p class="text-center text-gray-600 mb-4">Use the colors to show how you feel inside.</p>
+                <canvas id="draw-canvas" class="w-full h-48 sm:h-64 bg-white rounded-lg shadow-inner border-2 border-[#d8906d] cursor-crosshair"></canvas>
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+                    <div class="color-palette flex justify-center items-center gap-2" id="color-palette">
+                        <button onclick="changeColor('#473144', this)" style="background-color: #473144;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform active-color"></button>
+                        <button onclick="changeColor('#d8906d', this)" style="background-color: #d8906d;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform"></button>
+                        <button onclick="changeColor('#e55e5e', this)" style="background-color: #e55e5e;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform"></button>
+                        <button onclick="changeColor('#f9a875', this)" style="background-color: #f9a875;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform"></button>
+                        <button onclick="changeColor('#8ac6d0', this)" style="background-color: #8ac6d0;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform"></button>
+                        <button onclick="changeColor('#5aa469', this)" style="background-color: #5aa469;" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform"></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="brush-size" class="font-bold">Size:</label>
+                        <input type="range" id="brush-size" min="2" max="20" value="5" oninput="changeSize(this.value)" class="w-32">
+                    </div>
+                    <div>
+                        <button onclick="clearCanvas()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg shadow-sm">Clear</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center text-sm text-gray-400 mt-12">
+            Made with love for Olive ♥
+        </footer>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const feelings = {
+            happy: { emoji: '😊', text: 'It’s great that you feel happy! Let your smile shine.' },
+            sad: { emoji: '😢', text: 'It’s okay to feel sad. Like a rainy day, this feeling will pass.' },
+            mad: { emoji: '😠', text: 'Feeling mad is okay. Let\'s find a safe way to let that energy out.' },
+            scared: { emoji: '😨', text: 'It’s normal to feel scared sometimes. You are safe.' },
+            worried: { emoji: '😟', text: 'Worries can feel heavy. Remember to talk about them with someone you trust.' },
+            excited: { emoji: '🥳', text: 'Woohoo! It’s fun to feel excited! Enjoy the bubbly feeling.' },
+            shy: { emoji: '😳', text: 'Feeling shy is alright. You can take your time to warm up.' },
+            silly: { emoji: '🤪', text: 'It\'s fun to feel silly and laugh! Enjoy the giggles.' },
+            proud: { emoji: '🤩', text: 'You should feel proud! You did something amazing.' },
+            lonely: { emoji: '😔', text: 'Feeling lonely is tough. Remember, people care about you and you can always reach out.' },
+            calm: { emoji: '😌', text: 'It\'s wonderful to feel calm and peaceful. Enjoy this quiet moment.' },
+            frustrated: { emoji: '😤', text: 'It\'s okay to feel frustrated when things are hard. Take a deep breath; you can figure this out.' },
+            curious: { emoji: '🤔', text: 'Being curious means you\'re a great explorer of the world! What will you discover?' },
+            brave: { emoji: '🦸', text: 'Feeling brave is amazing! It means you\'re ready to face anything.' },
+            jealous: { emoji: '😒', text: 'It\'s okay to feel jealous sometimes. Let\'s think about all the wonderful things you have.' },
+            grateful: { emoji: '🙏', text: 'Feeling grateful is a warm and happy feeling. What are you thankful for today?' }
+        };
+
+        const affirmations = [
+            'You are loved.',
+            'It\'s okay to feel your feelings.',
+            'You are brave and strong.',
+            'You are not alone. People care about you.',
+            'Making mistakes is how we learn.',
+            'You can always ask for help.',
+            'You are enough, just as you are.'
+        ];
+
+        const disneyQuotes = [
+            { quote: "The very things that hold you down are going to lift you up.", source: "Dumbo" },
+            { quote: "Ohana means family. Family means nobody gets left behind or forgotten.", source: "Lilo & Stitch" },
+            { quote: "To infinity and beyond!", source: "Toy Story" },
+            { quote: "Just keep swimming.", source: "Finding Nemo" },
+            { quote: "The past can hurt. But the way I see it, you can either run from it or learn from it.", source: "The Lion King" },
+            { quote: "You’re braver than you believe, stronger than you seem, and smarter than you think.", source: "Winnie the Pooh" },
+            { quote: "Hakuna Matata! It means no worries for the rest of your days.", source: "The Lion King" },
+            { quote: "Even miracles take a little time.", source: "Cinderella" },
+            { quote: "Venture outside your comfort zone. The rewards are worth it.", source: "Tangled" }
+        ];
+
+        let selectedFeelings = [];
+        
+        // --- PAGE INITIALIZATION ---
+        window.onload = () => {
+            populateFeelingsButtons();
+            setupCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        };
+        
+        function populateFeelingsButtons() {
+            const container = document.getElementById('feelings-buttons');
+            for (const [name, data] of Object.entries(feelings)) {
+                const button = document.createElement('button');
+                button.className = 'btn-feeling bg-[#ffd6a3] hover:bg-[#ffe2c6] text-xl font-bold p-3 rounded-2xl shadow-md flex flex-col items-center gap-1 w-24';
+                button.innerHTML = `<span class="text-4xl">${data.emoji}</span><span class="capitalize">${name}</span>`;
+                button.onclick = (event) => toggleFeeling(name, event.currentTarget);
+                container.appendChild(button);
+            }
+        }
+        
+        // --- FEELINGS SECTION ---
+        function toggleFeeling(feelingName, clickedButton) {
+            const index = selectedFeelings.indexOf(feelingName);
+            if (index > -1) {
+                selectedFeelings.splice(index, 1);
+                clickedButton.classList.remove('active');
+            } else {
+                selectedFeelings.push(feelingName);
+                clickedButton.classList.add('active');
+            }
+            updateFeelingResponse();
+        }
+
+        function updateFeelingResponse() {
+            const responseDiv = document.getElementById('feeling-response');
+            const count = selectedFeelings.length;
+
+            if (count === 0) {
+                responseDiv.classList.add('hidden');
+                return;
+            }
+
+            let responseText = '';
+            let emojiHtml = selectedFeelings.map(name => `<span class="text-4xl">${feelings[name].emoji}</span>`).join(' ');
+
+            if (count === 1) {
+                responseText = feelings[selectedFeelings[0]].text;
+            } else if (count === 2) {
+                const feeling1 = `<strong>${selectedFeelings[0]}</strong>`;
+                const feeling2 = `<strong>${selectedFeelings[1]}</strong>`;
+                responseText = `It's very common to feel both ${feeling1} and ${feeling2} at the same time. All of your feelings are valid.`;
+            } else {
+                const feelingList = selectedFeelings.map(name => `<strong>${name}</strong>`).join(', ').replace(/,([^,]*)$/, ' and$1');
+                responseText = `Feeling ${feelingList} all at once can be a lot. It's perfectly okay to have many different feelings.`;
+            }
+
+            responseDiv.innerHTML = `<div class="flex justify-center gap-4 mb-3">${emojiHtml}</div><p>${responseText}</p>`;
+            responseDiv.classList.remove('hidden');
+        }
+
+        // --- INTERACTIVE TOOLS ---
+        function showTool(toolId) {
+            stopBreathingExercise();
+            document.querySelectorAll('.tool-content').forEach(tool => tool.classList.add('hidden'));
+
+            const toolToShow = document.getElementById(toolId);
+            if (toolToShow) {
+                toolToShow.classList.remove('hidden');
+                
+                if (toolId === 'affirmation-display') {
+                    const randomIndex = Math.floor(Math.random() * affirmations.length);
+                    toolToShow.textContent = affirmations[randomIndex];
+                } else if (toolId === 'quote-display') {
+                    const randomIndex = Math.floor(Math.random() * disneyQuotes.length);
+                    const randomQuote = disneyQuotes[randomIndex];
+                    toolToShow.innerHTML = `<p class="text-2xl italic">"${randomQuote.quote}"</p><p class="text-right mt-2 font-bold">- ${randomQuote.source}</p>`;
+                } else if (toolId === 'draw-area') {
+                    resizeCanvas();
+                }
+            }
+        }
+        
+        // --- BREATHING EXERCISE LOGIC ---
+        let isBreathing = false;
+        let breathingCycleInterval;
+        let timerInterval;
+        let timeLeft = 32;
+        const breathingText = document.getElementById('breathing-text');
+        const breathingCircle = document.getElementById('breathing-circle');
+        const timerDisplay = document.getElementById('breathing-timer');
+        const breathingBtn = document.getElementById('breathing-toggle-btn');
+        
+        function toggleBreathingExercise() {
+            if (isBreathing) stopBreathingExercise();
+            else startBreathingExercise();
+        }
+
+        function startBreathingExercise() {
+            isBreathing = true;
+            breathingBtn.textContent = 'Stop';
+            breathingBtn.classList.replace('bg-[#5aa469]', 'bg-red-500');
+            breathingBtn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+            timeLeft = 32;
+            timerDisplay.textContent = `Time left: ${timeLeft}s`;
+            
+            breatheIn();
+            breathingCycleInterval = setInterval(() => { breatheOut(); setTimeout(breatheIn, 4000); }, 8000);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) stopBreathingExercise();
+            }, 1000);
+        }
+
+        function stopBreathingExercise() {
+            if (!isBreathing) return;
+            isBreathing = false;
+            clearInterval(breathingCycleInterval);
+            clearInterval(timerInterval);
+            
+            breathingText.textContent = 'All Done!';
+            breathingCircle.classList.remove('grow');
+            breathingBtn.textContent = 'Start';
+            breathingBtn.classList.replace('bg-red-500', 'bg-[#5aa469]');
+            breathingBtn.classList.replace('hover:bg-red-600', 'hover:bg-green-600');
+            
+            setTimeout(() => {
+                if (!isBreathing) {
+                    breathingText.textContent = 'Ready?';
+                    timerDisplay.textContent = `Time left: 32s`;
+                }
+            }, 2000);
+        }
+
+        function breatheIn() { if (isBreathing) { breathingText.textContent = 'Breathe In...'; breathingCircle.classList.add('grow'); } }
+        function breatheOut() { if (isBreathing) { breathingText.textContent = 'Breathe Out...'; breathingCircle.classList.remove('grow'); } }
+
+        // --- DRAWING CANVAS LOGIC ---
+        const canvas = document.getElementById('draw-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let currentColor = '#473144';
+        let currentBrushSize = 5;
+
+        function setupCanvas() {
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function resizeCanvas() {
+            const hasSize = canvas.width > 0 && canvas.height > 0;
+            const drawingData = hasSize ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            if (drawingData) ctx.putImageData(drawingData, 0, 0);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = currentBrushSize;
+        }
+
+        function getCoordinates(event) {
+            event.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            if (event.touches && event.touches.length > 0) {
+                return [event.touches[0].clientX - rect.left, event.touches[0].clientY - rect.top];
+            }
+            return [event.offsetX, event.offsetY];
+        }
+
+        function startDrawing(e) { drawing = true; const [x, y] = getCoordinates(e); ctx.beginPath(); ctx.moveTo(x, y); }
+        function draw(e) { if (!drawing) return; const [x, y] = getCoordinates(e); ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }
+        function stopDrawing() { if (!drawing) return; ctx.beginPath(); drawing = false; }
+        function changeColor(color, clickedButton) { currentColor = color; ctx.strokeStyle = currentColor; document.querySelectorAll('#color-palette button').forEach(btn => btn.classList.remove('active-color')); clickedButton.classList.add('active-color'); }
+        function changeSize(size) { currentBrushSize = size; ctx.lineWidth = currentBrushSize; }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    </script>
+</body>
+</html>

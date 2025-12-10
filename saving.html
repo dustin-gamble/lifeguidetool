@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Savings & Investment Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@4.1.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f8fa;
+      margin: 0; padding: 0;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 30%;
+      min-width: 340px;
+      background: #fff;
+      box-shadow: 2px 0 12px #0001;
+      padding: 32px 24px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .main {
+      flex: 1;
+      padding: 32px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      background: #f5f6fa;
+      min-width: 0;
+    }
+    .slider-group {
+      margin-bottom: 18px;
+    }
+    label {
+      font-size: 1.1em;
+      font-weight: 500;
+    }
+    input[type=range] {
+      width: 95%;
+    }
+    select, input[type=number] {
+      margin-top: 5px;
+      width: 99%;
+      padding: 5px;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .slider-value {
+      float: right;
+      font-size: 1em;
+      color: #266;
+      margin-top: 3px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #fff;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px #0002;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: right;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    th {
+      background: #eef;
+      font-weight: 600;
+      text-align: right;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .custom-return-group {
+      display: none;
+      margin-top: 10px;
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: 2em;
+      color: #153;
+      letter-spacing: 1px;
+    }
+    #milestonesBox, #summaryBox {
+      margin: 14px 0 8px 0;
+      font-size: 1.08em;
+      color: #155;
+      background: #e8fbe5;
+      border-radius: 9px;
+      padding: 10px 16px;
+    }
+    #summaryBox {
+      margin-bottom: 10px;
+      color: #203;
+      background: #f3f5ff;
+      border: 1px solid #d2e1ff;
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .sidebar { width: 100%; min-width: unset; box-shadow: none;}
+      .main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h2>💰 Savings Tool</h2>
+      <div class="slider-group">
+        <label for="initInvestment">Initial Investment: <span class="slider-value" id="initInvestmentVal">$10,000</span></label>
+        <input type="range" min="500" max="500000" step="500" id="initInvestment" value="10000">
+      </div>
+      <div class="slider-group">
+        <label for="annualContribution">Annual Contribution: <span class="slider-value" id="annualContributionVal">$5,000</span></label>
+        <input type="range" min="0" max="100000" step="500" id="annualContribution" value="5000">
+      </div>
+      <div class="slider-group">
+        <label for="investmentType">Investment Type:</label>
+        <select id="investmentType">
+          <option value="savings">Savings Account (3%)</option>
+          <option value="sp500">S&P 500 Index (7%)</option>
+          <option value="bonds">Bonds (4%)</option>
+          <option value="reit">REIT (5%)</option>
+          <option value="crypto">Crypto (10%)</option>
+          <option value="custom">Custom (%)</option>
+        </select>
+        <div class="custom-return-group" id="customReturnGroup">
+          <label for="customReturn">Custom Annual Return (%):</label>
+          <input type="number" min="0" max="100" step="0.1" value="7.0" id="customReturn">
+        </div>
+      </div>
+      <div class="slider-group">
+        <label for="years">Investment Period: <span class="slider-value" id="yearsVal">30 yrs</span></label>
+        <input type="range" min="1" max="50" step="1" id="years" value="30">
+      </div>
+      <div class="slider-group">
+        <label for="goal">Savings/Spending Goal: <span class="slider-value" id="goalVal">$100,000</span></label>
+        <input type="range" min="5000" max="2000000" step="5000" id="goal" value="100000">
+      </div>
+      <div class="slider-group">
+        <label for="withdrawal">Target Annual Withdrawal: <span class="slider-value" id="withdrawalVal">$40,000</span></label>
+        <input type="range" min="1000" max="200000" step="1000" id="withdrawal" value="40000">
+      </div>
+    </div>
+    <div class="main">
+      <canvas id="chart" height="110"></canvas>
+      <div id="milestonesBox"></div>
+      <div id="summaryBox"></div>
+      <table id="summaryTable">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Total Value</th>
+            <th>Your Contributions</th>
+            <th>Growth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- rows go here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // Example returns for preset types
+    const returns = {
+      'savings': 0.03,
+      'sp500': 0.07,
+      'bonds': 0.04,
+      'reit': 0.05,
+      'crypto': 0.10,
+      'custom': 0.07
+    };
+    // Elements
+    const initInv = document.getElementById('initInvestment');
+    const initInvVal = document.getElementById('initInvestmentVal');
+    const annualContrib = document.getElementById('annualContribution');
+    const annualContribVal = document.getElementById('annualContributionVal');
+    const typeSel = document.getElementById('investmentType');
+    const years = document.getElementById('years');
+    const yearsVal = document.getElementById('yearsVal');
+    const customReturnGroup = document.getElementById('customReturnGroup');
+    const customReturn = document.getElementById('customReturn');
+    const goal = document.getElementById('goal');
+    const goalVal = document.getElementById('goalVal');
+    const withdrawal = document.getElementById('withdrawal');
+    const withdrawalVal = document.getElementById('withdrawalVal');
+
+    // Update values on slider
+    function formatUSD(v) {
+      let val = Number(v);
+      if (isNaN(val)) return '$0';
+      return "$" + val.toLocaleString();
+    }
+    function updateInputs() {
+      initInvVal.textContent = formatUSD(initInv.value);
+      annualContribVal.textContent = formatUSD(annualContrib.value);
+      yearsVal.textContent = years.value + " yrs";
+      customReturnGroup.style.display = (typeSel.value === 'custom') ? 'block' : 'none';
+      goalVal.textContent = formatUSD(goal.value);
+      withdrawalVal.textContent = formatUSD(withdrawal.value);
+    }
+    [initInv, annualContrib, typeSel, years, goal, withdrawal].forEach(e => e.addEventListener('input', () => { updateInputs(); updateChart(); }));
+    customReturn.addEventListener('input', updateChart);
+
+    // Calculate growth
+    function calculateGrowth(init, contrib, rate, nYears) {
+      let values = [];
+      let val = init, totalContrib = init;
+      for (let y = 0; y <= nYears; y++) {
+        if (y > 0) {
+          val = val * (1 + rate) + contrib;
+          totalContrib += contrib;
+        }
+        let growth = val - totalContrib;
+        values.push({year: y, value: val, contrib: totalContrib, growth: growth});
+      }
+      return values;
+    }
+    // Find year >= goal
+    function findGoalYear(data, goal) {
+      for (let d of data) if (d.value >= goal) return d.year;
+      return null;
+    }
+    function findWithdrawalYear(data, withdrawalAmount) {
+      // Using 4% rule
+      let needed = withdrawalAmount / 0.04;
+      for (let d of data) if (d.value >= needed) return d.year;
+      return null;
+    }
+    // Find big milestones
+    function findMilestones(data, targets) {
+      let result = [];
+      targets.forEach(target => {
+        let year = data.find(d => d.value >= target);
+        if (year) result.push({target, year: year.year, value: year.value});
+      });
+      return result;
+    }
+
+    // Chart setup
+    let chart;
+    function updateChart() {
+      let init = Number(initInv.value);
+      let contrib = Number(annualContrib.value);
+      let nYears = Number(years.value);
+      let type = typeSel.value;
+      let rate = (type === 'custom') ? Number(customReturn.value) / 100 : returns[type];
+      let data = calculateGrowth(init, contrib, rate, nYears);
+
+      // Table summary (with growth/contrib)
+      const tbody = document.querySelector("#summaryTable tbody");
+      tbody.innerHTML = '';
+      const shownYears = [5, 10, 20, 30, nYears].filter((v,i,a)=>v<=nYears && a.indexOf(v)===i);
+      shownYears.forEach(yr => {
+        let d = data[yr];
+        let row = `<tr>
+          <td>${yr}</td>
+          <td>${formatUSD(d.value.toFixed(0))}</td>
+          <td>${formatUSD(d.contrib.toFixed(0))}</td>
+          <td>${formatUSD(d.growth.toFixed(0))}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+
+      // Milestones
+      let msTargets = [init*2, 1e5, 2.5e5, 5e5, 1e6];
+      let milestones = findMilestones(data, msTargets);
+      let milestonesText = milestones.length
+        ? milestones.map(m => `Year ${m.year}: ${formatUSD(m.target)}`).join(' &bull; ')
+        : "No major milestones reached yet.";
+      document.getElementById('milestonesBox').innerHTML = "<b>Milestones:</b> " + milestonesText;
+
+      // Human summary
+      let last = data[nYears];
+      let percentGrowth = (last.growth/last.contrib*100).toFixed(0);
+      let summary = `After <b>${nYears} years</b>, you will have contributed <b>${formatUSD(last.contrib.toFixed(0))}</b> and your account will be worth <b>${formatUSD(last.value.toFixed(0))}</b>. That’s <b>${formatUSD(last.growth.toFixed(0))}</b> (${percentGrowth}%) from growth.`;
+
+      // Goal summaries
+      let g = Number(goal.value);
+      let w = Number(withdrawal.value);
+      let goalYear = findGoalYear(data, g);
+      let withdrawalYear = findWithdrawalYear(data, w);
+
+      let goalSummary = goalYear !== null
+        ? `You will reach your goal of <b>${formatUSD(g)}</b> in <b>year ${goalYear}</b>.`
+        : `You won't reach your goal within the selected time.`;
+      let withdrawalGoal = (w/0.04);
+      let withdrawalSummary = withdrawalYear !== null
+        ? `To support <b>${formatUSD(w)}/yr</b> withdrawals (safe 4% rule), you'll reach that in <b>year ${withdrawalYear}</b> (when account value exceeds <b>${formatUSD(withdrawalGoal.toFixed(0))}</b>).`
+        : `You won't reach your safe withdrawal goal in the selected time.`;
+      document.getElementById('summaryBox').innerHTML = summary + "<br><br>" + goalSummary + "<br>" + withdrawalSummary;
+
+      // Chart
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart) chart.destroy();
+      // Vertical annotation for goal, withdrawal
+      let annotations = {};
+      if (goalYear !== null) {
+        annotations.goal = {
+          type: 'line',
+          xMin: goalYear,
+          xMax: goalYear,
+          borderColor: '#ec660e',
+          borderWidth: 2,
+          label: { display: true, content: 'Goal', color: '#ec660e', rotation: 'vertical', font: {weight:'bold'} }
+        }
+      }
+      if (withdrawalYear !== null && withdrawalYear !== goalYear) {
+        annotations.withdraw = {
+          type: 'line',
+          xMin: withdrawalYear,
+          xMax: withdrawalYear,
+          borderColor: '#1a7bb7',
+          borderWidth: 2,
+          label: { display: true, content: 'Withdraw', color: '#1a7bb7', rotation: 'vertical', font: {weight:'bold'} }
+        }
+      }
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.map(d => d.year),
+          datasets: [{
+            label: "Total Value",
+            data: data.map(d => d.value),
+            borderWidth: 3,
+            pointRadius: 2,
+            tension: 0.12,
+            borderColor: "#21965a",
+            backgroundColor: "rgba(34,160,70,0.09)",
+            fill: true,
+          }]
+        },
+        options: {
+          animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => formatUSD(ctx.parsed.y) } },
+            annotation: { annotations }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Years" },
+              ticks: { autoSkip: true, maxTicksLimit: 15 }
+            },
+            y: {
+              title: { display: true, text: "Total Value ($)" },
+              beginAtZero: true,
+              ticks: { callback: v => "$" + v.toLocaleString() }
+            }
+          }
+        }
+      });
+    }
+    updateInputs();
+    updateChart();
+  </script>
+</body>
+</html>

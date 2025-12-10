@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Cost of Car Ownership Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .main-container {
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Custom slider styles */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+        }
+        .disabled-slider {
+            background: #e0e0e0 !important;
+        }
+        .disabled-slider::-webkit-slider-thumb {
+            background: #9e9e9e !important;
+        }
+        .disabled-slider::-moz-range-thumb {
+            background: #9e9e9e !important;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="main-container">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="/index.html" class="inline-flex items-center text-gray-600 hover:text-blue-600 group font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+            </a>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">Total Cost of Car Ownership</h1>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left Panel: Inputs -->
+            <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b pb-2">Inputs</h2>
+                <div class="space-y-6">
+                    <!-- Car Value Slider -->
+                    <div>
+                        <label for="carValue" class="block text-lg font-medium text-gray-600">Car Value: <span id="carValueLabel" class="font-bold text-blue-600">$35,000</span></label>
+                        <input type="range" id="carValue" min="3000" max="200000" step="1000" value="35000" class="w-full mt-2">
+                        <p class="text-sm text-gray-500 mt-1">Example: <span id="carExample" class="font-semibold">2024 Tesla Model 3</span></p>
+                    </div>
+
+                    <!-- Loan Percentage Slider -->
+                    <div>
+                        <label for="loanPercentage" class="block text-lg font-medium text-gray-600">Loan Percentage: <span id="loanPercentageLabel" class="font-bold text-blue-600">80%</span></label>
+                        <input type="range" id="loanPercentage" min="0" max="100" step="1" value="80" class="w-full mt-2">
+                    </div>
+
+                    <!-- Efficiency (MPG) Slider -->
+                    <div>
+                        <label for="mpg" class="block text-lg font-medium text-gray-600">Efficiency (MPG): <span id="mpgLabel" class="font-bold text-blue-600">30 MPG</span></label>
+                        <input type="range" id="mpg" min="10" max="50" step="1" value="30" class="w-full mt-2">
+                    </div>
+                    
+                    <!-- Electric Car Checkbox -->
+                    <div class="flex items-center">
+                        <input type="checkbox" id="isElectric" class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="isElectric" class="ml-3 block text-lg font-medium text-gray-600">Electric Car</label>
+                    </div>
+
+                    <!-- Annual Miles Slider -->
+                    <div>
+                        <label for="annualMiles" class="block text-lg font-medium text-gray-600">Annual Miles: <span id="annualMilesLabel" class="font-bold text-blue-600">12,000 mi</span></label>
+                        <input type="range" id="annualMiles" min="2000" max="30000" step="1000" value="12000" class="w-full mt-2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Outputs -->
+            <div class="w-full lg:w-2/3 bg-gray-50 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-700 mb-6 border-b pb-2">Outputs</h2>
+                
+                <!-- Summary Section -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-center">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-500">Down Payment</p>
+                        <p id="downPaymentOutput" class="text-xl font-bold text-gray-800">$7,000</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-500">Loan Amount</p>
+                        <p id="loanAmountOutput" class="text-xl font-bold text-gray-800">$28,000</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-500">Monthly Payment</p>
+                        <p id="monthlyPaymentOutput" class="text-xl font-bold text-gray-800">$545</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-500">Annual Insurance</p>
+                        <p id="annualInsuranceOutput" class="text-xl font-bold text-gray-800">$525</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-sm text-gray-500">Annual Fuel/Electric</p>
+                        <p id="annualFuelOutput" class="text-xl font-bold text-gray-800">$1,800</p>
+                    </div>
+                </div>
+
+                <!-- Cost of Ownership Plot -->
+                <div class="bg-white p-4 rounded-lg shadow mb-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">10-Year Cumulative Cash Outflow</h3>
+                    <div id="ownershipChart" style="width:100%;height:350px;"></div>
+                </div>
+
+                <!-- Comparative Table -->
+                 <div class="bg-white p-4 rounded-lg shadow mb-6 overflow-x-auto">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Comparative Examples</h3>
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-4 py-2">Car Example</th>
+                                <th scope="col" class="px-4 py-2">Value</th>
+                                <th scope="col" class="px-4 py-2">10-Year Cost</th>
+                                <th scope="col" class="px-4 py-2">5-Year Cost (If Sold)</th>
+                                <th scope="col" class="px-4 py-2">Avg. Monthly (Yrs 1-5)</th>
+                                <th scope="col" class="px-4 py-2">Avg. Monthly (Yrs 6-10)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <!-- Rows will be generated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Assumptions Section -->
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Assumptions</h3>
+                    <ul id="assumptionsList" class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                        <!-- List items will be generated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-container mt-12 text-center text-sm text-gray-500">
+        <div class="border-t pt-6">
+            <p class="font-semibold">LifeGuideTool</p>
+            <p class="mt-2 text-xs">&copy; 2024 LifeGuideTool. All Rights Reserved.</p>
+            <p class="mt-1 text-xs max-w-3xl mx-auto">This calculator is for informational purposes only and is not a substitute for professional financial advice. All calculations are estimates based on the assumptions listed above and may not reflect your individual circumstances.</p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA & CONSTANTS ---
+            const CAR_DATA = [
+                { name: "2008 Toyota Corolla", price: 3000 }, { name: "2012 Honda Civic", price: 7000 },
+                { name: "2017 Ford Focus", price: 12000 }, { name: "2019 Hyundai Elantra", price: 15000 },
+                { name: "2022 Nissan Sentra", price: 19000 }, { name: "2024 Toyota Corolla", price: 22000 },
+                { name: "2024 Mazda CX-5", price: 27000 }, { name: "2024 Tesla Model 3", price: 35000 },
+                { name: "2024 Honda CR-V", price: 37000 }, { name: "2024 Ford Mustang", price: 44000 },
+                { name: "2024 Toyota Highlander", price: 49000 }, { name: "2024 BMW X5", price: 67000 },
+                { name: "2024 Rivian R1T", price: 89000 }, { name: "2024 Porsche 911 Carrera", price: 115000 },
+                { name: "2024 Lucid Air Sapphire", price: 180000 }
+            ];
+
+            const assumptions = {
+                insuranceRate: 0.015, // 1.5% of initial car value per year
+                maintenancePerMile: 0.09, // $0.09 per mile
+                gasolineCostPerGallon: 4.50, // $4.50 per gallon
+                electricCostPerMile: 0.045, // $0.045 per mile
+                loanApr: 0.059, // 5.9% APR
+                loanTermMonths: 60, // 5 years
+                depreciationYear1: 0.20, // 20%
+                depreciationSubsequent: 0.15, // 15%
+            };
+
+            // --- DOM ELEMENTS ---
+            const carValueSlider = document.getElementById('carValue');
+            const carValueLabel = document.getElementById('carValueLabel');
+            const carExample = document.getElementById('carExample');
+            const loanPercentageSlider = document.getElementById('loanPercentage');
+            const loanPercentageLabel = document.getElementById('loanPercentageLabel');
+            const mpgSlider = document.getElementById('mpg');
+            const mpgLabel = document.getElementById('mpgLabel');
+            const isElectricCheckbox = document.getElementById('isElectric');
+            const annualMilesSlider = document.getElementById('annualMiles');
+            const annualMilesLabel = document.getElementById('annualMilesLabel');
+            const downPaymentOutput = document.getElementById('downPaymentOutput');
+            const loanAmountOutput = document.getElementById('loanAmountOutput');
+            const monthlyPaymentOutput = document.getElementById('monthlyPaymentOutput');
+            const annualInsuranceOutput = document.getElementById('annualInsuranceOutput');
+            const annualFuelOutput = document.getElementById('annualFuelOutput');
+            const ownershipChart = document.getElementById('ownershipChart');
+            const comparisonTableBody = document.getElementById('comparisonTableBody');
+            const assumptionsList = document.getElementById('assumptionsList');
+            
+            // --- FORMATTERS ---
+            const toCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+            const toMiles = (value) => new Intl.NumberFormat('en-US').format(value);
+
+            // --- CORE CALCULATION LOGIC ---
+            function calculateLoanPayment(principal, annualRate, termMonths) {
+                if (principal <= 0) return 0;
+                const monthlyRate = annualRate / 12;
+                if (monthlyRate === 0) return principal / termMonths;
+                const n = termMonths;
+                return principal * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+            }
+
+            function getDepreciatedValue(initialValue, year) {
+                if (year === 0) return initialValue;
+                let currentValue = initialValue * (1 - assumptions.depreciationYear1);
+                for (let i = 2; i <= year; i++) {
+                    currentValue *= (1 - assumptions.depreciationSubsequent);
+                }
+                return currentValue;
+            }
+
+            function calculateAllCosts(params) {
+                const { carValue, loanPercentage, mpg, isElectric, annualMiles } = params;
+
+                const downPayment = carValue * (1 - (loanPercentage / 100));
+                const loanAmount = carValue * (loanPercentage / 100);
+                const monthlyPayment = calculateLoanPayment(loanAmount, assumptions.loanApr, assumptions.loanTermMonths);
+                const annualInsurance = carValue * assumptions.insuranceRate;
+                
+                const annualFuelCost = isElectric
+                    ? annualMiles * assumptions.electricCostPerMile
+                    : (annualMiles / mpg) * assumptions.gasolineCostPerGallon;
+                
+                const annualMaintenance = annualMiles * assumptions.maintenancePerMile;
+
+                // Chart Data: Cumulative Cash Outflow
+                const years = Array.from({ length: 11 }, (_, i) => i);
+                const totalCostData = years.map(year => {
+                    const totalLoanPaid = Math.min(year, assumptions.loanTermMonths / 12) * monthlyPayment * 12;
+                    const totalInsurancePaid = year * annualInsurance;
+                    const totalFuelPaid = year * annualFuelCost;
+                    const totalMaintenancePaid = year * annualMaintenance;
+                    
+                    // This formula now represents the total money spent (cash outflow)
+                    return downPayment + totalLoanPaid + totalInsurancePaid + totalFuelPaid + totalMaintenancePaid;
+                });
+                
+                // Simplified Total Cost for Table
+                const calculateTotalCostForPeriod = (startYear, endYear) => {
+                     let cost = 0;
+                     for(let year = startYear; year <= endYear; year++) {
+                         const loanPaid = (year <= assumptions.loanTermMonths / 12) ? monthlyPayment * 12 : 0;
+                         cost += loanPaid + annualInsurance + annualFuelCost + annualMaintenance;
+                     }
+                     return cost;
+                };
+
+                return {
+                    downPayment, loanAmount, monthlyPayment, annualInsurance, annualFuelCost, annualMaintenance,
+                    chart: { years, totalCostData },
+                    calculateTotalCostForPeriod
+                };
+            }
+
+            // --- UPDATE UI FUNCTIONS ---
+            function updateSummaryAndChart() {
+                // 1. Read current input values
+                const carValue = parseFloat(carValueSlider.value);
+                const loanPercentage = parseInt(loanPercentageSlider.value, 10);
+                const mpg = parseInt(mpgSlider.value, 10);
+                const isElectric = isElectricCheckbox.checked;
+                const annualMiles = parseInt(annualMilesSlider.value, 10);
+
+                // 2. Update input labels
+                carValueLabel.textContent = toCurrency(carValue);
+                loanPercentageLabel.textContent = `${loanPercentage}%`;
+                annualMilesLabel.textContent = `${toMiles(annualMiles)} mi`;
+
+                // Update car example text
+                const closestCar = CAR_DATA.reduce((prev, curr) =>
+                    Math.abs(curr.price - carValue) < Math.abs(prev.price - carValue) ? curr : prev
+                );
+                carExample.textContent = closestCar.name;
+                
+                // Handle electric car state
+                if (isElectric) {
+                    mpgSlider.disabled = true;
+                    mpgSlider.classList.add('disabled-slider');
+                    mpgLabel.innerHTML = `<span class="font-bold text-green-600">Electric</span>`;
+                } else {
+                    mpgSlider.disabled = false;
+                    mpgSlider.classList.remove('disabled-slider');
+                    mpgLabel.innerHTML = `${mpg} MPG`;
+                }
+
+                // 3. Perform all calculations
+                const results = calculateAllCosts({ carValue, loanPercentage, mpg, isElectric, annualMiles });
+                
+                // 4. Update summary display
+                downPaymentOutput.textContent = toCurrency(results.downPayment);
+                loanAmountOutput.textContent = toCurrency(results.loanAmount);
+                monthlyPaymentOutput.textContent = toCurrency(results.monthlyPayment);
+                annualInsuranceOutput.textContent = toCurrency(results.annualInsurance);
+                annualFuelOutput.textContent = toCurrency(results.annualFuelCost);
+
+                // 5. Update Plotly chart
+                const plotData = [{
+                    x: results.chart.years,
+                    y: results.chart.totalCostData,
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#2563eb', width: 3 }
+                }];
+
+                const layout = {
+                    xaxis: { title: 'Years Owned', gridcolor: '#e5e7eb' },
+                    yaxis: { title: 'Cumulative Cash Outflow ($)', gridcolor: '#e5e7eb', tickprefix: '$', separatethousands: true },
+                    margin: { l: 80, r: 30, b: 50, t: 20 },
+                    hovermode: 'x unified',
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: {
+                        family: 'Inter, sans-serif'
+                    }
+                };
+
+                Plotly.newPlot(ownershipChart, plotData, layout, {responsive: true, displayModeBar: false});
+            }
+
+            function populateComparisonTable() {
+                comparisonTableBody.innerHTML = ''; // Clear existing table
+                CAR_DATA.forEach(car => {
+                    const carValue = car.price;
+                    // For table simplicity, assume default values for comparison
+                    const params = {
+                        carValue,
+                        loanPercentage: 80,
+                        mpg: (car.name.includes("Tesla") || car.name.includes("Rivian") || car.name.includes("Lucid")) ? 0 : 30,
+                        isElectric: (car.name.includes("Tesla") || car.name.includes("Rivian") || car.name.includes("Lucid")),
+                        annualMiles: 12000
+                    };
+                    
+                    const res = calculateAllCosts(params);
+                    
+                    const costFirst5Years = res.calculateTotalCostForPeriod(1, 5);
+                    const costLast5Years = res.calculateTotalCostForPeriod(6, 10);
+                    
+                    const total10YearCost = costFirst5Years + costLast5Years + (carValue - getDepreciatedValue(carValue, 10));
+
+                    const resaleValue5Years = getDepreciatedValue(carValue, 5);
+                    const costIfSold5Years = costFirst5Years + carValue - resaleValue5Years;
+
+                    const avgMonthly1to5 = costFirst5Years / 60;
+                    const avgMonthly6to10 = costLast5Years / 60;
+
+                    const row = `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">${car.name}</td>
+                            <td class="px-4 py-2">${toCurrency(carValue)}</td>
+                            <td class="px-4 py-2">${toCurrency(total10YearCost)}</td>
+                            <td class="px-4 py-2">${toCurrency(costIfSold5Years)}</td>
+                            <td class="px-4 py-2">${toCurrency(avgMonthly1to5)}</td>
+                            <td class="px-4 py-2">${toCurrency(avgMonthly6to10)}</td>
+                        </tr>
+                    `;
+                    comparisonTableBody.innerHTML += row;
+                });
+            }
+            
+            function populateAssumptions() {
+                assumptionsList.innerHTML = `
+                    <li>Insurance: ${assumptions.insuranceRate * 100}% of car value per year.</li>
+                    <li>Maintenance: ${toCurrency(assumptions.maintenancePerMile)} per mile.</li>
+                    <li>Gasoline Cost: ${toCurrency(assumptions.gasolineCostPerGallon)} per gallon.</li>
+                    <li>Electricity Cost: ${toCurrency(assumptions.electricCostPerMile)} per mile.</li>
+                    <li>Loan Terms: ${assumptions.loanApr * 100}% APR over ${assumptions.loanTermMonths} months.</li>
+                    <li>Depreciation: ${assumptions.depreciationYear1 * 100}% in year 1, then ${assumptions.depreciationSubsequent * 100}% of remaining value each year.</li>
+                `;
+            }
+
+            // --- INITIALIZATION & EVENT LISTENERS ---
+            function initialize() {
+                updateSummaryAndChart();
+                populateComparisonTable();
+                populateAssumptions();
+                
+                [carValueSlider, loanPercentageSlider, mpgSlider, annualMilesSlider].forEach(slider => {
+                    slider.addEventListener('input', updateSummaryAndChart);
+                });
+                isElectricCheckbox.addEventListener('change', updateSummaryAndChart);
+                
+                // A resize listener for plotly
+                window.addEventListener('resize', () => {
+                   Plotly.Plots.resize(ownershipChart);
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>College Planning Tool</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', 'Arial', sans-serif; background: #f5f9ff; margin: 0; }
+    #mainwrap { display: flex; min-height: 100vh; }
+    #controls {
+      width: 32%; min-width: 260px; max-width: 370px; background: #23395d; color: #fff; padding: 2em 1.5em 1em 2em;
+      border-radius: 0 2em 2em 0; margin-right: 1.5em; box-shadow: 0 2px 12px #1112;
+    }
+    label { display: block; margin: 1.7em 0 0.2em 0; font-weight: 500; }
+    input[type=range] { width: 100%; margin-top: 0.2em; }
+    .ex-label { font-size: 1.07em; margin: 0.15em 0 0.6em 0.2em; color: #fcba04; font-weight: bold; }
+    .dyn-label { font-size:1em; margin: 0 0 0.4em 0.2em; color: #b3f584; }
+    .val { color: #90ee90; font-weight: bold; font-size: 1.1em; }
+    #plotwrap { flex: 1; display: flex; flex-direction: column; }
+    #plot { height: 400px; width: 100%; margin-top: 2em;}
+    #sampleIncomes {
+      width: 95%; margin: 1.5em auto 0.6em auto; background: #fff; border-radius: 1em; box-shadow: 0 2px 8px #1133;
+      font-size: 1.05em; padding: 0.7em 1em; text-align: center;
+    }
+    #sampleIncomes table { width: 100%; border-collapse: collapse;}
+    #sampleIncomes th, #sampleIncomes td { padding: 0.3em 0.2em; }
+    #sampleIncomes th { background: #23395d; color: #fff; border-radius: 0.6em;}
+    #sampleIncomes tr:nth-child(even) { background: #f3f3fa;}
+    #assumptions { margin: 2em auto 0 auto; width: 90%; max-width: 880px; background: #e6eefa; border-radius: 1.3em; padding: 1.3em 2em; color: #234; box-shadow: 0 2px 12px #aaa3;}
+    #assumptions h3 { margin-top: 0; }
+    @media (max-width: 1000px) {
+      #mainwrap { flex-direction: column; }
+      #controls { border-radius: 0 0 2em 2em; width: 99vw; max-width: unset; margin-right: 0; }
+      #plotwrap { width: 100vw;}
+      #plot { width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+<div id="mainwrap">
+  <div id="controls">
+    <label>
+      Career: <span class="val" id="careerVal"></span>
+      <input id="career" type="range" min="1" max="10" value="1">
+      <div class="ex-label" id="careerExample"></div>
+      <div class="dyn-label" id="careerSalary"></div>
+    </label>
+    <label>
+      College Type: <span class="val" id="collegeVal"></span>
+      <input id="college" type="range" min="1" max="10" value="1">
+      <div class="ex-label" id="collegeExample"></div>
+      <div class="dyn-label" id="collegeCost"></div>
+    </label>
+    <label>
+      Parent/Scholarship: <span class="val" id="invVal"></span>
+      <input id="investment" type="range" min="0" max="200000" step="1000" value="0">
+    </label>
+  </div>
+  <div id="plotwrap">
+    <div id="plot"></div>
+    <div id="sampleIncomes">
+      <b>Sample Careers and Starting Salaries</b>
+      <table>
+        <tr>
+          <th>Career (Slider)</th>
+          <th>Example</th>
+          <th>Starting Income</th>
+          <th>Total College Cost</th>
+        </tr>
+        <tr><td>2</td><td id="career2"></td><td id="income2"></td><td id="cost2"></td></tr>
+        <tr><td>4</td><td id="career4"></td><td id="income4"></td><td id="cost4"></td></tr>
+        <tr><td>6</td><td id="career6"></td><td id="income6"></td><td id="cost6"></td></tr>
+        <tr><td>8</td><td id="career8"></td><td id="income8"></td><td id="cost8"></td></tr>
+        <tr><td>10</td><td id="career10"></td><td id="income10"></td><td id="cost10"></td></tr>
+      </table>
+    </div>
+    <div id="assumptions">
+      <h3>Assumptions</h3>
+      <ul>
+        <li><b>Careers:</b> Slider from 1 (English Major) to 10 (Medical Doctor); interpolated sample fields: Social Worker, Teacher, Engineer, Dentist, etc.</li>
+        <li><b>Colleges:</b> 1 = Community College (~$14k/yr all-in), 10 = Ivy League (~$83k/yr); intermediate values interpolate between national averages.</li>
+        <li><b>Parent/Scholarship:</b> Grants, scholarships, and family support, added as positive net value at college start and directly reduces student loan need.</li>
+        <li><b>Years in college:</b> 4 (slider 1), up to 8 (slider 10), linear interpolation.</li>
+        <li><b>Student Loan Interest:</b> 5% fixed, simple annual compounding.</li>
+        <li><b>Repayment:</b> 30% of gross income after college used to repay loan, minimum payment always applied. Payoff year marked 🏁.</li>
+        <li><b>Income:</b> Median starting salaries (BA: $58k; MD: $277k; others interpolated, see table).</li>
+        <li>No inflation, no raises, no tax modeled, income shown gross.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script>
+const careerNames = [
+  "Social Worker","English Major", "Graphic Designer", "Teacher", "Nurse",
+  "Engineer", "Pharmacist", "Software Developer", "Dentist", "Medical Doctor"
+];
+const collegeNames = [
+  "Community College", "Local State College", "Regional State College", "State University", "Good State University",
+  "Private College", "Private University", "Top Private University", "Elite Private College", "Ivy League"
+];
+const careerIncomes = [45000,58000, 51000, 55000, 68000, 83000, 128000, 135000, 180000, 277000];
+const costTuition = [14000, 17000, 19000, 23000, 28000, 35000, 45000, 55000, 70000, 83000];
+const raiseRate = 0.03; // 3% annual raise
+
+function updateLabels() {
+  const c = +document.getElementById('career').value;
+  const t = +document.getElementById('college').value;
+  document.getElementById('careerExample').innerText = careerNames[c-1];
+  document.getElementById('collegeExample').innerText = collegeNames[t-1];
+  document.getElementById('careerVal').innerText = c + " / 10";
+  document.getElementById('collegeVal').innerText = t + " / 10";
+  const inv = +document.getElementById('investment').value;
+  document.getElementById('invVal').innerText = '$'+inv.toLocaleString();
+  // Dynamic salary under Career slider
+  const salary0 = careerIncomes[c-1];
+  const salary5 = salary0 * Math.pow(1 + raiseRate, 5);
+  document.getElementById('careerSalary').innerText = "Yearly Salary after 5 yrs (with 3% raise): $" + Math.round(salary5).toLocaleString();
+  // Dynamic annual cost under College slider
+  const annualCost = costTuition[t-1];
+  document.getElementById('collegeCost').innerText = "Annual Cost: $" + annualCost.toLocaleString();
+  // Update table of sample careers
+  [2,4,6,8,10].forEach(function(idx){
+    document.getElementById('career'+idx).innerText = careerNames[idx-1];
+    document.getElementById('income'+idx).innerText = "$"+careerIncomes[idx-1].toLocaleString();
+    const years = Math.round(4 + (idx-1)*(4/9));
+    const tuition = costTuition[t-1];
+    document.getElementById('cost'+idx).innerText = "$" + (years * tuition).toLocaleString();
+  });
+}
+function compute() {
+  updateLabels();
+  const c = +document.getElementById('career').value;
+  const t = +document.getElementById('college').value;
+  const inv = +document.getElementById('investment').value;
+  const years = Math.round(4 + (c-1)*(4/9));
+  const tuition = costTuition[t-1];
+  const startingIncome = careerIncomes[c-1];
+  const loan = Math.max(0, tuition*years - inv);
+
+  let balance = loan;
+  let net = inv, netVals=[net], annIncs=[0], breakYear=null;
+  for(let y=0; y<years; y++){
+    net -= tuition;
+    balance *= 1.05;
+    netVals.push(net);
+    annIncs.push(0);
+  }
+  let salary = startingIncome;
+  for(let y=years; y<=years+10; y++){
+    if(y > years) salary *= (1 + raiseRate);
+    net += salary;
+    if(balance>0){
+      const pay = salary*0.3;
+      balance = Math.max(0, balance*1.05 - pay);
+      net -= pay;
+      if(balance<=0 && !breakYear) breakYear=y;
+    }
+    netVals.push(net);
+    annIncs.push(salary);
+  }
+  let payoffAnn = [];
+  for(let i=0; i<netVals.length; i++) payoffAnn.push(null);
+  if (breakYear !== null) payoffAnn[breakYear] = netVals[breakYear];
+
+  Plotly.newPlot('plot', [
+    {
+      x: netVals.map((_,i)=>i), y: netVals,
+      name: 'Net Value', yaxis: 'y1',
+      line: {color: "#d7263d", width: 4}
+    },
+    {
+      x: annIncs.map((_,i)=>i), y: annIncs,
+      name: 'Annual Income', yaxis: 'y2',
+      line: {color: "#138a36", dash: 'dot', width: 3}
+    },
+    {
+      x: netVals.map((_,i)=>i), y: payoffAnn,
+      name: 'Loan Paid Off', yaxis: 'y1',
+      mode: 'markers+text', marker: {size:14, color:'#fcba04'},
+      text: payoffAnn.map((v,i)=>v!==null?"🏁 Year "+i:""), textposition: 'top right',
+      showlegend: false
+    }
+  ], {
+    margin: {t:30,r:60,b:48,l:60},
+    plot_bgcolor: '#f5f9ff',
+    paper_bgcolor: '#f5f9ff',
+    legend: {orientation:'h', y:-0.23, x:0.25, font:{size:15}},
+    xaxis: {title: "Years from Now", tickformat: "d", showgrid:true, gridcolor:"#c3d0ec"},
+    yaxis: {title: "Net Value ($)", side: 'left', showgrid:true, gridcolor:"#c3d0ec", zeroline:true, zerolinecolor:'#333'},
+    yaxis2: {title: "Annual Income ($)", overlaying: 'y', side: 'right', showgrid:false, tickformat:',d'},
+    font:{family:"Segoe UI, Arial", size:16},
+    hovermode: "x unified"
+  }, {displayModeBar: false, staticPlot: false});
+}
+['career','college','investment'].forEach(id =>
+  document.getElementById(id).addEventListener('input',compute));
+compute();
+</script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+        <title>Life Guide Tool</title>
+        <style>
+            body {
+                background: #f7f7fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                margin: 0; padding: 0;
+                color: #212529;
+            }
+            .header {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                gap: 32px;
+                padding: 2rem 1rem 1.5rem 1rem;
+                background: #f8f6f2;
+            }
+            .header-text {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .logo-img {
+                width: 120px;
+                height: auto;
+                border-radius: 16px;
+                box-shadow: 0 3px 18px #2443321a;
+                background: #e7f3ea;
+                padding: 8px;
+            }
+            .brand-title {
+                font-size: 2.6rem;
+                font-weight: bold;
+                margin: 0;
+                letter-spacing: 1px;
+                color: #244332;
+                font-family: 'Georgia', serif;
+                text-shadow: 0 2px 12px #c3edd750;
+                text-align: left;
+            }
+            .tagline {
+                font-size: 1.13rem;
+                margin: 0.7rem 0 0 0;
+                font-weight: 500;
+                color: #35644a;
+                letter-spacing: 0.5px;
+                text-shadow: 0 1px 4px #c3edd740;
+                text-align: left;
+            }
+            main {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 16px;
+                max-width: 1200px;
+                margin: 24px auto 0 auto;
+                flex-wrap: wrap;
+            }
+            .tool-card {
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 1px 6px #d9e6ef40;
+                width: 180px;
+                min-height: 130px;
+                padding: 14px 10px 12px 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 16px;
+                transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
+                position: relative;
+                overflow: hidden;
+                cursor: pointer;
+                border: none;
+                text-align: center;
+            }
+            .tool-card:hover {
+                box-shadow: 0 8px 20px #a1c2f540, 0 0 12px #a1c2f580;
+                background: linear-gradient(135deg, #f0f6ff 0%, #e3efff 100%);
+                transform: scale(1.05);
+                z-index: 2;
+            }
+            .tool-card-link {
+                text-decoration: none;
+                color: inherit;
+                display: block;
+                height: 100%;
+                outline: none;
+            }
+            .tool-card-link:focus-visible {
+                outline: 2px solid #a1c2f5;
+                outline-offset: 2px;
+            }
+            .tool-icon {
+                font-size: 2.5em;
+                margin-bottom: 12px;
+                filter: none;
+                color: #5d82b6;
+                display: block;
+                text-align: center;
+            }
+            .tool-title {
+                font-size: 0.95em;
+                font-weight: 900;
+                color: #2c2c2c;
+                margin-bottom: 8px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                text-shadow: none;
+            }
+            .tool-desc {
+                font-size: 0.78em;
+                color: #41484f;
+                margin-bottom: 0;
+                line-height: 1.3;
+                flex: none;
+            }
+            @media (max-width: 1080px) {
+                main { flex-wrap: wrap; gap: 14px;}
+                .tool-card { width: 48vw; max-width: 260px;}
+            }
+            @media (max-width: 650px) {
+                .header { flex-direction: column; align-items: center; gap: 0; }
+                main { flex-direction: column; align-items: center; gap: 12px; }
+                .tool-card { width: 98vw; max-width: none; margin-bottom: 12px;}
+                .tool-card { padding: 12px 8px 10px 8px; min-height: 120px; }
+                .tool-title { font-size: 0.85em;}
+                .tool-icon { font-size: 2em; margin-bottom: 10px;}
+                .tool-desc { font-size: 0.75em; }
+            }
+            @media (min-width: 1081px) {
+                main {
+                    justify-content: flex-start;
+                }
+            }
+            @media (min-width: 650px) and (max-width: 1080px) {
+                main {
+                    justify-content: center;
+                }
+            }
+            .section-title {
+                width: 100%;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: #244332;
+                font-family: 'Georgia', serif;
+                margin: 24px 0 12px 0;
+                border-bottom: 2px solid #a1c2f5;
+                padding-bottom: 4px;
+                letter-spacing: 0.5px;
+            }
+            footer {
+                width:100%;text-align:center;margin:32px 0 22px 0;
+                font-size:0.98em;
+                color:#8a98a7;
+                opacity:0.93;
+            }
+        </style>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1745857011630006"
+             crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="header">
+    <img src="logo_lifeguidetool.png" alt="Life Guide Tool Logo" class="logo-img">
+    <div class="header-text">
+      <div class="brand-title">Life Guide Tool</div>
+      <div class="tagline">Tools to Navigate Life’s Journey</div>
+    </div>
+  </div>
+  <main>
+    <h2 class="section-title">Life Tools</h2>
+
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Weight & Wellness Tracker">
+      <a href="weight.html" class="tool-card-link" aria-label="Open Weight & Wellness Tracker">
+        <div class="tool-icon">⚖️</div>
+        <div class="tool-title">Weight & Wellness Tracker</div>
+        <div class="tool-desc">
+          Log your daily calories, meals, and exercise.
+          Project your weight and waistline over time and get real food examples as you plan.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Muscle Building Planner">
+      <a href="muscle.html" class="tool-card-link" aria-label="Open Muscle Building Planner">
+        <div class="tool-icon">💪</div>
+        <div class="tool-title">Muscle Building Planner</div>
+        <div class="tool-desc">
+          Plan and visualize your strength journey!
+          Set your training, protein, and goals to see your projected muscle gain and strength progress.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Life Expectancy Estimator">
+      <a href="life.html" class="tool-card-link" aria-label="Open Life Expectancy Estimator">
+        <div class="tool-icon">👵👴</div>
+        <div class="tool-title">Life Expectancy Estimator</div>
+        <div class="tool-desc">
+          Estimate your personal lifespan based on habits, stress, nutrition, and activity.
+          See how healthy changes add years to your life!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Pregnancy Size & Weight Tool">
+      <a href="Pregnancy_Size_Timeline.html" class="tool-card-link" aria-label="Open Pregnancy Size & Weight Tool">
+        <div class="tool-icon">🤰</div>
+        <div class="tool-title">Pregnancy Size & Weight Tool</div>
+        <div class="tool-desc">
+          Interactive tool for tracking pregnancy, baby size, and mom’s weight gain on a timeline.
+          Milestones and fruit sizes visualized!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Saving & Investment Tool">
+      <a href="saving.html" class="tool-card-link" aria-label="Open Saving & Investment Tool">
+        <div class="tool-icon">📈</div>
+        <div class="tool-title">Saving & Investment Tool</div>
+        <div class="tool-desc">
+          Visualize your investment growth, see when you’ll reach your goals, and plan for retirement. Set savings, contributions, goals, and see your future in real-world milestones.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open New Car Cost Tool">
+      <a href="new_car.html" class="tool-card-link" aria-label="Open New Car Cost Tool">
+        <div class="tool-icon">🚗</div>
+        <div class="tool-title">New Car Cost Tool</div>
+        <div class="tool-desc">
+          Explore total cost of car ownership. Set car price, loan, efficiency, and more—see example cars and get a time vs cost breakdown before you buy.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open College Planning Tool">
+      <a href="college.html" class="tool-card-link" aria-label="Open College Planning Tool">
+        <div class="tool-icon">🎓</div>
+        <div class="tool-title">College Planning Tool</div>
+        <div class="tool-desc">
+          Plan for college savings and expenses. Estimate tuition, set savings goals, project investment growth, and explore different scenarios to help you or your kids achieve their education dreams.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Sleep Quick Planner">
+      <a href="sleep.html" class="tool-card-link" aria-label="Open Sleep Quick Planner">
+        <div class="tool-icon">😴</div>
+        <div class="tool-title">Sleep Quick Planner</div>
+        <div class="tool-desc">
+          Instantly see how your nightly routine affects your sleep debt and overall sleep health. Adjust your typical sleep, wakeups, stress, and quality for the week and spot where you can improve!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Fuel Cost Simulator">
+      <a href="fuel_cost.html" class="tool-card-link" aria-label="Open Fuel Cost Simulator">
+        <div class="tool-icon">⛽</div>
+        <div class="tool-title">Fuel Cost Simulator</div>
+        <div class="tool-desc">
+          Estimate your car’s fuel cost over time. Pick your vehicle type, fuel price, and daily driving to see your long-term fuel spending.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Investment Property Analyzer">
+      <a href="investment_property.html" class="tool-card-link" aria-label="Open Investment Property Analyzer">
+        <div class="tool-icon">🏠💵</div>
+        <div class="tool-title">Investment Property Analyzer</div>
+        <div class="tool-desc">
+          Explore real estate investments. Set value, loan, rent, maintenance, and local growth to see your net gains over time—plus size/type examples and dynamic appreciation.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Stock Investment Simulator">
+      <a href="stock_sim.html" class="tool-card-link" aria-label="Open Stock Investment Simulator">
+        <div class="tool-icon">💹</div>
+        <div class="tool-title">Stock Investment Simulator</div>
+        <div class="tool-desc">
+          Pick your favorite stocks and simulate portfolio growth from the past year. Adjust investments and visualize historical value trends over time.
+        </div>
+      </a>
+    </div>
+    
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Feelings Helper">
+      <a href="feelings.html" class="tool-card-link" aria-label="Open Feelings Helper">
+        <div class="tool-icon">🧸</div>
+        <div class="tool-title">Feelings Helper</div>
+        <div class="tool-desc">
+          A gentle, interactive space for kids to name their feelings, try calming activities, draw, and read kind reminders. Created to support emotional well-being and self-expression.
+        </div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Games</h2>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Tic Tac Toe">
+      <a href="tictactoe.html" class="tool-card-link" aria-label="Open Tic Tac Toe">
+        <div class="tool-icon">❌⭕</div>
+        <div class="tool-title">Tic Tac Toe</div>
+        <div class="tool-desc">
+          Classic Tic Tac Toe game! Play solo or challenge a friend for quick brain-boosting fun.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Flappy Flight">
+      <a href="flappyflight.html" class="tool-card-link" aria-label="Open Flappy Flight">
+        <div class="tool-icon">🛩️</div>
+        <div class="tool-title">Flappy Flight</div>
+        <div class="tool-desc">
+          Tap to fly and dodge obstacles in this addictive aviation-themed arcade game!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Craft & Mine">
+      <a href="craftmine.html" class="tool-card-link" aria-label="Open Craft & Mine">
+        <div class="tool-icon">⛏️</div>
+        <div class="tool-title">Craft & Mine</div>
+        <div class="tool-desc">
+          A 3D sandbox world. Build, explore, and place blocks to create your own adventure!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Hyperspace Shooter">
+      <a href="space.html" class="tool-card-link" aria-label="Open Hyperspace Shooter">
+        <div class="tool-icon">🌌</div>
+        <div class="tool-title">Hyperspace Shooter</div>
+        <div class="tool-desc">
+          Steer through hyperspace and blast incoming enemies with your powerful beam. How high can you score?
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Heads Up Game">
+      <a href="headup.html" class="tool-card-link" aria-label="Open Heads Up Game">
+        <div class="tool-icon">🎭</div>
+        <div class="tool-title">Heads Up Game</div>
+        <div class="tool-desc">
+          Pick a category, act it out, and see how many your friends can guess! Includes Funny Mode, mobile swipes, and scoring.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Tetris">
+      <a href="tetris.html" class="tool-card-link" aria-label="Open Tetris">
+        <div class="tool-icon">🟪</div>
+        <div class="tool-title">Tetris</div>
+        <div class="tool-desc">
+          Classic Tetris! Rotate and drop blocks to clear lines and rack up your high score.
+        </div>
+      </a>
+    </div>
+    
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Simon Says Game">
+      <a href="simonsays.html" class="tool-card-link" aria-label="Open Simon Says Game">
+        <div class="tool-icon">🟢🔴🟡🔵</div>
+        <div class="tool-title">Simon Says Game</div>
+        <div class="tool-desc">
+          Test your memory! Repeat the color pattern as it grows, and see how high you can score.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Dice Game">
+      <a href="dice.html" class="tool-card-link" aria-label="Open Dice Game">
+        <div class="tool-icon">🎲</div>
+        <div class="tool-title">Dice Game</div>
+        <div class="tool-desc">
+          Roll the dice and play for luck, probability, or just to settle a quick challenge.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Stopwatch Tool">
+      <a href="stopwatch.html" class="tool-card-link" aria-label="Open Stopwatch Tool">
+        <div class="tool-icon">⏱️</div>
+        <div class="tool-title">Stopwatch Tool</div>
+        <div class="tool-desc">
+          A simple, reliable stopwatch for tracking time, laps, and split timing for any activity.
+        </div>
+      </a>
+    </div>
+
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Mars Trajectory Simulator">
+      <a href="mars_launch.html" class="tool-card-link" aria-label="Open Mars Trajectory Simulator">
+        <div class="tool-icon">🚀</div>
+        <div class="tool-title">Mars Trajectory Simulator</div>
+        <div class="tool-desc">
+          Set launch angle and velocity to guide your spacecraft to Mars! Includes orbital mechanics, real-time feedback, and mission outcomes.
+        </div>
+      </a>
+    </div>
+
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Two Player Dodger">
+      <a href="two_dodger.html" class="tool-card-link" aria-label="Open Two Player Dodger">
+        <div class="tool-icon">👯</div>
+        <div class="tool-title">Two Player Dodger</div>
+        <div class="tool-desc">
+          Team up to dodge falling obstacles in this fast-paced two-player arcade challenge! Survive as long as you can together!
+        </div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Quizzes &amp; Practice</h2>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Drone Part 107 Quiz">
+      <a href="part107.html" class="tool-card-link" aria-label="Open Drone Part 107 Quiz">
+        <div class="tool-icon">🚁</div>
+        <div class="tool-title">Drone Part 107 Quiz</div>
+        <div class="tool-desc">
+          Test your knowledge and prep for your FAA Part 107 Remote Pilot exam with realistic quizzes.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Amateur Radio License Quiz">
+      <a href="hamradio.html" class="tool-card-link" aria-label="Open Amateur Radio License Quiz">
+        <div class="tool-icon">📻</div>
+        <div class="tool-title">Amateur Radio License Quiz</div>
+        <div class="tool-desc">
+          Practice and master your FCC ham radio exam with a mix of real questions and instant feedback.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open N-400 Civics Test Practice">
+      <a href="n-400.html" class="tool-card-link" aria-label="Open N-400 Civics Test Practice">
+        <div class="tool-icon">🇺🇸</div>
+        <div class="tool-title">N-400 Civics Test Practice</div>
+        <div class="tool-desc">
+          Prepare for the U.S. citizenship civics test with interactive questions, instant feedback, hints, and a full review of your results. Practice with 100 real civics questions, track your timing, and build confidence!
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open California DMV Practice Test">
+      <a href="ca-dmv.html" class="tool-card-link" aria-label="Open California DMV Practice Test">
+        <div class="tool-icon">🚗</div>
+        <div class="tool-title">California DMV Practice Test</div>
+        <div class="tool-desc">
+          Get ready for your California driver’s license with interactive practice questions based on the real DMV knowledge test. Includes hints, instant feedback, quiz mode with grading, and full review.
+        </div>
+      </a>
+    </div>
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open First Aid Quiz">
+      <a href="firstaid.html" class="tool-card-link" aria-label="Open First Aid Quiz">
+        <div class="tool-icon">🚑</div>
+        <div class="tool-title">First Aid Quiz</div>
+        <div class="tool-desc">
+          Practice life-saving scenarios. Learn what to do in an emergency, get feedback, and boost your safety knowledge.
+        </div>
+      </a>
+    </div>
+    
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Typing Speed Test">
+      <a href="typing-test.html" class="tool-card-link" aria-label="Open Typing Speed Test">
+        <div class="tool-icon">⌨️</div>
+        <div class="tool-title">Typing Speed Test</div>
+        <div class="tool-desc">
+          Measure your typing speed, accuracy, and WPM with interactive modes for text, words, and code.
+        </div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Experimental</h2>
+
+
+
+    <div class="tool-card" tabindex="0" role="link" aria-label="Open Jump Penguin">
+      <a href="jumppenguin.html" class="tool-card-link" aria-label="Open Jump Penguin">
+        <div class="tool-icon">🐧</div>
+        <div class="tool-title">Jump Penguin</div>
+        <div class="tool-desc">
+          Help the penguin jump platforms and collect points. Cute, fast, and fun for all ages!
+        </div>
+      </a>
+    </div>
+  </main>
+  <footer style="width:100%;text-align:center;margin:34px 0 22px 0;font-size:0.97em;color:#89a6c4;opacity:0.83;">
+    <div>
+      <b>Disclaimer:</b> This site is for personal and educational purposes only. Wellness information and estimators are not a substitute for medical, legal, or financial advice. All tools © 2024–2025 Dustin Gamble and contributors. All rights reserved.<br>
+      Please do not copy, redistribute, or resell these tools or materials without permission.
+    </div>
+  </footer>
+</body>
+</html>

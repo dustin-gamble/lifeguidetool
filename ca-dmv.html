@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>California DMV Practice Test</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    html, body { background: #f3f7fb; color: #232c3d; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+    body { max-width: 560px; margin: 0 auto; padding: 0 0 2em 0; }
+    .quiz-box { background: #fff; border-radius: 20px; box-shadow: 0 6px 40px #3e4b6510; padding: 2.5em 2em 2em 2em; margin: 2.5em 0 1.5em 0; }
+    h1 { text-align: center; color: #2f82cc; letter-spacing: 0.02em; margin: 0 0 1.5em 0; font-size: 2em; font-weight: 800; }
+    .progress { text-align: right; font-size: 0.95em; color: #9098a8; margin-bottom: 0.4em; }
+    .timer { font-size: 1.08em; color: #3675e6; text-align: left; font-weight: bold; margin-bottom: 0.3em; }
+    .question { font-size: 1.25em; margin-bottom: 1em; font-weight: 600; min-height: 2.5em; }
+    .hint { color: #6576a8; font-size: 0.96em; background: #eef3fd; border-radius: 6px; padding: 0.7em 1em; margin: 0.5em 0 1.2em 0; display: inline-block; }
+    .answers { margin-bottom: 1.1em; }
+    .answer-btn { display: block; width: 100%; padding: 1.1em 1em; margin-bottom: 0.7em; border: none; border-radius: 9px; background: #f4f7ff; font-size: 1.08em; cursor: pointer; text-align: left; font-weight: 500; transition: background 0.18s, color 0.13s; box-shadow: 0 2px 8px #0001; }
+    .answer-btn:hover { background: #e0ebff; }
+    .answer-btn.selected { background: #ffeaea; }
+    .answer-btn.correct { background: #c7f1d2; color: #175b2d; }
+    .feedback { min-height: 2.2em; font-weight: bold; color: #d95040; margin-bottom: 0.9em; white-space: pre-line; font-size: 1.05em; transition: color 0.18s; }
+    .feedback.correct { color: #257d4a; }
+    .next-btn, .start-btn { display: inline-block; margin: 1em 0 0 0; padding: 0.9em 2em; background: #2f82cc; color: #fff; border: none; border-radius: 10px; font-size: 1.08em; font-weight: 700; cursor: pointer; box-shadow: 0 2px 14px #3d7efd22; transition: background 0.2s; letter-spacing: 0.03em; }
+    .next-btn:active, .start-btn:active { background: #215299; }
+    .start-screen { text-align: center; margin: 2em 0; }
+    .option-btn { background: #f5f9ff; border: 1.8px solid #c3d7fa; border-radius: 8px; margin: 1em 0.5em 0 0.5em; padding: 1em 2em; color: #2f82cc; font-size: 1.06em; font-weight: 600; cursor: pointer; transition: background 0.15s, border 0.15s; }
+    .option-btn.selected, .option-btn:hover { background: #dde6fb; border-color: #2f82cc; }
+    .summary { font-size: 1.1em; margin: 1.2em 0 0.5em 0; text-align: center; color: #215299; font-weight: 600; }
+    .hint-toggle { margin: 1.5em 0 0 0; text-align: center; }
+    .hint-toggle label { cursor: pointer; color: #3a4a70; font-size: 1.08em; margin-left: 0.5em;}
+    .hint-toggle input[type="checkbox"] { transform: scale(1.3); margin-right: 0.4em; vertical-align: middle; }
+    @media (max-width: 600px) { .quiz-box { padding: 1.5em 0.5em; } h1 { font-size: 1.5em; } .answer-btn, .option-btn { font-size: 1em; } }
+  </style>
+</head>
+<body>
+  <div class="quiz-box" id="mainBox"></div>
+  <script>
+    // --- California DMV sample questions (expand as needed) ---
+    const questions = [
+      {
+        q: "What does a solid red traffic light mean?",
+        answers: [
+          "Stop and wait until the light turns green",
+          "Yield to oncoming traffic",
+          "Proceed with caution",
+          "Stop, then proceed if safe"
+        ],
+        correct: 0,
+        why: [
+          "Correct! You must stop and wait for green.",
+          "This is not required for a red light.",
+          "You must come to a full stop, not just proceed with caution.",
+          "You must stay stopped; you can only go if turning right after stopping and yielding."
+        ],
+        hint: "Red always means stop."
+      },
+      {
+        q: "What should you do at a flashing yellow traffic signal?",
+        answers: [
+          "Come to a complete stop before proceeding",
+          "Proceed with caution",
+          "Stop, then yield to cross traffic",
+          "Speed up to clear the intersection"
+        ],
+        correct: 1,
+        why: [
+          "You do not need to stop for flashing yellow.",
+          "Correct! Slow down and proceed with caution.",
+          "Not necessary unless there is other traffic.",
+          "Never speed up at a flashing yellow."
+        ],
+        hint: "Yellow means caution, but not always stop."
+      },
+      {
+        q: "When are you allowed to turn right at a red light?",
+        answers: [
+          "Never",
+          "Only when a sign allows it",
+          "After making a full stop and yielding to traffic and pedestrians",
+          "At any time"
+        ],
+        correct: 2,
+        why: [
+          "Right turns on red are allowed in California after stopping, unless posted otherwise.",
+          "Usually you can turn unless posted 'No Turn on Red.'",
+          "Correct! Stop fully and yield first.",
+          "You must stop first!"
+        ],
+        hint: "Stop, check, then go if clear and allowed."
+      },
+      {
+        q: "What is the speed limit in a school zone when children are present?",
+        answers: [
+          "15 mph",
+          "20 mph",
+          "25 mph",
+          "35 mph"
+        ],
+        correct: 2,
+        why: [
+          "15 mph is for some blind intersections or alleys.",
+          "20 mph is not the school zone limit.",
+          "Correct! 25 mph when children are present.",
+          "Too fast for a school zone."
+        ],
+        hint: "Think about safe speeds for kids."
+      },
+      {
+        q: "What is the legal BAC (Blood Alcohol Concentration) limit for adult drivers 21+ in California?",
+        answers: [
+          "0.05%",
+          "0.08%",
+          "0.10%",
+          "0.12%"
+        ],
+        correct: 1,
+        why: [
+          "Not strict enough; the legal limit is 0.08%.",
+          "Correct! 0.08% is the maximum legal BAC.",
+          "That is over the legal limit.",
+          "That is over the legal limit."
+        ],
+        hint: "It's lower than 0.1%."
+      }
+      // Add more California DMV questions as needed!
+    ];
+
+    // --- The rest of the logic is identical to your N-400 tool, just with different questions. ---
+    // Copy the full app JS logic from your civics test tool here (question count, show hints, timer, scoring, etc).
+    // For brevity, I'm not pasting the entire logic block here (ask for full code if needed!), but just use the existing quiz logic.
+
+    // Below is a minimal functional demo using the previous logic; for a real app, drop in your full quiz logic.
+    let questionCount = 5, shuffledQuestions = [], currentIdx = 0, score = 0, attempts = 0;
+    let timerInterval = null, startTime = null, elapsedTime = 0, showHints = true, userAnswers = [];
+
+    function showStartScreen() {
+      document.getElementById('mainBox').innerHTML = `
+        <h1>🚦 CA DMV Practice Test</h1>
+        <div class="start-screen">
+          <div style="font-size:1.1em; color:#3a4a70; margin-bottom:1em;">
+            How many questions?
+          </div>
+          <button class="option-btn" onclick="setQuestionCount(5)">5 Questions</button>
+          <button class="option-btn" onclick="setQuestionCount(10)">10 Questions</button>
+          <button class="option-btn" onclick="setQuestionCount(20)">20 Questions</button>
+          <button class="option-btn" onclick="setQuestionCount(50)">50 Questions</button>
+          <button class="option-btn" onclick="setQuestionCount('all')">All (${questions.length})</button>
+          <div class="hint-toggle">
+            <input type="checkbox" id="showHintsCheckbox" checked>
+            <label for="showHintsCheckbox">Show Hints</label>
+          </div>
+          <div style="margin-top:2em; color:#859ab6; font-size:0.98em;">
+            Practice with real DMV questions. <span style="color:#3675e6;">⏱️ Timer & graded review included!</span>
+          </div>
+        </div>
+      `;
+      document.getElementById('showHintsCheckbox').addEventListener('change', (e) => {
+        showHints = e.target.checked;
+      });
+      showHints = true;
+      document.getElementById('showHintsCheckbox').checked = showHints;
+    }
+    window.setQuestionCount = function(n) {
+      if (n === 'all') questionCount = questions.length;
+      else questionCount = Math.min(Number(n), questions.length);
+      startQuiz();
+    }
+    function startQuiz() {
+      const cb = document.getElementById('showHintsCheckbox');
+      if (cb) showHints = cb.checked;
+      shuffledQuestions = shuffle(questions).slice(0, questionCount);
+      currentIdx = 0; score = 0; elapsedTime = 0;
+      startTime = Date.now();
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 200);
+      userAnswers = [];
+      showQuestion();
+    }
+    function updateTimer() {
+      elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+      let min = Math.floor(elapsedTime / 60), sec = elapsedTime % 60;
+      const timerEl = document.getElementById('timer');
+      if (timerEl) timerEl.textContent = `⏱️ Time: ${min}:${sec.toString().padStart(2, '0')}`;
+    }
+    function showQuestion() {
+      attempts = 0;
+      const qObj = shuffledQuestions[currentIdx];
+      document.getElementById('mainBox').innerHTML = `
+        <h1>🚦 CA DMV Practice Test</h1>
+        <div class="progress">Question ${currentIdx+1} of ${shuffledQuestions.length}</div>
+        <div class="timer" id="timer">⏱️ Time: 0:00</div>
+        <div class="question" id="question">${qObj.q}</div>
+        <div class="hint" id="hint" style="${showHints ? '' : 'display:none;'}">💡 Hint: ${qObj.hint}</div>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="nextBtn" style="display:none;">Next</button>
+      `;
+      updateTimer();
+      const answersDiv = document.getElementById('answers');
+      qObj.answers.forEach((ans, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = ans;
+        btn.className = 'answer-btn';
+        btn.onclick = () => selectAnswer(i);
+        answersDiv.appendChild(btn);
+      });
+      if (!showHints && typeof userAnswers[currentIdx] === 'number') {
+        const btns = document.querySelectorAll('.answer-btn');
+        btns.forEach((b, i) => {
+          b.disabled = true;
+          if (i === userAnswers[currentIdx]) b.classList.add('selected');
+        });
+        document.getElementById('nextBtn').style.display = 'inline-block';
+      }
+    }
+    function selectAnswer(idx) {
+      const qObj = shuffledQuestions[currentIdx];
+      if (!showHints) {
+        // Quiz mode: record answer, highlight only their choice, do not show feedback or correct answer
+        userAnswers[currentIdx] = idx;
+        const btns = document.querySelectorAll('.answer-btn');
+        btns.forEach((b, i) => {
+          b.disabled = true;
+          if (i === idx) b.classList.add('selected');
+        });
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('feedback').className = 'feedback';
+        document.getElementById('nextBtn').style.display = 'inline-block';
+      } else {
+        // Practice mode: show feedback, require correct answer to advance
+        attempts++;
+        const btns = document.querySelectorAll('.answer-btn');
+        btns.forEach(b => b.disabled = true);
+        btns[idx].classList.add(idx === qObj.correct ? 'correct' : 'selected');
+        let feedback = "";
+        if (idx === qObj.correct) {
+          feedback = "✅ " + qObj.why[idx];
+          document.getElementById('feedback').className = 'feedback correct';
+          score++;
+          document.getElementById('nextBtn').style.display = 'inline-block';
+        } else {
+          feedback = "❌ " + qObj.why[idx];
+          if (showHints) {
+            feedback += `\n\nHint: ${qObj.hint}`;
+            const hintDiv = document.getElementById('hint');
+            if (hintDiv) hintDiv.style.display = 'none';
+          } else if (attempts >= 2) {
+            feedback += `\n\nHint: ${qObj.hint}`;
+          }
+          document.getElementById('feedback').className = 'feedback';
+          if (attempts < qObj.answers.length - 1) {
+            btns.forEach((b, i) => {
+              if (i !== idx && i !== qObj.correct) b.disabled = false;
+              if (i === qObj.correct) b.disabled = false;
+            });
+          } else {
+            btns[qObj.correct].classList.add('correct');
+            feedback += `\n\nThe correct answer is: "${qObj.answers[qObj.correct]}".`;
+            document.getElementById('nextBtn').style.display = 'inline-block';
+          }
+        }
+        document.getElementById('feedback').textContent = feedback;
+      }
+    }
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.id === "nextBtn") {
+        currentIdx++;
+        if (currentIdx < shuffledQuestions.length) {
+          showQuestion();
+        } else {
+          showResults();
+        }
+      }
+    });
+    function showResults() {
+      if (timerInterval) clearInterval(timerInterval);
+      let totalTime = elapsedTime;
+      let min = Math.floor(totalTime / 60);
+      let sec = totalTime % 60;
+      let avg = (totalTime / shuffledQuestions.length) || 0;
+      let avgMin = Math.floor(avg / 60);
+      let avgSec = Math.round(avg % 60);
+
+      if (!showHints) {
+        let correctCount = 0, details = "";
+        for (let i = 0; i < shuffledQuestions.length; i++) {
+          const qObj = shuffledQuestions[i];
+          const userAnswerIdx = typeof userAnswers[i] === 'number' ? userAnswers[i] : null;
+          const correctIdx = qObj.correct;
+          const isCorrect = userAnswerIdx === correctIdx;
+          if (isCorrect) correctCount++;
+          details += `<div style="margin:1.3em 0 1.2em 0; padding:1.1em 1em; background:#f7f9fd; border-radius:9px;">
+            <div style="font-weight:600; color:#2c3a5c; margin-bottom:0.5em;">Q${i+1}: ${qObj.q}</div>
+            <div>
+              Your answer: <span style="font-weight:600; color:${isCorrect ? '#1f7d3d' : '#c22d2d'};">
+                ${userAnswerIdx !== null && qObj.answers[userAnswerIdx] !== undefined
+                  ? qObj.answers[userAnswerIdx]
+                  : '<em>No answer</em>'}
+              </span>
+              ${isCorrect ? '<span style="margin-left:1em;">✔️</span>' : '<span style="margin-left:1em;">❌</span>'}
+            </div>
+            ${!isCorrect ? `
+              <div>
+                Correct answer: <span style="font-weight:600; color:#1f7d3d;">${qObj.answers[correctIdx]}</span>
+                <br><span style="font-size:0.97em; color:#385fa7;">${qObj.why[correctIdx]}</span>
+              </div>
+            ` : ''}
+          </div>`;
+        }
+        document.getElementById('mainBox').innerHTML = `
+          <h1>🚦 Quiz Complete!</h1>
+          <div class="summary">
+            Your score: <b>${correctCount} / ${shuffledQuestions.length}</b>
+          </div>
+          <div style="text-align:center; margin:1.2em 0 0.2em 0;">
+            <div style="color:#3675e6; font-weight:600; margin-bottom:0.2em;">
+              ⏱️ Total time: <b>${min}:${sec.toString().padStart(2, '0')}</b>
+            </div>
+            <div style="color:#739be5;">
+              Avg time per question: <b>${avgMin}:${avgSec.toString().padStart(2, '0')}</b>
+            </div>
+          </div>
+          <div style="margin:2em 0 0.7em 0;">
+            ${details}
+          </div>
+          <div style="margin:1.5em 0 0.7em 0; text-align:center;">
+            <button class="start-btn" onclick="showStartScreen()">Try Again</button>
+          </div>
+          <div style="margin-top:2em; color:#9ba8ba; font-size:1em; text-align:center;">
+            Keep practicing and review your answers to improve!
+          </div>
+        `;
+      } else {
+        // Practice mode: just show a simple result as before
+        document.getElementById('mainBox').innerHTML = `
+          <h1>🚦 Quiz Complete!</h1>
+          <div class="summary">
+            Your score: <b>${score} / ${shuffledQuestions.length}</b>
+          </div>
+          <div style="text-align:center; margin:1.2em 0 0.2em 0;">
+            <div style="color:#3675e6; font-weight:600; margin-bottom:0.2em;">
+              ⏱️ Total time: <b>${min}:${sec.toString().padStart(2, '0')}</b>
+            </div>
+            <div style="color:#739be5;">
+              Avg time per question: <b>${avgMin}:${avgSec.toString().padStart(2, '0')}</b>
+            </div>
+          </div>
+          <div style="margin:1.5em 0 0.7em 0; text-align:center;">
+            <button class="start-btn" onclick="showStartScreen()">Try Again</button>
+          </div>
+          <div style="margin-top:2em; color:#9ba8ba; font-size:1em; text-align:center;">
+            Keep practicing to improve your knowledge and confidence!
+          </div>
+        `;
+      }
+    }
+    function shuffle(array) {
+      return array.map(a => [Math.random(), a])
+        .sort((a, b) => a[0] - b[0])
+        .map(a => a[1]);
+    }
+    // --- Launch the quiz app ---
+    showStartScreen();
+  </script>
+</body>
+</html>

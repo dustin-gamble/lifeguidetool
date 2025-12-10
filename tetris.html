@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tetris</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
+  <style>
+    html, body { background: #181825; margin: 0; overflow: hidden; }
+    body { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh;}
+    #hud { margin-bottom: 6px; color: #aaf; font-family: monospace; font-size: 20px;}
+    #game { box-shadow: 0 0 32px #222, 0 0 8px #00f inset; background: #181825;}
+    #controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+    .ctrl-btn {
+      width: 56px; height: 56px;
+      background: #212d3f;
+      border: none;
+      color: #fff;
+      font-size: 2em;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px #0007;
+      margin: 2px;
+      user-select: none;
+      outline: none;
+      transition: background .1s;
+    }
+    .ctrl-btn:active { background: #0074f7; }
+    @media (max-width: 600px) {
+      #game { width: 90vw; height: 180vw; max-width: 360px; max-height: 720px;}
+      .ctrl-btn { width: 48px; height: 48px; font-size: 1.6em;}
+    }
+  </style>
+</head>
+<body>
+<div id="hud">Tetris | <span id="score">0</span></div>
+<canvas id="game" width="300" height="600"></canvas>
+<div id="controls">
+  <button class="ctrl-btn" id="left">◀️</button>
+  <button class="ctrl-btn" id="right">▶️</button>
+  <button class="ctrl-btn" id="rotate">🔄</button>
+  <button class="ctrl-btn" id="down">⬇️</button>
+  <button class="ctrl-btn" id="drop">⏬</button>
+</div>
+<script>
+const COLS = 10, ROWS = 20, BLOCK = 30;
+const COLORS = ['#000', '#1abc9c','#e74c3c','#f1c40f','#2ecc71','#9b59b6','#3498db','#ff9800'];
+const SHAPES = [
+  [],
+  [[1,1,1,1]], // I
+  [[2,0,0],[2,2,2]], // J
+  [[0,0,3],[3,3,3]], // L
+  [[4,4],[4,4]], // O
+  [[0,5,5],[5,5,0]], // S
+  [[0,6,0],[6,6,6]], // T
+  [[7,7,0],[0,7,7]], // Z
+];
+let board = Array.from({length:ROWS},_=>Array(COLS).fill(0));
+let curr = {x:0,y:0,shape:[],type:0};
+let score = 0, dropSpeed = 500, dropTimer = 0, gameOver = false;
+let softDrop = false;
+
+// --- Functions ---
+function resetPiece() {
+  curr.type = Math.floor(Math.random()*7)+1;
+  curr.shape = SHAPES[curr.type].map(r=>r.slice());
+  curr.x = Math.floor((COLS-curr.shape[0].length)/2);
+  curr.y = 0;
+  if(collision(curr.x,curr.y,curr.shape)) gameOver = true;
+}
+function collision(x,y,shape) {
+  for(let r=0;r<shape.length;r++) for(let c=0;c<shape[r].length;c++) {
+    if(shape[r][c] && (
+      y+r >= ROWS ||
+      x+c < 0 ||
+      x+c >= COLS ||
+      (y+r>=0 && board[y+r][x+c])
+    )) return true;
+  }
+  return false;
+}
+function merge() {
+  for(let r=0;r<curr.shape.length;r++)
+    for(let c=0;c<curr.shape[r].length;c++)
+      if(curr.shape[r][c] && curr.y+r>=0)
+        board[curr.y+r][curr.x+c]=curr.type;
+}
+function clearLines() {
+  let lines = 0;
+  for(let r=ROWS-1;r>=0;r--) {
+    if(board[r].every(v=>v)) {
+      board.splice(r,1);
+      board.unshift(Array(COLS).fill(0));
+      lines++; r++;
+    }
+  }
+  if(lines) {
+    score += [0,40,100,300,1200][lines];
+    document.getElementById('score').textContent = score;
+    dropSpeed = Math.max(60, 500 - score*0.5);
+  }
+}
+function rotate(shape) {
+  return shape[0].map((_,c)=>shape.map(row=>row[c])).reverse();
+}
+
+// --- Game Loop ---
+function step(ts=0) {
+  if(gameOver) {
+    ctx.fillStyle = '#111d';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 36px monospace';
+    ctx.fillText('GAME OVER', 35,300);
+    return;
+  }
+  if(!curr.shape.length) resetPiece();
+  if(ts-dropTimer>(softDrop?60:dropSpeed)) {
+    if(!collision(curr.x,curr.y+1,curr.shape)) curr.y++;
+    else {
+      merge(); clearLines(); resetPiece();
+    }
+    dropTimer = ts;
+  }
+  draw();
+  requestAnimationFrame(step);
+}
+
+// --- Drawing ---
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+function drawBlock(x,y,type) {
+  ctx.fillStyle = COLORS[type];
+  ctx.fillRect(x*BLOCK,y*BLOCK,BLOCK,BLOCK);
+  ctx.strokeStyle = '#222';
+  ctx.strokeRect(x*BLOCK+1,y*BLOCK+1,BLOCK-2,BLOCK-2);
+}
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let r=0;r<ROWS;r++)
+    for(let c=0;c<COLS;c++)
+      if(board[r][c]) drawBlock(c,r,board[r][c]);
+  for(let r=0;r<curr.shape.length;r++)
+    for(let c=0;c<curr.shape[r].length;c++)
+      if(curr.shape[r][c] && curr.y+r>=0)
+        drawBlock(curr.x+c,curr.y+r,curr.type);
+}
+
+// --- Controls ---
+window.addEventListener('keydown',e=>{
+  if(gameOver) return;
+  if(e.key=='ArrowLeft' && !collision(curr.x-1,curr.y,curr.shape)) curr.x--;
+  if(e.key=='ArrowRight' && !collision(curr.x+1,curr.y,curr.shape)) curr.x++;
+  if(e.key=='ArrowDown') softDrop = true;
+  if(e.key=='ArrowUp') {
+    let next = rotate(curr.shape);
+    if(!collision(curr.x,curr.y,next)) curr.shape = next;
+  }
+  if(e.key==' '){
+    while(!collision(curr.x,curr.y+1,curr.shape)) curr.y++;
+    merge(); clearLines(); resetPiece();
+  }
+  draw();
+});
+window.addEventListener('keyup',e=>{
+  if(e.key=='ArrowDown') softDrop = false;
+});
+
+// Touch buttons
+function tap(dir) {
+  if(gameOver) return;
+  if(dir=='left' && !collision(curr.x-1,curr.y,curr.shape)) curr.x--;
+  if(dir=='right' && !collision(curr.x+1,curr.y,curr.shape)) curr.x++;
+  if(dir=='down') softDrop = true;
+  if(dir=='rotate') {
+    let next = rotate(curr.shape);
+    if(!collision(curr.x,curr.y,next)) curr.shape = next;
+  }
+  if(dir=='drop'){
+    while(!collision(curr.x,curr.y+1,curr.shape)) curr.y++;
+    merge(); clearLines(); resetPiece();
+  }
+  draw();
+}
+function untap(dir){
+  if(dir=='down') softDrop = false;
+}
+// --- Improved touch & click controls ---
+function handleControl(dir, type) {
+  if (type === 'down') {
+    if (dir === 'down') softDrop = true;
+    else tap(dir);
+  } else if (type === 'up') {
+    if (dir === 'down') softDrop = false;
+  }
+}
+
+// Mouse (desktop)
+document.getElementById('left').onmousedown = ()=>tap('left');
+document.getElementById('right').onmousedown = ()=>tap('right');
+document.getElementById('rotate').onmousedown = ()=>tap('rotate');
+document.getElementById('drop').onmousedown = ()=>tap('drop');
+document.getElementById('down').onmousedown = ()=>handleControl('down', 'down');
+document.getElementById('down').onmouseup = ()=>handleControl('down', 'up');
+document.getElementById('down').onmouseleave = ()=>handleControl('down', 'up');
+
+// Touch (mobile)
+document.getElementById('left').ontouchstart = e=>{e.preventDefault();tap('left');};
+document.getElementById('right').ontouchstart = e=>{e.preventDefault();tap('right');};
+document.getElementById('rotate').ontouchstart = e=>{e.preventDefault();tap('rotate');};
+document.getElementById('drop').ontouchstart = e=>{e.preventDefault();tap('drop');};
+document.getElementById('down').ontouchstart = e=>{e.preventDefault();handleControl('down','down');};
+document.getElementById('down').ontouchend = e=>{e.preventDefault();handleControl('down','up');};
+
+// --- Enhanced gesture controls ---
+// One finger left half: move left. One finger right half: move right.
+// Two fingers anywhere: rotate. Three fingers: soft drop faster.
+canvas.addEventListener('touchstart', function(e) {
+  if (gameOver) return;
+  if (e.touches.length === 1) {
+    const x = e.touches[0].clientX;
+    const mid = window.innerWidth / 2;
+    if (x < mid) tap('left');
+    else tap('right');
+  } else if (e.touches.length === 2) {
+    tap('rotate');
+  } else if (e.touches.length === 3) {
+    softDrop = true;
+  }
+});
+canvas.addEventListener('touchend', function(e) {
+  if (e.touches.length < 3) {
+    softDrop = false;
+  }
+});
+
+resetPiece();
+step();
+</script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Investment Property Analyzer</title>
+  <script src="https://cdn.plot.ly/plotly-2.31.1.min.js"></script>
+  <style>
+    body { background: #f4f8fb; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0;}
+    .ip-container { margin: 32px auto 0 auto; max-width: 900px; background: #fff; border-radius: 18px; box-shadow: 0 6px 32px #a4d5fa22; padding: 30px 32px 20px 32px; display: flex; gap: 38px; }
+    .ip-inputs { width: 350px; flex-shrink: 0; }
+    .ip-slider-group { margin-bottom: 32px; }
+    .ip-slider-label { font-weight: 700; font-size: 1.09em; margin-bottom: 7px; color: #1b3c63;}
+    .ip-slider-row { display: flex; align-items: center; gap: 12px;}
+    .ip-slider { width: 62%; }
+    .ip-slider-value { min-width: 80px; text-align: right; font-weight: 700; color: #12567a;}
+    .ip-info-row { font-size: 0.99em; color: #29556c; opacity: 0.88; margin-top: 2px; margin-bottom: -6px;}
+    .ip-maint-ex { font-size: 0.99em; color: #b45619; opacity: 0.82; margin-top: 3px;}
+    @media (max-width: 1000px) {.ip-container {flex-direction: column;align-items: stretch;}.ip-inputs{width:100%;}}
+    .ip-assume { font-size: 0.95em; color: #3a607e; opacity: 0.78; margin-top: 14px;}
+    h1 {text-align:center; margin-bottom:20px; font-size:2.15em; color:#17658d;}
+    .ip-disc { font-size:0.93em; color:#678a92; opacity:0.75; text-align:center; margin:32px auto 0 auto; max-width:670px;}
+  </style>
+</head>
+<body>
+  <h1>🏡 Investment Property Analyzer</h1>
+  <div class="ip-container">
+    <div class="ip-inputs">
+      <div class="ip-slider-group">
+        <div class="ip-slider-label">🏠 Property Value</div>
+        <div class="ip-slider-row">
+          <input id="propVal" type="range" min="50000" max="2000000" step="1000" value="550000" class="ip-slider">
+          <div class="ip-slider-value" id="propValVal">$550,000</div>
+        </div>
+        <div class="ip-info-row" id="propTypeInfo"></div>
+      </div>
+      <div class="ip-slider-group">
+        <div class="ip-slider-label">📈 Location Growth</div>
+        <div class="ip-slider-row">
+          <input id="location" type="range" min="1" max="10" step="1" value="5" class="ip-slider">
+          <div class="ip-slider-value" id="locationVal">5 / 10</div>
+        </div>
+        <div style="font-size:0.98em;color:#1c5482;opacity:0.85;margin-top:3px;" id="growthInfo"></div>
+      </div>
+      <div class="ip-slider-group">
+        <div class="ip-slider-label">💸 Loan Amount</div>
+        <div class="ip-slider-row">
+          <input id="loanAmt" type="range" min="0" max="2000000" step="1000" value="440000" class="ip-slider">
+          <div class="ip-slider-value" id="loanAmtVal">$440,000</div>
+        </div>
+        <div class="ip-info-row" id="loanPct"></div>
+      </div>
+      <div class="ip-slider-group">
+        <div class="ip-slider-label">🏘️ Monthly Rent</div>
+        <div class="ip-slider-row">
+          <input id="rent" type="range" min="500" max="10000" step="25" value="3500" class="ip-slider">
+          <div class="ip-slider-value" id="rentVal">$3,500</div>
+        </div>
+        <div class="ip-info-row" id="netMonth"></div>
+      </div>
+      <div class="ip-slider-group">
+        <div class="ip-slider-label">🧰 Monthly Maintenance</div>
+        <div class="ip-slider-row">
+          <input id="maint" type="range" min="0" max="3000" step="10" value="400" class="ip-slider">
+          <div class="ip-slider-value" id="maintVal">$400</div>
+        </div>
+        <div class="ip-maint-ex" id="maintEx"></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:220px;">
+      <div id="plot" style="width:100%;height:380px;"></div>
+      <div class="ip-assume" id="ip-assume"></div>
+    </div>
+  </div>
+  <div class="ip-disc">
+    This tool is for educational and informational purposes only. Assumptions do not include taxes, vacancies, insurance, or transaction costs. Actual results will vary. Always consult a financial advisor before investing.
+  </div>
+  <script>
+    // For Property Type Example
+    const houseTypes = [
+      { min: 0, max: 120000, label: "Small condo or fixer (<1200 sq ft)", example: "e.g. Detroit, Cleveland" },
+      { min: 120000, max: 220000, label: "Modest 2-bed townhouse (~1200 sq ft)", example: "e.g. Kansas City, St. Louis" },
+      { min: 220000, max: 350000, label: "Starter home, 3-bed (~1400 sq ft)", example: "e.g. Houston, Denver" },
+      { min: 350000, max: 700000, label: "Nice suburban home, 3–4 bed (~2000 sq ft)", example: "e.g. Seattle, Austin" },
+      { min: 700000, max: 1200000, label: "Large home, 4+ bed (~2800 sq ft)", example: "e.g. San Francisco, Miami" },
+      { min: 1200000, max: 10000000, label: "Luxury or coastal home, 3500+ sq ft", example: "e.g. LA, NYC, Miami Beach" },
+    ];
+    // For Maintenance Examples
+    function maintExample(m) {
+      if (m < 100) return "Basic repairs only (small condo, self-managed)";
+      if (m < 350) return "Typical: minor repairs, some HOA, simple landscaping";
+      if (m < 650) return "Includes: lawn care, moderate repairs, possible pool";
+      if (m < 1200) return "High: repairs, pool, HOA, full landscaping, pest";
+      return "Very high: major repairs, luxury/large home, full service";
+    }
+    const locationExamples = [
+      "Detroit (little to no growth)", "Cleveland", "Kansas City", "St. Louis", "Houston",
+      "Denver", "Seattle", "Austin", "San Francisco", "Miami (high growth)"
+    ];
+    const growthRates = [0.01,0.012,0.014,0.016,0.018,0.02,0.022,0.024,0.026,0.03];
+    function getGrowthInfo(idx) {
+      return `Est. growth: <b>${(growthRates[idx-1]*100).toFixed(1)}%/yr</b> &ndash; e.g., <i>${locationExamples[idx-1]}</i>`;
+    }
+    function propTypeString(val, locIdx) {
+      // favor higher-end in high-growth areas
+      for (let h of houseTypes) {
+        let scale = (locIdx - 4) * 0.08 + 1.0;
+        let min = h.min * scale, max = h.max * scale;
+        if (val >= min && val < max) return `${h.label} <span style="opacity:0.7">(${h.example})</span>`;
+      }
+      return houseTypes[houseTypes.length-1].label;
+    }
+
+    // DOM
+    const propVal = document.getElementById('propVal');
+    const propValVal = document.getElementById('propValVal');
+    const loanAmt = document.getElementById('loanAmt');
+    const loanAmtVal = document.getElementById('loanAmtVal');
+    const rent = document.getElementById('rent');
+    const rentVal = document.getElementById('rentVal');
+    const maint = document.getElementById('maint');
+    const maintVal = document.getElementById('maintVal');
+
+    const locationSlider = document.getElementById('location');
+    const locationVal = document.getElementById('locationVal');
+    const growthInfo = document.getElementById('growthInfo');
+
+    const propTypeInfo = document.getElementById('propTypeInfo');
+    const maintEx = document.getElementById('maintEx');
+    const loanPct = document.getElementById('loanPct');
+    const netMonth = document.getElementById('netMonth');
+
+    // Input listeners
+    propVal.oninput = function() {
+      propValVal.textContent = `$${(+propVal.value).toLocaleString()}`;
+      loanAmt.max = propVal.value;
+      if (+loanAmt.value > +propVal.value) { loanAmt.value = propVal.value; }
+      loanAmtVal.textContent = `$${(+loanAmt.value).toLocaleString()}`;
+      update();
+    };
+    loanAmt.oninput = ()=>{loanAmtVal.textContent=`$${(+loanAmt.value).toLocaleString()}`;update();};
+    rent.oninput = ()=>{rentVal.textContent=`$${(+rent.value).toLocaleString()}`;update();};
+    maint.oninput = ()=>{maintVal.textContent=`$${(+maint.value).toLocaleString()}`;update();};
+    locationSlider.oninput = function() {
+      locationVal.textContent = `${locationSlider.value} / 10`;
+      growthInfo.innerHTML = getGrowthInfo(+locationSlider.value);
+      update();
+    };
+    // Mortgage calculator (fixed rate)
+    function mortgagePayment(loan, years=30, rate=0.07) {
+      const n = years*12, r = rate/12;
+      return loan>0 ? loan * r * Math.pow(1+r, n) / (Math.pow(1+r, n)-1) : 0;
+    }
+    function update() {
+      // Inputs
+      const val = +propVal.value;
+      const loan = +loanAmt.value;
+      const moRent = +rent.value;
+      const moMaint = +maint.value;
+      const locIdx = +locationSlider.value;
+      const growth = growthRates[locIdx-1];
+      // Property type info
+      propTypeInfo.innerHTML = propTypeString(val, locIdx);
+      // Maintenance example
+      maintEx.textContent = maintExample(moMaint);
+      // Location growth
+      locationVal.textContent = `${locIdx} / 10`;
+      growthInfo.innerHTML = getGrowthInfo(locIdx);
+      // Loan percent
+      loanPct.textContent = `Loan: ${(loan/val*100).toFixed(1)}% of value`;
+      // Mortgage (30 yr, 7% fixed)
+      const moMort = mortgagePayment(loan);
+      // Net month
+      netMonth.textContent = `Net monthly: $${(moRent - moMaint - moMort).toLocaleString(undefined,{maximumFractionDigits:0})}`;
+      // Main plot
+      const years = 40;
+      let trace = [], t = [];
+      for (let y = 0; y <= years; y++) {
+        let netGain = 0;
+        let propApp = val;
+        for (let m = 0; m < 12 * y; m++) {
+          propApp *= (1 + growth/12);
+          if (m < 360) netGain += moRent - moMaint - moMort;
+          else netGain += moRent - moMaint;
+        }
+        trace.push(netGain + (propApp - val));
+        t.push(y);
+      }
+      Plotly.newPlot('plot', [{
+        x: t, y: trace, type: 'scatter', mode: 'lines+markers', line: { width: 3 }, name: "Net Gain", marker: {size:5}
+      }], {
+        margin: { t: 22, l: 56, r: 18, b: 44 },
+        xaxis: { title: "Years", tickvals:[0,5,10,15,20,25,30,35,40] },
+        yaxis: { title: "Net Gain ($)" },
+        plot_bgcolor: '#eaf3fd',
+        paper_bgcolor: '#fff'
+      }, {displayModeBar:false, responsive:true});
+      document.getElementById('ip-assume').innerHTML =
+        `Assumptions: 30-year fixed loan @ 7% interest. No taxes, insurance, or vacancy. After 30 years, mortgage is paid off.<br>
+        <b>Mortgage Payment:</b> $${moMort.toLocaleString(undefined, {maximumFractionDigits:0})}/mo`;
+    }
+    // Initialize display
+    update();
+  </script>
+</body>
+</html>

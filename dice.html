@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Yahtzee</title>
+  <style>
+    body { background: #f7fafc; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+    .yahtzee-container { background: #fff; border-radius: 18px; box-shadow: 0 8px 40px #b4d9fd38; padding: 24px 28px 30px 28px; margin-top: 48px; width: 370px; max-width: 98vw;}
+    .title { font-size: 2em; font-weight: 900; color: #2377c5; margin-bottom: 10px;}
+    .section { margin-bottom: 18px;}
+    .dice-row { display: flex; justify-content: center; gap: 20px; margin-bottom: 16px;}
+    .die { width: 78px; height: 78px; background: #eaf3fd; border-radius: 10px; border: 2.5px solid #b2cced; display: flex; align-items: center; justify-content: center; font-size: 3.1em; font-weight: 700; box-shadow: 0 1px 7px #ddefff4f;}
+    .roll-btn {
+      margin: 0 8px;
+      padding: 12px 32px;
+      font-size: 1.2em;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #fde68a 0%, #fbbf24 100%);
+      color: #6d3402;
+      cursor: pointer;
+      transition: background 0.13s, color 0.11s;
+      margin-left: 18px;
+      float: right;
+    }
+    .roll-btn:hover {
+      background: linear-gradient(90deg, #5dd6fb 0%, #60a5fa 100%);
+      color: #fff;
+    }
+    .next-btn {
+      margin: 0 8px;
+      padding: 12px 32px;
+      font-size: 1.2em;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #c0e0ff 0%, #7ec8f5 100%);
+      color: #183c5d;
+      cursor: pointer;
+      transition: background 0.13s, color 0.11s;
+      /* No float or margin-left here */
+    }
+    .next-btn:hover {
+      background: linear-gradient(90deg, #5dd6fb 0%, #60a5fa 100%);
+      color: #fff;
+    }
+    .scoreboard { width: 100%; margin: 16px 0 0 0;}
+    .scoreboard th, .scoreboard td { text-align: center; padding: 6px 6px;}
+    .scoreboard th { background: #e9f1ff; color: #25508b; border-radius: 5px;}
+    .scoreboard td { background: #f6fbff; color: #2470b8; border-radius: 4px;}
+    .active-player { font-weight: 800; color: #059669; }
+    @media (max-width: 600px) {.yahtzee-container {padding: 8px 2vw 12px 2vw; width:98vw;}}
+  </style>
+</head>
+<body>
+  <div class="yahtzee-container">
+    <div class="title">🎲 Mini Yahtzee</div>
+    <div class="section">
+      Players:
+      <select id="numPlayers">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+      <button onclick="startGame()" class="roll-btn" style="padding:8px 18px;font-size:1em;">Start</button>
+    </div>
+    <div id="gameArea" style="display:none;">
+      <div class="section" id="playerTurn"></div>
+      <div class="dice-row" id="diceRow"></div>
+      <button id="nextBtn" class="next-btn" style="display:none;">Next Player</button>
+      <button id="rollBtn" class="roll-btn">Roll Dice</button>
+      <div id="turnMsg" style="margin-top:10px;font-size:1em;color:#286da8;"></div>
+      <table class="scoreboard" id="scoreboard" style="margin-top:22px;"></table>
+    </div>
+  </div>
+  <script>
+    let numPlayers = 2, currentPlayer = 0, scores = [], dice = [1,1,1,1,1], rollCount = 0, rolling = false;
+    const playerTurn = document.getElementById('playerTurn');
+    const diceRow = document.getElementById('diceRow');
+    const rollBtn = document.getElementById('rollBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const scoreboard = document.getElementById('scoreboard');
+    const turnMsg = document.getElementById('turnMsg');
+    function startGame() {
+      numPlayers = parseInt(document.getElementById('numPlayers').value);
+      scores = new Array(numPlayers).fill(0);
+      currentPlayer = 0; rollCount = 0;
+      document.getElementById('gameArea').style.display = '';
+      turnMsg.textContent = '';
+      render();
+    }
+    function render() {
+      playerTurn.innerHTML = `<span class="active-player">Player ${currentPlayer + 1}'s turn</span>`;
+      // Dice visuals
+      diceRow.innerHTML = '';
+      for(let d=0;d<5;d++) {
+        const el = document.createElement('div');
+        el.className = 'die';
+        el.textContent = rolling ? ['⚀','⚁','⚂','⚃','⚄','⚅'][Math.floor(Math.random()*6)] : ['⚀','⚁','⚂','⚃','⚄','⚅'][dice[d]-1];
+        diceRow.appendChild(el);
+      }
+      // Scoreboard
+      let html = '<tr><th>Player</th>';
+      for(let p=0;p<numPlayers;p++) html += `<th>${p+1}</th>`;
+      html += '</tr><tr><td>Total</td>';
+      for(let p=0;p<numPlayers;p++) html += `<td>${scores[p]}</td>`;
+      html += '</tr>';
+      scoreboard.innerHTML = html;
+      // Buttons
+      rollBtn.style.display = rolling || rollCount >= 1 ? 'none' : '';
+      nextBtn.style.display = rollCount === 1 ? '' : 'none';
+    }
+    // Dice roll animation
+    function animateRoll(callback) {
+      let frames = 16, interval = 64;
+      rolling = true;
+      let anim = setInterval(() => {
+        render();
+        frames--;
+        if(frames <= 0) {
+          clearInterval(anim);
+          rolling = false;
+          // Final roll values
+          for(let d=0;d<5;d++) dice[d] = Math.floor(Math.random()*6)+1;
+          render();
+          callback();
+        }
+      }, interval);
+    }
+    rollBtn.onclick = function() {
+      if(rolling || rollCount >= 1) return;
+      animateRoll(() => {
+        rollCount++;
+        // Add up dice for simple scoring (sum, not real Yahtzee rules for now)
+        let sum = dice.reduce((a,b)=>a+b,0);
+        scores[currentPlayer] += sum;
+        turnMsg.textContent = `You rolled ${dice.map(v=>['⚀','⚁','⚂','⚃','⚄','⚅'][v-1]).join(' ')} (Total: ${sum})`;
+        render();
+      });
+    }
+    nextBtn.onclick = function() {
+      if(rolling) return;
+      currentPlayer = (currentPlayer+1)%numPlayers;
+      rollCount = 0;
+      turnMsg.textContent = '';
+      render();
+    }
+  </script>
+</body>
+</html>

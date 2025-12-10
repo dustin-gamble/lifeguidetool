@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sleep Quick Planner</title>
+  <script src="https://cdn.plot.ly/plotly-2.30.1.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #f7fafd 0%, #e7f0ff 100%);
+      margin: 0;
+      padding: 0;
+      color: #1d2c3a;
+    }
+    .container {
+      display: flex;
+      max-width: 1000px;
+      margin: 44px auto;
+      gap: 40px;
+    }
+    .inputs {
+      width: 30%;
+      background: #fff;
+      padding: 32px 22px 26px 22px;
+      border-radius: 20px;
+      box-shadow: 0 6px 32px #81bcf015;
+      min-width: 240px;
+      border: 2px solid #c2e1fc;
+    }
+    .inputs h2 {
+      margin-top: 0;
+      font-size: 1.45em;
+      color: #247eb8;
+    }
+    .inputs label {
+      font-weight: 700;
+      display: block;
+      margin-top: 18px;
+      font-size: 1.08em;
+    }
+    .inputs input[type=range] {
+      width: 100%;
+      margin-top: 3px;
+      accent-color: #247eb8;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+    .inputs .desc {
+      color: #4e688a;
+      font-size: 0.96em;
+      margin-bottom: 2px;
+      margin-left: 2px;
+    }
+    .outputs {
+      width: 70%;
+      background: #f7fbfe;
+      padding: 32px 36px 24px 36px;
+      border-radius: 20px;
+      box-shadow: 0 6px 32px #b7dafc19;
+      border: 2px solid #c8ebfa;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .outputs h2 {
+      margin-top: 0;
+      font-size: 1.25em;
+      color: #207494;
+    }
+    #sleepPlot {
+      width: 100%;
+      height: 235px;
+      min-height: 120px;
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid #bee7fa;
+      margin-bottom: 10px;
+    }
+    .stats, .tip, .assumptions {
+      font-size: 1.07em;
+      margin-top: 10px;
+      margin-bottom: 0;
+      padding: 8px 14px;
+      border-radius: 8px;
+    }
+    .stats {
+      background: #e1f7f2;
+      color: #125c5c;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .tip {
+      background: #f6f1e7;
+      color: #72502c;
+      border: 1px dashed #fad390;
+      margin-bottom: 7px;
+    }
+    .assumptions {
+      background: #f8faff;
+      color: #38596a;
+      border: 1.3px solid #d3eafc;
+      margin-top: 18px;
+      font-size: 0.99em;
+    }
+    @media (max-width: 900px) {
+      .container { flex-direction: column; align-items: center; gap: 18px;}
+      .inputs, .outputs { width: 98vw; max-width: 420px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="inputs">
+      <h2>🛌 Sleep Quick Planner</h2>
+      <label class="slider-label">
+        <span>Sleep Duration (hr)</span>
+        <span id="sleepDurVal">7.0</span>
+      </label>
+      <input type="range" min="5" max="10" step="0.1" value="7" id="sleepDur">
+      <div class="desc">Typical hours of sleep per night</div>
+      <label class="slider-label">
+        <span>Wakeups/Night</span>
+        <span id="wakeupsVal">0</span>
+      </label>
+      <input type="range" min="0" max="5" step="1" value="0" id="wakeups">
+      <div class="desc">Number of times you wake up per night</div>
+      <label class="slider-label">
+        <span>Sleep Quality</span>
+        <span id="qualityVal">★★★☆☆</span>
+      </label>
+      <input type="range" min="1" max="5" step="1" value="3" id="quality">
+      <div class="desc" id="qualDesc"></div>
+      <label class="slider-label">
+        <span>Stress Level</span>
+        <span id="stressVal">3</span>
+      </label>
+      <input type="range" min="1" max="5" step="1" value="3" id="stress">
+      <div class="desc" id="stressDesc"></div>
+    </div>
+    <div class="outputs">
+      <h2>📈 Sleep Score & Debt (5 Days)</h2>
+      <div id="sleepPlot"></div>
+      <div class="stats" id="stats"></div>
+      <div class="tip" id="tip"></div>
+      <div class="assumptions">
+        <b>Assumptions:</b><br>
+        • Ideal sleep is 8.0 hours/night. Sleep debt accumulates each day when sleep is below 8 hours.<br>
+        • Sleep Score is out of 10, calculated from sleep duration, wakeups, self-rated quality, and stress.<br>
+        • Quality and stress are self-reported (1=worst, 5=best).<br>
+        • For planning purposes only—does not diagnose medical sleep problems.<br>
+      </div>
+    </div>
+  </div>
+  <script>
+    function stars(n) {
+      return '★'.repeat(n) + '☆'.repeat(5-n);
+    }
+    const qualDescArr = [
+      "Very poor (restless, exhausted)",
+      "Poor (tired, frequent wakeups)",
+      "OK (not fully rested)",
+      "Good (well rested, few wakeups)",
+      "Excellent (deep, refreshing sleep)"
+    ];
+    const stressDescArr = [
+      "Very low (relaxed)",
+      "Low (calm)",
+      "Average",
+      "High (busy, distracted)",
+      "Very high (overwhelmed)"
+    ];
+
+    function updateUI() {
+      let sleepDur = +document.getElementById("sleepDur").value;
+      let wakeups = +document.getElementById("wakeups").value;
+      let quality = +document.getElementById("quality").value;
+      let stress = +document.getElementById("stress").value;
+
+      document.getElementById("sleepDurVal").textContent = sleepDur.toFixed(1);
+      document.getElementById("wakeupsVal").textContent = wakeups;
+      document.getElementById("qualityVal").textContent = stars(quality);
+      document.getElementById("qualDesc").textContent = qualDescArr[quality-1];
+      document.getElementById("stressVal").textContent = stress;
+      document.getElementById("stressDesc").textContent = stressDescArr[stress-1];
+
+      // Calculate sleep debt: ideal = 8.0 hr/night
+      let debtPerNight = Math.max(0, 8 - sleepDur);
+      let debtArr = [0];
+      for (let i=1;i<6;i++) debtArr[i] = debtArr[i-1] + debtPerNight;
+      // Sleep score per night (out of 10): based on all factors
+      function sleepScore() {
+        let score = 10;
+        score -= Math.abs(sleepDur-8) * 1.5; // penalize <8 or >8hr
+        score -= wakeups * 1.2;
+        score += (quality-3)*1.2;
+        score -= (stress-3)*1.1;
+        return Math.max(1, Math.min(10, score));
+      }
+      let scoreArr = Array(5).fill(sleepScore());
+
+      Plotly.newPlot('sleepPlot', [
+        { x:["Mon","Tue","Wed","Thu","Fri","Sat"], y:debtArr, name:"Sleep Debt (hr)", type:"bar", marker:{color:"#fca342"}, yaxis:'y'},
+        { x:["Mon","Tue","Wed","Thu","Fri"], y:scoreArr, name:"Sleep Score", type:"scatter", mode:"lines+markers", line:{shape:"spline", color:"#357be2"}, yaxis:'y2'}
+      ], {
+        margin:{t:20, r:30, l:60, b:40},
+        yaxis: { title:"Sleep Debt (hr)", range:[0,Math.max(8,debtArr[5]+1)], side:"left", showgrid:true, zeroline:true },
+        yaxis2: { title:"Score (out of 10)", range:[1,10], overlaying:"y", side:"right", showgrid:false, zeroline:false },
+        xaxis: { title:"Day", tickmode:"array" },
+        legend:{x:0.75,y:1.12, orientation:"h"},
+        height:230,
+        plot_bgcolor:"#fff", paper_bgcolor:"#f7fbfe"
+      }, {displayModeBar:false});
+
+      // Stats
+      let totalDebt = debtArr[5];
+      let score = scoreArr[0];
+      document.getElementById("stats").innerHTML =
+        `<b>Total Sleep Debt:</b> ${totalDebt.toFixed(1)} hr (Mon–Sat) &nbsp; | &nbsp;
+         <b>Sleep Score:</b> ${score.toFixed(1)} / 10`;
+
+      // Tip
+      let tip = "";
+      if (sleepDur<7) tip = "😴 Try aiming for at least 7 hours of sleep for better recovery.";
+      else if (wakeups>1) tip = "🌙 Consider why you wake up at night—hydration, noise, or stress?";
+      else if (quality<=2) tip = "🛌 Improving your sleep routine could help boost sleep quality.";
+      else if (stress>=4) tip = "🧘 High stress is hurting your sleep. Try unwinding before bed.";
+      else tip = "✅ Your sleep habits look pretty solid!";
+      document.getElementById("tip").innerHTML = tip;
+    }
+
+    ["sleepDur","wakeups","quality","stress"].forEach(id=>
+      document.getElementById(id).addEventListener("input", updateUI)
+    );
+    updateUI();
+  </script>
+</body>
+</html>

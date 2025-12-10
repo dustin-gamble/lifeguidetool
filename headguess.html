@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Heads Up Clone</title>
+  <style>
+    body {
+      background: #f1f7fd;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .headsup-container {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 40px #b0d9ff33;
+      padding: 34px 28px 30px 28px;
+      margin-top: 48px;
+      width: 340px;
+      max-width: 97vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .hu-title {
+      font-size: 2.1em;
+      font-weight: 900;
+      color: #2579b8;
+      letter-spacing: 1.4px;
+      margin-bottom: 10px;
+    }
+    .hu-timer {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #0c647d;
+      margin: 18px 0 18px 0;
+      letter-spacing: 2px;
+    }
+    .hu-card {
+      background: #ecfeff;
+      border-radius: 22px;
+      box-shadow: 0 2px 18px #81e1f64a;
+      padding: 34px 28px;
+      min-width: 220px;
+      min-height: 60px;
+      font-size: 2.2em;
+      font-weight: 800;
+      color: #108497;
+      text-align: center;
+      margin-bottom: 22px;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .hu-btn {
+      margin-top: 12px;
+      padding: 12px 38px;
+      font-size: 1.2em;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #93e7e6 0%, #60a5fa 100%);
+      color: #0e486e;
+      cursor: pointer;
+      box-shadow: 0 1.5px 10px #cdf3eb20;
+      transition: background 0.13s, color 0.13s;
+    }
+    .hu-btn:hover { background: linear-gradient(90deg, #7dd3fc 0%, #34d399 100%); color: #fff;}
+    .hu-fade {
+      opacity: 0.25;
+      pointer-events: none;
+      transition: opacity 0.22s;
+    }
+    .hu-list-info {
+      font-size: 0.97em; color: #459bb1; margin-top: 12px; opacity: 0.77;
+    }
+  </style>
+</head>
+<body>
+  <div class="headsup-container">
+    <div class="hu-title">🙆 Heads Up! Clone</div>
+    <div id="timer" class="hu-timer"></div>
+    <div id="card" class="hu-card">Get ready!</div>
+    <button id="startBtn" class="hu-btn">Start 60s</button>
+    <button id="nextBtn" class="hu-btn" style="display:none;">Next Card</button>
+    <div class="hu-list-info" id="huListInfo"></div>
+  </div>
+  <script>
+    const items = [
+      "Elephant", "Pizza", "Basketball", "New York", "Superman", "Guitar", "Jellyfish", "Mount Everest",
+      "Detective", "Camping", "Shark", "Time Machine", "Football", "Doctor", "Ballet", "Chocolate", "Soccer",
+      "Robot", "Pirate", "Yoga", "Ice Cream", "Firefighter", "Tennis", "Kangaroo", "Painting", "Submarine",
+      "Chef", "Swimming", "Rainbow", "Moon", "Rock Star", "Wizard", "Popcorn", "Dinosaur", "Santa Claus",
+      "Space Shuttle", "Clown", "Surfing", "Volcano", "Penguin", "Astronaut", "Cat", "Cactus", "Vampire",
+      "Turtle", "Mermaid", "Dragon", "Baseball", "Laptop", "Ninja", "Helicopter", "Cake", "Lion", "Piano",
+      "Horse", "Train", "Soccer", "Witch", "Pirate Ship", "Camel", "Roller Coaster", "Unicorn", "Spider",
+      "Giraffe", "Cookie", "Hot Air Balloon", "Zebra", "Treasure", "Magician", "Violin", "Skiing", "Dancing",
+      "Robot", "Ice Skating", "Snowman", "Monkey", "Helicopter", "Donut", "Rabbit", "Gorilla", "School Bus",
+      "Apple", "Koala", "Octopus", "Fireworks", "Guitar", "Tiger", "Sloth", "Castle", "Bicycle", "Wolf",
+      "Juggler", "Knight", "Doctor", "Cave", "Candle", "Castle", "Trampoline", "Whale", "Cheese", "Crown"
+      // Add more for >100 items!
+    ];
+    let used = [], timerInt = null, seconds = 60, started = false, currentIdx = 0;
+    const timerElem = document.getElementById('timer');
+    const cardElem = document.getElementById('card');
+    const startBtn = document.getElementById('startBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const huListInfo = document.getElementById('huListInfo');
+
+    function startGame() {
+      used = [];
+      currentIdx = -1;
+      seconds = 60;
+      started = true;
+      startBtn.style.display = 'none';
+      nextBtn.style.display = '';
+      cardElem.classList.remove('hu-fade');
+      timerElem.textContent = "60";
+      huListInfo.textContent = `${items.length - used.length} cards left`;
+      showNextCard();
+      timerInt = setInterval(() => {
+        seconds--;
+        timerElem.textContent = seconds;
+        if(seconds <= 0) {
+          clearInterval(timerInt);
+          timerElem.textContent = "⏰";
+          cardElem.textContent = "Time's up!";
+          cardElem.classList.add('hu-fade');
+          nextBtn.style.display = '';
+          started = false;
+          huListInfo.textContent = "Session ended. Cards remaining: " + (items.length - used.length);
+        }
+      }, 1000);
+    }
+
+    function showNextCard() {
+      if (used.length === items.length) {
+        cardElem.textContent = "All cards done!";
+        cardElem.classList.add('hu-fade');
+        nextBtn.style.display = 'none';
+        startBtn.style.display = '';
+        timerElem.textContent = '';
+        huListInfo.textContent = "All cards played!";
+        return;
+      }
+      let idx;
+      do {
+        idx = Math.floor(Math.random()*items.length);
+      } while (used.includes(idx) && used.length < items.length);
+      used.push(idx);
+      currentIdx = idx;
+      cardElem.textContent = items[idx];
+      cardElem.classList.remove('hu-fade');
+      huListInfo.textContent = `${items.length - used.length} cards left`;
+      if (!started) {
+        nextBtn.style.display = 'none';
+        startBtn.style.display = '';
+        timerElem.textContent = '';
+      }
+    }
+
+    startBtn.onclick = function() {
+      startGame();
+    };
+    nextBtn.onclick = function() {
+      if (seconds > 0) showNextCard();
+      else { startBtn.style.display = ''; nextBtn.style.display = 'none'; }
+    };
+  </script>
+</body>
+</html>

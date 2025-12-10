@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Player Dodger</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Apply Inter font and basic styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        canvas {
+            background-color: #3f51b5; /* A pleasant blue for the sky/background */
+            border: 4px solid #6b46c1; /* Purple border */
+            border-radius: 12px;
+            display: block;
+            touch-action: none; /* Disable default touch actions */
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px; /* Max width for larger screens */
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .instructions {
+            background-color: #2d3748; /* Darker grey for instructions */
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .control-key {
+            display: inline-block;
+            background-color: #4a5568;
+            color: #a0aec0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 0 0.2rem;
+            min-width: 2.5em; /* Ensure consistent key size */
+            text-align: center;
+        }
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #2d3748;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .mobile-controls {
+            display: none; /* Hidden by default */
+            margin-top: 1rem;
+            gap: 1rem;
+            width: 100%;
+            justify-content: center;
+        }
+        .mobile-button {
+            background-color: #4a5568;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-grow: 1; /* Allow buttons to grow */
+            text-align: center;
+            user-select: none; /* Prevent text selection on touch */
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease;
+            max-width: 120px; /* Limit button width */
+        }
+        .mobile-button:active {
+            background-color: #6a768c;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .instructions {
+                font-size: 0.9rem;
+            }
+            .mobile-controls {
+                display: flex; /* Show on smaller screens */
+                flex-wrap: wrap; /* Allow buttons to wrap */
+            }
+            .mobile-button {
+                min-width: unset; /* Remove min-width for better wrapping */
+                padding: 0.8rem 1rem;
+                font-size: 1rem;
+            }
+            .mobile-controls > div {
+                flex: 1 1 45%; /* Two columns roughly */
+                display: flex; /* For nested flexbox */
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 text-purple-300">Two-Player Co-op Dodger</h1>
+
+        <div class="instructions text-center mb-4">
+            <p class="text-lg mb-2">Team up and dodge obstacles together!</p>
+            <div class="flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 md:space-x-8">
+                <div class="player-1-controls">
+                    <h3 class="text-xl font-semibold mb-2 text-blue-300">Player 1 (Left Side)</h3>
+                    <p>Move Left: <span class="control-key">A</span></p>
+                    <p>Move Right: <span class="control-key">D</span></p>
+                    <p>Jump: <span class="control-key">W</span></p>
+                </div>
+                <div class="player-2-controls">
+                    <h3 class="text-xl font-semibold mb-2 text-red-300">Player 2 (Right Side)</h3>
+                    <p>Move Left: <span class="control-key">&larr;</span> (Arrow Left)</p>
+                    <p>Move Right: <span class="control-key">&rarr;</span> (Arrow Right)</p>
+                    <p>Jump: <span class="control-key">&uarr;</span> (Arrow Up)</p>
+                </div>
+            </div>
+            <p class="mt-4 text-md text-yellow-200">Avoid the magenta blocks! If either player runs out of health, it's game over for both. Earn points by dodging obstacles!</p>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="mobile-controls hidden md:hidden">
+            <div class="flex flex-col gap-2">
+                <button id="p1-jump" class="mobile-button">P1 Jump</button>
+                <div class="flex gap-2">
+                    <button id="p1-left" class="mobile-button">P1 Left</button>
+                    <button id="p1-right" class="mobile-button">P1 Right</button>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button id="p2-jump" class="mobile-button">P2 Jump</button>
+                <div class="flex gap-2">
+                    <button id="p2-left" class="mobile-button">P2 Left</button>
+                    <button id="p2-right" class="mobile-button">P2 Right</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get the canvas element and its 2D rendering context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game settings
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 400;
+        const GROUND_HEIGHT = 50; // Height of the ground from the bottom
+        const PLAYER_SIZE = 30; // Size of player squares
+        const PLAYER_SPEED = 4; // Horizontal movement speed (Reduced)
+        const JUMP_VELOCITY = -12; // Initial upward velocity for jump
+        const GRAVITY = 0.6; // Gravity pulling players down
+        const OBSTACLE_WIDTH = 30;
+        const OBSTACLE_HEIGHT_MIN = 10; // Minimum height (Reduced)
+        const OBSTACLE_HEIGHT_MAX = 60; // Maximum height (Reduced)
+        const OBSTACLE_SPEED = 3.5; // Speed at which obstacles move left (Reduced)
+        const OBSTACLE_SPAWN_INTERVAL_MIN = 1200; // Minimum time between obstacle spawns (ms)
+        const OBSTACLE_SPAWN_INTERVAL_MAX = 2800; // Maximum time between obstacle spawns (ms)
+        const PLAYER_INITIAL_HEALTH = 5; // Starting health for each player
+        const HIT_COOLDOWN_FRAMES = 60; // Frames of invincibility after being hit (approx 1 second at 60 FPS)
+        const SCORE_PER_OBSTACLE = 100; // Points awarded for each successfully dodged obstacle
+
+        // Game state variables
+        let players = [];
+        let obstacles = [];
+        let score = 0;
+        let isGameOver = false;
+        let lastObstacleSpawnTime = 0;
+        let nextObstacleSpawnDelay = 0;
+        let animationFrameId; // To store the requestAnimationFrame ID for stopping
+
+        // Keyboard input state
+        const keysPressed = {};
+
+        // Mobile touch control flags
+        const mobileControls = {
+            aleft: false,
+            dright: false,
+            wjump: false,
+            left: false,
+            right: false,
+            up: false,
+        };
+
+        // Player constructor function
+        function Player(x, y, color, controls) {
+            this.x = x;
+            this.y = y;
+            this.width = PLAYER_SIZE;
+            this.height = PLAYER_SIZE;
+            this.color = color;
+            this.velocityY = 0;
+            this.isJumping = false;
+            this.controls = controls; // Object mapping action to key codes
+            this.health = PLAYER_INITIAL_HEALTH; // Initial health
+            this.hitCooldown = 0; // Cooldown frames after being hit
+        }
+
+        // Initialize game elements
+        function initGame() {
+            canvas.width = GAME_WIDTH;
+            canvas.height = GAME_HEIGHT;
+
+            // Initialize players
+            players = [
+                new Player(50, GAME_HEIGHT - GROUND_HEIGHT - PLAYER_SIZE, '#81e6d9', { // Player 1 (Teal)
+                    left: 'KeyA',
+                    right: 'KeyD',
+                    jump: 'KeyW'
+                }),
+                new Player(GAME_WIDTH - 50 - PLAYER_SIZE, GAME_HEIGHT - GROUND_HEIGHT - PLAYER_SIZE, '#f56565', { // Player 2 (Red)
+                    left: 'ArrowLeft',
+                    right: 'ArrowRight',
+                    jump: 'ArrowUp'
+                })
+            ];
+
+            obstacles = [];
+            score = 0;
+            isGameOver = false;
+            lastObstacleSpawnTime = performance.now();
+            nextObstacleSpawnDelay = getRandomInt(OBSTACLE_SPAWN_INTERVAL_MIN, OBSTACLE_SPAWN_INTERVAL_MAX);
+
+            // Clear any previous animation frame
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            gameLoop(); // Start the game loop
+        }
+
+        // Generate a random integer within a range
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Check for collision between two rectangles
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+
+        // Game update logic
+        function update(deltaTime) {
+            if (isGameOver) return;
+
+            // No longer updating score based on time
+            // score += deltaTime / 100;
+
+            // Update players
+            players.forEach(player => {
+                // Decrement hit cooldown
+                if (player.hitCooldown > 0) {
+                    player.hitCooldown--;
+                }
+
+                // Apply horizontal movement based on keys pressed or mobile controls
+                const controlMap = {
+                    'KeyA': 'aleft', 'KeyD': 'dright', 'KeyW': 'wjump',
+                    'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'up'
+                };
+
+                const isLeftPressed = keysPressed[player.controls.left] || mobileControls[controlMap[player.controls.left]];
+                const isRightPressed = keysPressed[player.controls.right] || mobileControls[controlMap[player.controls.right]];
+                const isJumpPressed = keysPressed[player.controls.jump] || mobileControls[controlMap[player.controls.jump]];
+
+
+                if (isLeftPressed) {
+                    player.x -= PLAYER_SPEED;
+                }
+                if (isRightPressed) {
+                    player.x += PLAYER_SPEED;
+                }
+
+                // Boundary checks for players
+                if (player.x < 0) player.x = 0;
+                if (player.x + player.width > GAME_WIDTH) player.x = GAME_WIDTH - player.width;
+
+                // Apply gravity
+                player.velocityY += GRAVITY;
+                player.y += player.velocityY;
+
+                // Ground collision
+                const groundY = GAME_HEIGHT - GROUND_HEIGHT - player.height;
+                if (player.y >= groundY) {
+                    player.y = groundY;
+                    player.velocityY = 0;
+                    player.isJumping = false;
+                }
+
+                // Jump logic
+                if (isJumpPressed && !player.isJumping && player.y >= groundY) {
+                    player.velocityY = JUMP_VELOCITY;
+                    player.isJumping = true;
+                }
+            });
+
+            // Update obstacles
+            const currentTime = performance.now();
+            if (currentTime - lastObstacleSpawnTime > nextObstacleSpawnDelay) {
+                const obstacleHeight = getRandomInt(OBSTACLE_HEIGHT_MIN, OBSTACLE_HEIGHT_MAX);
+                obstacles.push({
+                    x: GAME_WIDTH,
+                    y: GAME_HEIGHT - GROUND_HEIGHT - obstacleHeight,
+                    width: OBSTACLE_WIDTH,
+                    height: obstacleHeight,
+                    color: '#ff00ff', // Bright Magenta for obstacles
+                    isHit: false // Flag to track if this obstacle has hit a player
+                });
+                lastObstacleSpawnTime = currentTime;
+                nextObstacleSpawnDelay = getRandomInt(OBSTACLE_SPAWN_INTERVAL_MIN, OBSTACLE_SPAWN_INTERVAL_MAX);
+            }
+
+            obstacles.forEach(obstacle => {
+                obstacle.x -= OBSTACLE_SPEED;
+
+                // Collision detection with players
+                players.forEach(player => {
+                    // Only check for collision if the player is not on cooldown and obstacle hasn't been hit yet
+                    if (checkCollision(player, obstacle) && player.hitCooldown <= 0 && !obstacle.isHit) {
+                        player.health--; // Player loses health
+                        player.hitCooldown = HIT_COOLDOWN_FRAMES; // Set invincibility frames
+                        obstacle.isHit = true; // Mark obstacle as having hit a player
+                        // console.log(`Player ${player.controls.jump === 'KeyW' ? 1 : 2} hit! Health: ${player.health}`); // Debugging
+
+                        if (player.health <= 0) {
+                            isGameOver = true; // Game over if any player runs out of health
+                        }
+                    }
+                });
+            });
+
+            // Filter out obstacles that have gone off-screen
+            obstacles = obstacles.filter(obstacle => {
+                const shouldRemove = obstacle.x + obstacle.width < 0;
+                // If the obstacle is going off-screen AND it hasn't hit any player, reward score
+                if (shouldRemove && !obstacle.isHit) {
+                    score += SCORE_PER_OBSTACLE;
+                }
+                return !shouldRemove; // Keep obstacles that are still on screen
+            });
+        }
+
+        // Game rendering logic
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ground
+            ctx.fillStyle = '#4CAF50'; // Green ground
+            ctx.fillRect(0, GAME_HEIGHT - GROUND_HEIGHT, GAME_WIDTH, GROUND_HEIGHT);
+
+            // Draw players
+            players.forEach(player => {
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+                // Add a simple border for better visibility
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+                // Flash player if on cooldown
+                if (player.hitCooldown > 0 && Math.floor(player.hitCooldown / 5) % 2 === 0) { // Flash every 5 frames
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Semi-transparent red overlay
+                    ctx.fillRect(player.x, player.y, player.width, player.height);
+                }
+            });
+
+            // Draw obstacles
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+
+            // Draw score
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '24px "Inter", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Score: ${Math.floor(score)}`, 10, 30);
+
+            // Draw player health
+            ctx.fillText(`P1 Health: ${players[0].health}`, 10, 60);
+            ctx.fillText(`P2 Health: ${players[1].health}`, 10, 90);
+
+
+            // Draw game over message if applicable
+            if (isGameOver) {
+                drawGameOver();
+            }
+        }
+
+        // Draw game over screen
+        function drawGameOver() {
+            // Dark overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Game Over Text
+            ctx.fillStyle = '#fff';
+            ctx.font = '48px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2 - 30);
+
+            // Final Score
+            ctx.font = '30px "Inter", sans-serif';
+            ctx.fillText(`Final Score: ${Math.floor(score)}`, canvas.width / 2, canvas.height / 2 + 10);
+
+            // Restart instruction
+            ctx.font = '20px "Inter", sans-serif';
+            ctx.fillText('Press R or Tap to Restart', canvas.width / 2, canvas.height / 2 + 60);
+
+            // Show a restart modal (HTML based for better styling)
+            if (!document.getElementById('gameOverModal')) {
+                const modalHtml = `
+                    <div id="gameOverModal" class="game-over-modal">
+                        <div class="modal-content">
+                            <h2 class="text-3xl font-bold text-red-400 mb-4">GAME OVER!</h2>
+                            <p class="text-xl mb-4">Final Score: <span class="font-bold text-yellow-300">${Math.floor(score)}</span></p>
+                            <button id="restartButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transform transition duration-150 hover:scale-105">
+                                Restart Game
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('restartButton').addEventListener('click', () => {
+                    document.getElementById('gameOverModal').remove();
+                    initGame();
+                });
+                // Also handle tapping anywhere on the canvas to restart on mobile
+                canvas.addEventListener('click', handleCanvasClickForRestart, { once: true });
+            }
+        }
+
+        // Helper function for canvas click to restart
+        function handleCanvasClickForRestart() {
+            if (isGameOver && document.getElementById('gameOverModal')) {
+                document.getElementById('gameOverModal').remove();
+                initGame();
+            }
+        }
+
+        // Main game loop
+        let lastTime = 0;
+        function gameLoop(currentTime) {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
+            update(deltaTime);
+            draw();
+
+            if (!isGameOver) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Event listeners for keyboard input
+        document.addEventListener('keydown', (e) => {
+            keysPressed[e.code] = true;
+            // Prevent default action for arrow keys and spacebar to stop scrolling
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+                e.preventDefault();
+            }
+            if (isGameOver && e.code === 'KeyR') {
+                if (document.getElementById('gameOverModal')) {
+                    document.getElementById('gameOverModal').remove();
+                }
+                initGame();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keysPressed[e.code] = false;
+        });
+
+        // Mobile control event listeners
+        const p1LeftBtn = document.getElementById('p1-left');
+        const p1RightBtn = document.getElementById('p1-right');
+        const p1JumpBtn = document.getElementById('p1-jump');
+        const p2LeftBtn = document.getElementById('p2-left');
+        const p2RightBtn = document.getElementById('p2-right');
+        const p2JumpBtn = document.getElementById('p2-jump');
+
+        function setupMobileButton(button, actionKey, isDown = true) {
+            if (button) {
+                const controlMap = {
+                    'p1-left': 'aleft', 'p1-right': 'dright', 'p1-jump': 'wjump',
+                    'p2-left': 'left', 'p2-right': 'right', 'p2-jump': 'up'
+                };
+                const mappedAction = controlMap[button.id];
+
+                button.addEventListener('touchstart', (e) => {
+                    e.preventDefault(); // Prevent scrolling
+                    mobileControls[mappedAction] = isDown;
+                }, { passive: false });
+                button.addEventListener('touchend', () => {
+                    mobileControls[mappedAction] = !isDown;
+                });
+                button.addEventListener('touchcancel', () => { // Handle cases where touch leaves button
+                    mobileControls[mappedAction] = !isDown;
+                });
+            }
+        }
+
+        setupMobileButton(p1LeftBtn, 'KeyA');
+        setupMobileButton(p1RightBtn, 'KeyD');
+        setupMobileButton(p1JumpBtn, 'KeyW');
+        setupMobileButton(p2LeftBtn, 'ArrowLeft');
+        setupMobileButton(p2RightBtn, 'ArrowRight');
+        setupMobileButton(p2JumpBtn, 'ArrowUp');
+
+
+        // Initialize the game when the window loads
+        window.onload = function() {
+            initGame();
+        };
+
+        // Resize canvas on window resize to maintain aspect ratio and fit container
+        window.addEventListener('resize', () => {
+            // For this game, we keep fixed dimensions for simplicity, but a responsive canvas
+            // would adjust its drawing surface based on container size.
+            // Example for responsive canvas if needed:
+            // const container = document.querySelector('.game-container');
+            // const aspectRatio = GAME_WIDTH / GAME_HEIGHT;
+            // let newWidth = container.clientWidth;
+            // let newHeight = newWidth / aspectRatio;
+            // if (newHeight > container.clientHeight) {
+            //     newHeight = container.clientHeight;
+            //     newWidth = newHeight * aspectRatio;
+            // }
+            // canvas.style.width = `${newWidth}px`;
+            // canvas.style.height = `${newHeight}px`;
+            // Redraw if game state doesn't automatically update on resize
+            if (!isGameOver) { // Only redraw if game is active, otherwise game over modal handles it
+                draw();
+            }
+        });
+
+    </script>
+</body>
+</html>
+

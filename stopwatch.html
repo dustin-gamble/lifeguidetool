@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stopwatch</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #f7fafd 0%, #e0eafe 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .stopwatch-container {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px #a2d1fc33;
+      padding: 38px 44px 32px 44px;
+      margin-top: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 430px;
+      width: 96vw;
+    }
+    .spin-anim {
+      margin-bottom: 22px;
+      width: 88px; height: 88px;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.24s;
+      opacity: 1;
+    }
+    .spinning {
+      animation: spin 1.3s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    .spin-bg {
+      stroke: #e0eafe;
+      stroke-width: 8;
+      fill: none;
+    }
+    .spin-fg {
+      stroke: #3ec6e8;
+      stroke-width: 8;
+      fill: none;
+      stroke-linecap: round;
+      stroke-dasharray: 60 90;
+      stroke-dashoffset: 30;
+      filter: drop-shadow(0 2px 7px #a8e3fa55);
+    }
+    .stopwatch-title {
+      font-size: 4em;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #2170c3;
+      margin-bottom: 18px;
+      text-shadow: 0 3px 12px #baeaff33;
+    }
+    .stopwatch-time {
+      font-size: 3.8em;
+      font-family: 'Roboto Mono', 'Menlo', 'Courier New', monospace;
+      color: #115d96;
+      background: #eaf3fc;
+      border-radius: 16px;
+      padding: 16px 34px;
+      letter-spacing: 0.07em;
+      box-shadow: 0 2px 18px #d9e6ef15;
+      margin-bottom: 38px;
+      min-width: 375px;
+      text-align: center;
+      transition: background 0.2s;
+      user-select: none;
+    }
+    .button-row {
+      display: flex;
+      gap: 22px;
+    }
+    .sw-btn {
+      font-size: 1.45em;
+      font-weight: 700;
+      border: none;
+      border-radius: 11px;
+      padding: 16px 38px;
+      margin: 0;
+      cursor: pointer;
+      box-shadow: 0 2px 14px #bfdcff27;
+      transition: background 0.12s, color 0.13s, transform 0.10s;
+      outline: none;
+    }
+    .sw-btn:active {
+      transform: scale(0.98);
+    }
+    .sw-btn.start { background: #6ee7b7; color: #065f46; }
+    .sw-btn.stop  { background: #fb7185; color: #fff; }
+    .sw-btn.reset { background: #e0eafe; color: #374151; }
+    .sw-btn.start:hover { background: #36d399; }
+    .sw-btn.stop:hover  { background: #f43f5e; }
+    .sw-btn.reset:hover { background: #c7d7ee; }
+    @media (max-width: 550px) {
+      .stopwatch-container { padding: 18px 2vw 18px 2vw; }
+      .stopwatch-time { font-size: 2.2em; min-width: 55vw; padding: 11px 3vw;}
+      .spin-anim { width: 45vw; height: 45vw; min-width:54px; min-height:54px; }
+      .button-row { gap: 10px;}
+      .sw-btn { font-size: 1.02em; padding: 11px 16px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="stopwatch-container">
+    <div class="stopwatch-title">⏱ Stopwatch</div>
+    <div class="spin-anim" id="spin-ring">
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle class="spin-bg" cx="44" cy="44" r="36"/>
+        <circle class="spin-fg" cx="44" cy="44" r="36"/>
+      </svg>
+    </div>
+    <div class="stopwatch-time" id="sw-time">0.000</div>
+    <div class="button-row">
+      <button class="sw-btn start" id="sw-start">Start</button>
+      <button class="sw-btn stop"  id="sw-stop">Stop</button>
+      <button class="sw-btn reset" id="sw-reset">Reset</button>
+    </div>
+  </div>
+  <script>
+    let swStart = document.getElementById('sw-start');
+    let swStop = document.getElementById('sw-stop');
+    let swReset = document.getElementById('sw-reset');
+    let swTime = document.getElementById('sw-time');
+    let spinRing = document.getElementById('spin-ring');
+
+    let startTime = null;
+    let elapsed = 0;
+    let running = false;
+    let rafId;
+
+    function updateDisplay(t) {
+      swTime.textContent = t.toFixed(3);
+    }
+    function run() {
+      if (running) {
+        let now = performance.now();
+        let delta = now - startTime;
+        updateDisplay((elapsed + delta) / 1000);
+        rafId = requestAnimationFrame(run);
+      }
+    }
+    swStart.onclick = function() {
+      if (!running) {
+        running = true;
+        startTime = performance.now();
+        spinRing.classList.add('spinning');
+        rafId = requestAnimationFrame(run);
+      }
+    };
+    swStop.onclick = function() {
+      if (running) {
+        running = false;
+        let now = performance.now();
+        elapsed += now - startTime;
+        updateDisplay(elapsed / 1000);
+        spinRing.classList.remove('spinning');
+        cancelAnimationFrame(rafId);
+      }
+    };
+    swReset.onclick = function() {
+      running = false;
+      elapsed = 0;
+      updateDisplay(0);
+      spinRing.classList.remove('spinning');
+      cancelAnimationFrame(rafId);
+    };
+    // On page load, spinner is not spinning
+    spinRing.classList.remove('spinning');
+    // Allow spacebar (start/stop), R (reset)
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        if (running) swStop.onclick();
+        else swStart.onclick();
+        e.preventDefault();
+      }
+      if (e.code === 'KeyR') {
+        swReset.onclick();
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

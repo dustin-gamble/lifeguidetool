@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Automobile Fuel Cost Simulator</title>
+  <script src="https://cdn.plot.ly/plotly-2.31.1.min.js"></script>
+  <style>
+    body { background: #f7fafc; font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:0; }
+    .sim-container { margin: 36px auto; max-width: 750px; background: #fff; border-radius: 15px; box-shadow:0 6px 26px #95d9fa20; padding:28px 26px 24px 26px; display:flex; gap:32px;}
+    .sim-inputs { width: 320px; }
+    .sim-slider-group { margin-bottom:28px;}
+    .sim-slider-label { font-weight:700; font-size:1.06em; margin-bottom:7px; color:#24527a;}
+    .sim-slider-row { display:flex; align-items:center; gap:10px;}
+    .sim-slider { width:65%;}
+    .sim-slider-value { min-width:75px; text-align:right; font-weight:700; color:#19667a;}
+    .sim-example { font-size:0.96em; color:#2a6b3b; margin:4px 0 0 0; opacity:0.82;}
+    @media (max-width:800px){.sim-container{flex-direction:column;align-items:stretch;}.sim-inputs{width:100%;}}
+    .sim-assume {font-size:0.97em;color:#466a7e;opacity:0.8;margin-top:16px;}
+    h1 {text-align:center;margin-bottom:20px;font-size:2em;color:#17658d;}
+  </style>
+</head>
+<body>
+  <h1>⛽ Automobile Fuel Cost Simulator</h1>
+  <div class="sim-container">
+    <div class="sim-inputs">
+      <div class="sim-slider-group">
+        <div class="sim-slider-label">🚗 Vehicle Fuel Usage</div>
+        <div class="sim-slider-row">
+          <input id="fuelUse" type="range" min="1" max="10" value="4" class="sim-slider">
+          <div class="sim-slider-value" id="fuelUseVal">4</div>
+        </div>
+        <div class="sim-example" id="mpgExample"></div>
+      </div>
+      <div class="sim-slider-group">
+        <div class="sim-slider-label">🛢️ Fuel Cost (per gallon)</div>
+        <div class="sim-slider-row">
+          <input id="fuelCost" type="range" min="2.5" max="8" step="0.05" value="4.5" class="sim-slider">
+          <div class="sim-slider-value" id="fuelCostVal">$4.50</div>
+        </div>
+        <div class="sim-example" id="costExample"></div>
+      </div>
+      <div class="sim-slider-group">
+        <div class="sim-slider-label">🛣️ Daily Miles Driven</div>
+        <div class="sim-slider-row">
+          <input id="dailyMiles" type="range" min="1" max="150" value="25" class="sim-slider">
+          <div class="sim-slider-value" id="dailyMilesVal">25 mi</div>
+        </div>
+        <div class="sim-example" id="milesExample"></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:230px;">
+      <div id="plot" style="width:100%;height:320px;"></div>
+      <div class="sim-assume" id="sim-assume"></div>
+    </div>
+  </div>
+  <script>
+    // MPG values and examples (indexed 1–10)
+    const mpgTable = [
+      {mpg:12, ex:"Large Pickup/SUV (e.g., Ford F-250, 12 MPG)"},
+      {mpg:16, ex:"Old SUV (e.g., Jeep Grand Cherokee, 16 MPG)"},
+      {mpg:20, ex:"Mid SUV, Minivan (e.g., Honda Odyssey, 20 MPG)"},
+      {mpg:24, ex:"Sedan, Small SUV (e.g., Toyota Camry, 24 MPG)"},
+      {mpg:28, ex:"Modern Sedan (e.g., Honda Accord, 28 MPG)"},
+      {mpg:32, ex:"Compact Car (e.g., Honda Civic, 32 MPG)"},
+      {mpg:38, ex:"Hybrid Sedan (e.g., Toyota Prius, 38 MPG)"},
+      {mpg:45, ex:"Efficient Hybrid (e.g., Hyundai Ioniq, 45 MPG)"},
+      {mpg:55, ex:"Plug-in Hybrid (e.g., Prius Prime, 55 MPG)"},
+      {mpg:120, ex:"Electric (MPGe, e.g., Tesla Model 3, 120 MPGe)"}
+    ];
+    const costExamples = [
+      {cost:2.5, ex:"Mississippi, Texas"},
+      {cost:3.0, ex:"Florida, Ohio"},
+      {cost:3.6, ex:"Oklahoma, Colorado"},
+      {cost:4.5, ex:"California, Hawaii"},
+      {cost:6.0, ex:"UK, Germany, Norway (converted to USD)"},
+      {cost:8.0, ex:"Iceland, Monaco, Switzerland"}
+    ];
+    const milesExamples = [
+      {mi:1, ex:"Short neighborhood trips"},
+      {mi:5, ex:"Average city commute"},
+      {mi:25, ex:"Suburban to city commute"},
+      {mi:60, ex:"Regional travel, daily sales route"},
+      {mi:120, ex:"Cross-county delivery, road tripper"}
+    ];
+    // DOM
+    const fuelUse = document.getElementById('fuelUse');
+    const fuelUseVal = document.getElementById('fuelUseVal');
+    const mpgExample = document.getElementById('mpgExample');
+    const fuelCost = document.getElementById('fuelCost');
+    const fuelCostVal = document.getElementById('fuelCostVal');
+    const costExample = document.getElementById('costExample');
+    const dailyMiles = document.getElementById('dailyMiles');
+    const dailyMilesVal = document.getElementById('dailyMilesVal');
+    const milesExample = document.getElementById('milesExample');
+    function findClosest(table, val, field) {
+      let idx = 0, minDiff = Math.abs(table[0][field] - val);
+      for(let i=1;i<table.length;i++) {
+        let d = Math.abs(table[i][field]-val);
+        if(d<minDiff) { idx=i; minDiff=d;}
+      }
+      return table[idx].ex;
+    }
+    function update() {
+      const idx = fuelUse.value-1;
+      const mpg = mpgTable[idx].mpg;
+      fuelUseVal.textContent = fuelUse.value;
+      mpgExample.textContent = `Est. ${mpg} MPG — ${mpgTable[idx].ex}`;
+      // Fuel cost
+      fuelCostVal.textContent = `$${(+fuelCost.value).toFixed(2)}`;
+      costExample.textContent = findClosest(costExamples, +fuelCost.value, "cost");
+      // Daily miles
+      dailyMilesVal.textContent = `${dailyMiles.value} mi`;
+      milesExample.textContent = findClosest(milesExamples, +dailyMiles.value, "mi");
+      // Plot
+      const years = 10, x=[], y=[];
+      for(let yr=1;yr<=years;yr++) {
+        let annualMiles = +dailyMiles.value*365;
+        let galUsed = mpg>=99 ? (annualMiles/33) : (annualMiles/mpg); // For EVs, use 33 MPGe as gal equiv
+        let cost = galUsed * +fuelCost.value * yr;
+        y.push(cost);
+        x.push(yr);
+      }
+      Plotly.newPlot('plot', [{
+        x:x, y:y, type:'scatter', mode:'lines+markers', name:'Fuel Cost', line:{width:3}
+      }], {
+        margin:{t:22,l:52,r:18,b:44},
+        xaxis:{title:"Years",tickvals:[1,2,3,4,5,6,7,8,9,10]},
+        yaxis:{title:"Cumulative Fuel Cost ($)"},
+        plot_bgcolor:'#eaf3fd',
+        paper_bgcolor:'#fff'
+      }, {displayModeBar:false, responsive:true});
+      document.getElementById('sim-assume').innerHTML =
+        "Assumptions: Fuel use is based on EPA city/highway averages. Electric vehicles use 33 kWh = 1 gallon gasoline equivalent (MPGe). For rough comparison only.";
+    }
+    fuelUse.oninput=update;
+    fuelCost.oninput=update;
+    dailyMiles.oninput=update;
+    update();
+  </script>
+</body>
+</html>

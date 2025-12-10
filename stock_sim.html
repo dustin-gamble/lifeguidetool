@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What-If Stock Investment Tool</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    height: 100vh;
+    background-color: #f0f2f5;
+  }
+  .sidebar {
+    width: 30%;
+    padding: 20px;
+    background: #ffffff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    overflow-y: auto;
+    border-right: 1px solid #ddd;
+  }
+  .main {
+    width: 70%;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
+  }
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .stock-select {
+    margin-bottom: 10px;
+    padding: 8px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  input[type=range] {
+    width: 100%;
+    margin: 5px 0;
+  }
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #555;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 15px 0;
+  }
+</style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Select Stocks & Investments</h2>
+    <div id="inputs"></div>
+  </div>
+  <div class="main">
+    <div id="chart" style="width: 100%; height: 100%;"></div>
+  </div>
+  
+  
+
+  <script>
+    const stockDataUrl = "stock_data.csv"; // Adjust if hosted elsewhere
+    const maxStocks = 4;
+    const maxInvestment = 100000;
+    let allData = {};
+    let dates = [];
+
+    function createInputs(tickers) {
+      const container = document.getElementById("inputs");
+      for (let i = 0; i < maxStocks; i++) {
+        const select = document.createElement("select");
+        select.id = `stock${i}`;
+        select.className = 'stock-select';
+        tickers.forEach(ticker => {
+          const option = document.createElement("option");
+          option.value = ticker;
+          option.textContent = ticker;
+          select.appendChild(option);
+        });
+        const label = document.createElement("label");
+        label.textContent = `Investment $ for Stock ${i + 1}`;
+        const slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = 0;
+        slider.max = maxInvestment;
+        slider.step = 500;
+        slider.value = 0;
+        slider.id = `slider${i}`;
+
+        const valueLabel = document.createElement("span");
+        valueLabel.id = `val${i}`;
+        valueLabel.textContent = " $0";
+
+        slider.oninput = () => {
+          valueLabel.textContent = ` $${slider.value}`;
+          updateChart();
+        };
+
+        select.onchange = updateChart;
+
+        container.appendChild(select);
+        container.appendChild(document.createElement("br"));
+        container.appendChild(label);
+        container.appendChild(slider);
+        container.appendChild(valueLabel);
+        container.appendChild(document.createElement("hr"));
+      }
+    }
+
+    function updateChart() {
+      const traces = [];
+      for (let i = 0; i < maxStocks; i++) {
+        const ticker = document.getElementById(`stock${i}`).value;
+        const investment = parseFloat(document.getElementById(`slider${i}`).value);
+        const prices = allData[ticker];
+        const firstValid = prices.find(p => !isNaN(p));
+        if (!firstValid) {
+          console.warn(`Skipping ${ticker} — no valid prices`, prices);
+          continue;
+        }
+        console.log("ticker", ticker);
+        console.log("first valid price", firstValid);
+        console.log("all prices", prices);
+        const shares = investment / firstValid;
+        const values = prices.map(p => (isNaN(p) ? 0 : p * shares));
+        traces.push({
+          x: dates,
+          y: values,
+          mode: 'lines',
+          name: `${ticker} ($${investment})`
+        });
+      }
+      Plotly.newPlot("chart", traces, {
+        title: "Portfolio Value Over Time",
+        xaxis: { title: "Date" },
+        yaxis: { title: "Value in $" },
+      });
+    }
+
+    fetch(stockDataUrl)
+      .then(response => response.text())
+      .then(csv => {
+        const lines = csv.trim().split("\n");
+        const headers = lines.slice(0, 2).map(row => row.split(","));
+        const typeHeader = headers[0];
+        const tickerHeader = headers[1];
+
+        let seen = {};
+        const tickerHeaderMap = {};
+        tickerHeader.forEach((ticker, i) => {
+          if (
+            ticker && ticker !== "Date" && ticker !== "Price" &&
+            !seen[ticker] && typeHeader[i] === "Close"
+          ) {
+            tickerHeaderMap[i] = ticker;
+            seen[ticker] = true;
+          }
+        });
+
+        const tickers = [...new Set(Object.values(tickerHeaderMap))];
+        const parsed = {};
+        dates = [];
+
+        tickers.forEach(t => parsed[t] = []);
+
+        for (let i = 2; i < lines.length; i++) {
+          const cells = lines[i].split(",");
+          const date = cells[0];
+          dates.push(date);
+          Object.entries(tickerHeaderMap).forEach(([colIndex, ticker]) => {
+            const val = parseFloat(cells[colIndex]);
+            parsed[ticker].push(val);
+          });
+        }
+
+        allData = parsed;
+        createInputs(tickers);
+        updateChart();
+      });
+  </script>
+</body>
+</html>

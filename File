@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Weight Wellness Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f6f9; color: #1a1a1a; }
+    .container { display: flex; max-width: 950px; margin: 40px auto; gap: 32px; }
+    .inputs { flex: 1; background: #fff; padding: 32px 24px; border-radius: 18px; box-shadow: 0 6px 24px #0001; }
+    .inputs h2 { margin-top: 0; }
+    .meal-section { margin-bottom: 24px; }
+    .examples { font-size: 0.93em; color: #4b5671; margin-top: 4px; }
+    .slider-label { display: flex; justify-content: space-between; }
+    .outputs { flex: 2; background: #fff; padding: 32px 24px; border-radius: 18px; box-shadow: 0 6px 24px #0001; }
+    canvas { width: 100% !important; height: 370px !important; }
+    .ex-slider { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="inputs">
+      <h2>Personal Wellness Tracker</h2>
+      <div>
+        <label class="slider-label">
+          <span>Starting Weight</span>
+          <span id="startWeightVal">180</span> lb
+        </label>
+        <input id="startWeight" type="range" min="100" max="300" value="180" step="1">
+      </div>
+      <hr>
+      <div class="meal-section">
+        <strong>Breakfast</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="breakfastCalVal">400</span>
+        </label>
+        <input id="breakfastCal" type="range" min="0" max="1000" value="400" step="10">
+        <div class="examples" id="breakfastExamples"></div>
+      </div>
+      <div class="meal-section">
+        <strong>Lunch</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="lunchCalVal">600</span>
+        </label>
+        <input id="lunchCal" type="range" min="0" max="1000" value="600" step="10">
+        <div class="examples" id="lunchExamples"></div>
+      </div>
+      <div class="meal-section">
+        <strong>Dinner</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="dinnerCalVal">800</span>
+        </label>
+        <input id="dinnerCal" type="range" min="0" max="1000" value="800" step="10">
+        <div class="examples" id="dinnerExamples"></div>
+      </div>
+      <hr>
+      <div>
+        <label class="slider-label">
+          <span>Exercise (minutes per week)</span>
+          <span id="exerciseVal">120</span> min
+        </label>
+        <input id="exercise" type="range" min="0" max="600" value="120" step="10" class="ex-slider">
+      </div>
+    </div>
+    <div class="outputs">
+      <h2>Projected Weight Over Time</h2>
+      <canvas id="weightChart"></canvas>
+    </div>
+  </div>
+  <script>
+    // Food calorie examples by ranges
+    function getMealExamples(cal) {
+      if (cal < 100) return "Black coffee, apple, plain toast";
+      if (cal < 250) return "Small yogurt, banana, hard-boiled egg";
+      if (cal < 400) return "Bagel w/cream cheese, bowl of cereal, avocado toast";
+      if (cal < 600) return "Breakfast burrito, pancakes w/syrup, smoothie";
+      if (cal < 800) return "2 eggs+bacon+toast, big bowl granola, sandwich";
+      return "Big omelette+toast, full English breakfast, stack of pancakes";
+    }
+
+    function getLunchExamples(cal) {
+      if (cal < 150) return "Side salad, small soup, protein bar";
+      if (cal < 300) return "Turkey wrap, small sandwich, sushi roll";
+      if (cal < 500) return "Chicken salad, burrito bowl, grilled cheese";
+      if (cal < 700) return "Burger, pizza slice, large salad w/chicken";
+      if (cal < 900) return "Double burger, burrito+chips, large bowl pasta";
+      return "Full meal combo (burger/fries/drink), 2 burritos, big rice bowl";
+    }
+
+    function getDinnerExamples(cal) {
+      if (cal < 200) return "Soup, salad, veggie bowl";
+      if (cal < 400) return "Stir fry, small pasta, baked potato";
+      if (cal < 600) return "Chicken breast+rice, steak+veg, salmon bowl";
+      if (cal < 800) return "Lasagna, large tacos, big sandwich";
+      if (cal < 950) return "Steak dinner, pizza, Chinese takeout";
+      return "Big pasta + dessert, large steak dinner, multi-course meal";
+    }
+
+    // Inputs
+    const startWeight = document.getElementById('startWeight');
+    const breakfastCal = document.getElementById('breakfastCal');
+    const lunchCal = document.getElementById('lunchCal');
+    const dinnerCal = document.getElementById('dinnerCal');
+    const exercise = document.getElementById('exercise');
+
+    // Value displays
+    const startWeightVal = document.getElementById('startWeightVal');
+    const breakfastCalVal = document.getElementById('breakfastCalVal');
+    const lunchCalVal = document.getElementById('lunchCalVal');
+    const dinnerCalVal = document.getElementById('dinnerCalVal');
+    const exerciseVal = document.getElementById('exerciseVal');
+
+    // Example displays
+    const breakfastExamples = document.getElementById('breakfastExamples');
+    const lunchExamples = document.getElementById('lunchExamples');
+    const dinnerExamples = document.getElementById('dinnerExamples');
+
+    // Chart
+    let chart;
+    function updateChart() {
+      // Calories per day
+      const b = Number(breakfastCal.value);
+      const l = Number(lunchCal.value);
+      const d = Number(dinnerCal.value);
+      const daily = b + l + d;
+      // Exercise calorie burn (estimate: 5 kcal/min moderate, 9 kcal/min intense; use 7 as average)
+      const exMin = Number(exercise.value);
+      const weeklyBurn = exMin * 7;
+      const dailyBurn = weeklyBurn / 7;
+
+      // Maintenance cals/day = 13 x weight in lbs (simple)
+      let weight = Number(startWeight.value);
+      let weightArr = [weight];
+      let weeks = [];
+      for (let w = 0; w <= 52; w++) {
+        weeks.push(w);
+        // Basal metabolic rate (BMR) approx
+        let maint = weight * 13;
+        let net = daily - dailyBurn - maint;
+        // 3500 kcal ≈ 1 lb; so weekly weight change = (7*net)/3500
+        weight += (7 * net) / 3500;
+        weightArr.push(weight < 80 ? 80 : weight);
+      }
+      chart.data.labels = weeks;
+      chart.data.datasets[0].data = weightArr.slice(0, weeks.length);
+      chart.update();
+    }
+
+    function updateAllDisplays() {
+      startWeightVal.textContent = startWeight.value;
+      breakfastCalVal.textContent = breakfastCal.value;
+      lunchCalVal.textContent = lunchCal.value;
+      dinnerCalVal.textContent = dinnerCal.value;
+      exerciseVal.textContent = exercise.value;
+
+      breakfastExamples.textContent = getMealExamples(Number(breakfastCal.value));
+      lunchExamples.textContent = getLunchExamples(Number(lunchCal.value));
+      dinnerExamples.textContent = getDinnerExamples(Number(dinnerCal.value));
+
+      updateChart();
+    }
+
+    [startWeight, breakfastCal, lunchCal, dinnerCal, exercise].forEach(el =>
+      el.addEventListener('input', updateAllDisplays)
+    );
+
+    // Init Chart.js
+    chart = new Chart(document.getElementById('weightChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: Array.from({length: 53}, (_, i) => i),
+        datasets: [{
+          label: 'Weight (lb)',
+          data: Array(53).fill(Number(startWeight.value)),
+          borderWidth: 3,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.18
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Weeks' }, grid: { color: "#eee" }},
+          y: { title: { display: true, text: 'Weight (lb)' }, min: 80, max: 320, grid: { color: "#eee" } }
+        }
+      }
+    });
+
+    // Initial display
+    updateAllDisplays();
+  </script>
+</body>
+</html>

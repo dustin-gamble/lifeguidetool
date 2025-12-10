@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Income & Wealth Builder</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      background: #0a1a2f;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      max-width: 1230px;
+      margin: 2em auto;
+      gap: 2em;
+      align-items: flex-start;
+    }
+    .sidebar {
+      background: #122b45;
+      border-radius: 1.5em;
+      padding: 2em 1.5em;
+      min-width: 370px;
+      max-width: 420px;
+      box-shadow: 0 2px 12px #0004;
+    }
+    .sidebar label {
+      display: block;
+      margin-bottom: 0.2em;
+      font-weight: bold;
+    }
+    .slider-row {
+      margin-bottom: 1.2em;
+    }
+    .slider-value {
+      float: right;
+      font-weight: bold;
+      color: #65d6ff;
+    }
+    .monthly-net {
+      background: #15345d;
+      margin: 1em 0 2em 0;
+      padding: 1em;
+      border-radius: 1em;
+      color: #cff;
+      font-size: 1.15em;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 2px 12px #0002;
+    }
+    .plot-area {
+      flex: 1;
+      min-width: 520px;
+      background: #1a2a3f;
+      border-radius: 2em;
+      padding: 1.5em;
+      box-shadow: 0 2px 16px #0003;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 1em;
+    }
+    .desc {
+      margin: 2em auto 0;
+      max-width: 840px;
+      color: #bbb;
+      font-size: 1.01em;
+    }
+    .copyright {
+      margin-top: 3em;
+      text-align: center;
+      color: #567;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+  <h1>💼 Personal Income & Wealth Builder</h1>
+  <div class="container">
+    <div class="sidebar">
+      <div class="slider-row">
+        <label for="startYear">Start Year <span class="slider-value" id="startYearVal">2024</span></label>
+        <input type="range" min="2000" max="2040" value="2024" id="startYear" />
+      </div>
+      <div class="slider-row">
+        <label for="workYears">Working Years <span class="slider-value" id="workYearsVal">35</span></label>
+        <input type="range" min="0" max="50" value="35" step="1" id="workYears" />
+      </div>
+      <div class="slider-row">
+        <label for="homePurchaseYear">Home Purchase Year <span class="slider-value" id="homePurchaseYearVal">2024</span></label>
+        <input type="range" min="2000" max="2060" value="2024" id="homePurchaseYear" />
+      </div>
+      <div class="slider-row">
+        <label for="startNetWorth">Starting Net Worth <span class="slider-value" id="startNetWorthVal">$0</span></label>
+        <input type="range" min="-150000" max="150000" value="0" step="1000" id="startNetWorth" />
+      </div>
+      <div class="slider-row">
+        <label for="homeValue">Home Value at Purchase <span class="slider-value" id="homeValueVal">$600,000</span></label>
+        <input type="range" min="100000" max="3000000" value="600000" step="10000" id="homeValue" />
+      </div>
+      <div class="slider-row">
+        <label for="mortgagePayment">Mortgage Payment <span class="slider-value" id="mortgagePaymentVal">$3,000</span></label>
+        <input type="range" min="500" max="10000" value="3000" step="50" id="mortgagePayment" />
+      </div>
+      <div class="slider-row">
+        <label for="carPayment">Car Payment <span class="slider-value" id="carPaymentVal">$600</span></label>
+        <input type="range" min="200" max="2000" value="600" step="10" id="carPayment" />
+      </div>
+      <div class="slider-row">
+        <label for="overheadPayment">Overhead per Month <span class="slider-value" id="overheadPaymentVal">$2,000</span></label>
+        <input type="range" min="500" max="10000" value="2000" step="50" id="overheadPayment" />
+      </div>
+      <div class="slider-row">
+        <label for="k401">401k Contribution (% of income) <span class="slider-value" id="k401Val">8%</span></label>
+        <input type="range" min="0" max="30" value="8" step="1" id="k401" />
+      </div>
+      <div class="slider-row">
+        <label for="taxRate">Effective Tax Rate <span class="slider-value" id="taxRateVal">25%</span></label>
+        <input type="range" min="0" max="50" value="25" step="1" id="taxRate" />
+      </div>
+      <div class="slider-row">
+        <label for="ssBenefit">Social Security / mo <span class="slider-value" id="ssBenefitVal">$2,000</span></label>
+        <input type="range" min="0" max="4000" value="2000" step="100" id="ssBenefit" />
+      </div>
+      <div class="monthly-net">
+        Net Monthly Cash Flow: <span id="monthlyNetFlow">$0</span>
+      </div>
+    </div>
+    <div class="plot-area">
+      <div id="plot" style="height: 540px; width: 100%"></div>
+    </div>
+  </div>
+  <div class="desc">
+    <b>Features:</b>
+    <ul>
+      <li>Taxes subtracted from earned/retirement income before savings/expenses.</li>
+      <li>Social Security begins at retirement (or set to $0).</li>
+      <li>When working years end, income drops to 80% of final working salary + Social Security; this is drawn from 401k first.</li>
+      <li>Home equity only accrues after home purchase year.</li>
+      <li>Net worth, 401k, and home value all continue after retirement. If 401k runs out in retirement, withdrawals come from net worth.</li>
+      <li>Shaded region indicates working years.</li>
+    </ul>
+    <b>Assumptions:</b>
+    <ul>
+      <li>Engineer salary curve, Lockheed-style raises/promotions.</li>
+      <li>Home value grows 5%/yr (CA avg), 401k grows 7%/yr.</li>
+      <li>No inflation for simplicity; all values in today's dollars.</li>
+    </ul>
+  </div>
+  <div class="copyright">
+    © Lockheed Martin, Developed by Dustin Gamble & ChatGPT.
+  </div>
+  <script>
+    // Sliders
+    const startYear = document.getElementById('startYear');
+    const workYears = document.getElementById('workYears');
+    const homePurchaseYear = document.getElementById('homePurchaseYear');
+    const startNetWorth = document.getElementById('startNetWorth');
+    const homeValue = document.getElementById('homeValue');
+    const mortgagePayment = document.getElementById('mortgagePayment');
+    const carPayment = document.getElementById('carPayment');
+    const overheadPayment = document.getElementById('overheadPayment');
+    const k401 = document.getElementById('k401');
+    const taxRate = document.getElementById('taxRate');
+    const ssBenefit = document.getElementById('ssBenefit');
+    // Value displays
+    const startYearVal = document.getElementById('startYearVal');
+    const workYearsVal = document.getElementById('workYearsVal');
+    const homePurchaseYearVal = document.getElementById('homePurchaseYearVal');
+    const startNetWorthVal = document.getElementById('startNetWorthVal');
+    const homeValueVal = document.getElementById('homeValueVal');
+    const mortgagePaymentVal = document.getElementById('mortgagePaymentVal');
+    const carPaymentVal = document.getElementById('carPaymentVal');
+    const overheadPaymentVal = document.getElementById('overheadPaymentVal');
+    const k401Val = document.getElementById('k401Val');
+    const taxRateVal = document.getElementById('taxRateVal');
+    const ssBenefitVal = document.getElementById('ssBenefitVal');
+    const monthlyNetFlow = document.getElementById('monthlyNetFlow');
+
+    // Format currency
+    function fmt(val) {
+      const abs = Math.abs(val);
+      if (abs >= 1e6) return '$' + (val/1e6).toFixed(2) + 'M';
+      if (abs >= 1e3) return '$' + (val/1e3).toFixed(1) + 'k';
+      return '$' + val.toLocaleString();
+    }
+
+    // Update slider labels
+    function updateLabels(salary0, mPay, cPay, oPay, k401v, tax, ss) {
+      startYearVal.textContent = startYear.value;
+      workYearsVal.textContent = workYears.value;
+      homePurchaseYearVal.textContent = homePurchaseYear.value;
+      let snw = parseInt(startNetWorth.value);
+      startNetWorthVal.textContent = fmt(snw);
+      homeValueVal.textContent = fmt(parseInt(homeValue.value));
+      mortgagePaymentVal.textContent = fmt(parseInt(mortgagePayment.value));
+      carPaymentVal.textContent = fmt(parseInt(carPayment.value));
+      overheadPaymentVal.textContent = fmt(parseInt(overheadPayment.value));
+      k401Val.textContent = k401.value + "%";
+      taxRateVal.textContent = taxRate.value + "%";
+      ssBenefitVal.textContent = fmt(parseInt(ssBenefit.value));
+      // Net monthly (first year, working)
+      if (salary0 !== undefined) {
+        let taxableIncome = salary0;
+        let taxes = taxableIncome * tax / 100;
+        let net = (taxableIncome - taxes) / 12
+          - mPay - cPay - oPay - (taxableIncome * k401v / 100) / 12;
+        monthlyNetFlow.textContent = fmt(Math.round(net));
+      }
+    }
+
+    // Salary function: Lockheed Martin engineer, levels and raises
+    function salaryCurve(years) {
+      let base = 85000;
+      let y = [];
+      for (let i = 0; i < years; ++i) {
+        let salary;
+        if (i < 10) salary = base * Math.pow(1.05, i);
+        else salary = base * Math.pow(1.05, 10) * Math.pow(1.03, i-10);
+        // Promotion bumps every 7 years (+$20k)
+        if (i >= 7) salary += 20000 * Math.floor((i-7)/7 + 1);
+        y.push(salary);
+      }
+      return y;
+    }
+
+    // Run simulation and plot
+    function runSim() {
+      let sYear = parseInt(startYear.value);
+      let wYears = parseInt(workYears.value);
+      let homeY = parseInt(homePurchaseYear.value);
+      let snw = parseInt(startNetWorth.value);
+      let hVal = parseInt(homeValue.value);
+      let mPay = parseInt(mortgagePayment.value);
+      let cPay = parseInt(carPayment.value);
+      let oPay = parseInt(overheadPayment.value);
+      let k401v = parseInt(k401.value);
+      let tax = parseInt(taxRate.value);
+      let ss = parseInt(ssBenefit.value);
+      let years = 60; // timeline
+      let tYears = [];
+      let salary = [];
+      let salaryBase = salaryCurve(years);
+
+      // Salary stops after working years, replaced with retirement
+      let retirementYear = sYear + wYears;
+      let finalSalary = salaryBase[wYears-1] || 0;
+      let retirementIncome = finalSalary * 0.8; // 80% of last salary
+
+      for (let i = 0; i < years; ++i) {
+        let currYear = sYear + i;
+        tYears.push(currYear);
+        if (i < wYears) {
+          salary.push(salaryBase[i]);
+        } else {
+          // Retirement: salary = 80% last working salary
+          salary.push(0);
+        }
+      }
+
+      // Wealth tracking arrays
+      let netWorth = [snw];
+      let house = [0];
+      let k401_balance = [0];
+      let k401_bal = 0;
+      let home = 0;
+      let homeYears = tYears.map(y => y >= homeY);
+      // Home value and equity only start accruing after purchase year
+      for (let i = 0; i < years; ++i) {
+        if (tYears[i] < homeY) {
+          house.push(0);
+        } else if (tYears[i] === homeY) {
+          home = hVal;
+          house.push(home);
+        } else {
+          home = home * 1.05;
+          house.push(home);
+        }
+      }
+      house = house.slice(1); // trim leading dummy
+
+      let monthlySS = ss;
+      let k401s = [];
+      let netWorths = [];
+      let homes = [];
+      let retirementTraceY = [];
+      let incomeShow = []; // for showing retirement income on plot
+      let k401Show = [];
+      let homeShow = [];
+
+      // Simulate each year
+      let currNetWorth = snw;
+      let currK401 = 0;
+      for (let i = 0; i < years; ++i) {
+        let isWorking = i < wYears;
+        let currSalary = isWorking ? salaryBase[i] : 0;
+        let currHome = house[i];
+        // 401k contribution only when working
+        let contrib = isWorking ? currSalary * k401v / 100 : 0;
+        // Retirement: draw from 401k as needed
+        let taxableIncome, totalIncome, incomeToSpend;
+        if (isWorking) {
+          taxableIncome = currSalary;
+          let taxes = taxableIncome * tax / 100;
+          let takeHome = taxableIncome - taxes - contrib;
+          // Net income for spending: takeHome / 12 months, minus fixed costs
+          incomeToSpend = takeHome / 12 - mPay - cPay - oPay;
+          // Annual surplus/deficit (for net worth): takeHome - annual fixed costs
+          let netAnnual = takeHome - (mPay + cPay + oPay) * 12;
+          currK401 = (currK401 + contrib) * 1.07; // 401k grows
+          currNetWorth += netAnnual + (currHome - (i > 0 ? house[i-1] : 0));
+          retirementTraceY.push(null); // only plot after work ends
+          incomeShow.push(currSalary - taxes);
+        } else {
+          // RETIREMENT
+          // Retirement income = 80% of final working salary + Social Security
+          let baseRet = retirementIncome;
+          let totalRet = baseRet + monthlySS * 12;
+          let taxes = totalRet * tax / 100;
+          let postTaxRet = totalRet - taxes;
+          // Withdraw from 401k first
+          let withdraw401k = Math.min(currK401, postTaxRet);
+          currK401 -= withdraw401k;
+          let withdrawOther = postTaxRet - withdraw401k;
+          // Net income for spending: postTaxRet / 12 - fixed monthly costs
+          let netAnnual = postTaxRet - (mPay + cPay + oPay) * 12;
+          currNetWorth += netAnnual + (currHome - (i > 0 ? house[i-1] : 0));
+          if (currK401 < 0) currK401 = 0; // don't go negative
+          retirementTraceY.push(postTaxRet);
+          incomeShow.push(postTaxRet);
+        }
+        k401s.push(currK401);
+        netWorths.push(currNetWorth);
+        homes.push(currHome);
+        k401Show.push(currK401);
+        homeShow.push(currHome);
+      }
+
+      // Update labels, show net monthly for first year (working)
+      updateLabels(salaryBase[0], mPay, cPay, oPay, k401v, tax, ss);
+      
+      // Plot: add shaded region for working years
+      let shapes = [];
+      if (wYears > 0) {
+        shapes.push({
+          type: 'rect',
+          xref: 'x',
+          yref: 'paper',
+          x0: sYear,
+          x1: sYear + wYears,
+          y0: 0,
+          y1: 1,
+          fillcolor: '#00f2ff30',
+          opacity: 0.20,
+          layer: 'below',
+          line: { width: 0 }
+        });
+      }
+      // Add homeownership shading
+      if (homeY > sYear) {
+        shapes.push({
+          type: 'rect',
+          xref: 'x',
+          yref: 'paper',
+          x0: homeY,
+          x1: tYears[tYears.length-1],
+          y0: 0,
+          y1: 0.08,
+          fillcolor: '#f9d97699',
+          opacity: 0.3,
+          layer: 'below',
+          line: { width: 0 }
+        });
+      }
+
+      // Plot Traces
+      let salaryTrace = {
+        x: tYears,
+        y: salary,
+        yaxis: 'y1',
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Salary (pre-tax)',
+        line: { dash: 'solid', width: 2, color: '#23b6ea' }
+      };
+      let netWorthTrace = {
+        x: tYears,
+        y: netWorths,
+        yaxis: 'y2',
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Net Wealth',
+        line: { width: 4, color: '#98f57a' }
+      };
+      let homeTrace = {
+        x: tYears,
+        y: homeShow,
+        yaxis: 'y2',
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Home Value',
+        line: { width: 2, dash: 'dot', color: '#ffa726' }
+      };
+      let k401Trace = {
+        x: tYears,
+        y: k401Show,
+        yaxis: 'y2',
+        type: 'scatter',
+        mode: 'lines',
+        name: '401k Balance',
+        line: { width: 2, dash: 'dash', color: '#65d6ff' }
+      };
+      let retirementIncomeTrace = {
+        x: tYears,
+        y: retirementTraceY,
+        yaxis: 'y1',
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Retirement Income (post-tax, SS)',
+        line: { width: 2, dash: 'solid', color: '#e673ff' }
+      };
+
+      Plotly.newPlot('plot',
+        [salaryTrace, retirementIncomeTrace, netWorthTrace, homeTrace, k401Trace],
+        {
+          title: 'Career & Retirement: Income, Wealth, Home, 401k, Social Security',
+          xaxis: { title: 'Year', showgrid: false },
+          yaxis: { title: 'Annual Income', showgrid: false, tickprefix: '$' },
+          yaxis2: {
+            title: 'Net Wealth / Home / 401k',
+            overlaying: 'y',
+            side: 'right',
+            tickprefix: '$'
+          },
+          legend: { x: 0.01, y: 1 },
+          plot_bgcolor: '#1a2a3f',
+          paper_bgcolor: '#1a2a3f',
+          font: { color: '#eee' },
+          shapes: shapes,
+          annotations: [
+            wYears > 0
+              ? {
+                  x: sYear + wYears / 2,
+                  y: 1.1,
+                  xref: 'x',
+                  yref: 'paper',
+                  text: 'Working Years',
+                  showarrow: false,
+                  font: { size: 13, color: '#4df' },
+                  bgcolor: '#00f2ff20',
+                  borderpad: 4
+                }
+              : null,
+            homeY > sYear
+              ? {
+                  x: homeY + (tYears[tYears.length-1] - homeY)/2,
+                  y: 0.08,
+                  xref: 'x',
+                  yref: 'paper',
+                  text: 'Homeownership',
+                  showarrow: false,
+                  font: { size: 11, color: '#fa0' },
+                  bgcolor: '#f9d97633',
+                  borderpad: 2
+                }
+              : null
+          ].filter(Boolean)
+        },
+        {responsive:true}
+      );
+    }
+
+    // Event listeners
+    [
+      startYear, workYears, homePurchaseYear, startNetWorth, homeValue, mortgagePayment,
+      carPayment, overheadPayment, k401, taxRate, ssBenefit
+    ].forEach(el => {
+      el.addEventListener('input', runSim);
+    });
+
+    // Initial display
+    runSim();
+  </script>
+</body>
+</html>

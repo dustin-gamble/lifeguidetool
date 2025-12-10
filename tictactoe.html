@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      background: #f7f7fa;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .tictac-container {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px #b9d9fc20;
+      padding: 40px 28px 30px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 440px;
+      margin-top: 50px;
+      width: 96vw;
+    }
+    .ttt-title {
+      font-size: 4em;
+      font-weight: 800;
+      color: #2170c3;
+      letter-spacing: 1.5px;
+      margin-bottom: 25px;
+      text-shadow: 0 2px 12px #d0eaff40;
+    }
+    .ttt-board {
+      display: grid;
+      grid-template-columns: repeat(3, 74px);
+      grid-template-rows: repeat(3, 74px);
+      gap: 12px;
+      background: #eaf3fc;
+      border-radius: 12px;
+      box-shadow: 0 1px 8px #bdd8ed11;
+      margin-bottom: 30px;
+    }
+    .ttt-cell {
+      width: 74px; height: 74px;
+      background: #fff;
+      border: 2px solid #a1b8d6;
+      border-radius: 8px;
+      font-size: 2.7em;
+      font-weight: 700;
+      color: #2170c3;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.18s, box-shadow 0.14s;
+      box-shadow: 0 0.5px 2.5px #d0eaff0f;
+      user-select: none;
+    }
+    .ttt-cell.x { color: #fb7185; }
+    .ttt-cell.o { color: #10b981; }
+    .ttt-cell:active {
+      background: #f4fafe;
+    }
+    .ttt-status {
+      font-size: 1.25em;
+      color: #15529c;
+      margin-bottom: 22px;
+      min-height: 1.6em;
+      font-weight: 600;
+      text-align: center;
+    }
+    .ttt-restart, .ttt-vscomp, .ttt-advmode {
+      padding: 12px 35px;
+      font-size: 1.17em;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #7ee9c2 10%, #85bafc 100%);
+      color: #1c3e5c;
+      cursor: pointer;
+      box-shadow: 0 1px 12px #cdf3eb28;
+      transition: background 0.11s, color 0.11s;
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+    .ttt-restart:hover, .ttt-vscomp:hover, .ttt-advmode:hover {
+      background: linear-gradient(90deg, #34d399 0%, #60a5fa 100%);
+      color: #fff;
+    }
+    .ttt-vscomp.selected {
+      background: linear-gradient(90deg, #feb47b 10%, #fdc76c 100%);
+      color: #6a4400;
+    }
+    .ttt-advmode.selected {
+      background: linear-gradient(90deg, #fbbf24 10%, #f97316 100%);
+      color: #5a3700;
+    }
+    @media (max-width: 600px) {
+      .ttt-board { grid-template-columns: repeat(3, 18vw); grid-template-rows: repeat(3, 18vw);}
+      .ttt-cell { width: 18vw; height: 18vw; font-size: 2em;}
+      .tictac-container { padding: 12px 2vw 12px 2vw; margin-top: 18vw;}
+    }
+    .ttt-btn-row { display: flex; flex-direction: row; gap: 8px; justify-content: center;}
+
+    /* Advanced mode styles */
+    .ttt-advboard {
+      display: grid;
+      grid-template-columns: repeat(3, 220px);
+      grid-template-rows: repeat(3, 220px);
+      gap: 20px;
+      background: #eaf3fc;
+      border-radius: 16px;
+      box-shadow: 0 1px 12px #bdd8ed22;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+    .ttt-advboard .ttt-advcell {
+      background: #fff;
+      border: 3px solid #a1b8d6;
+      border-radius: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .ttt-advboard .ttt-advcell.won-x { border-color: #fb7185; background: #ffe4e6; }
+    .ttt-advboard .ttt-advcell.won-o { border-color: #10b981; background: #d1fae5; }
+    .ttt-advboard .ttt-advcell.highlight {
+      box-shadow: 0 0 12px 3px #fbbf24aa;
+      z-index: 5;
+    }
+    .ttt-mini-cell {
+      background: #fff;
+      border: 1.5px solid #a1b8d6;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: 700;
+      color: #2170c3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, box-shadow 0.12s;
+      user-select: none;
+      cursor: pointer;
+    }
+    .ttt-mini-cell.x { color: #fb7185; }
+    .ttt-mini-cell.o { color: #10b981; }
+    .ttt-mini-cell:active {
+      background: #f4fafe;
+    }
+    .ttt-mini-cell.disabled {
+      cursor: default;
+      color: #a1b8d6;
+    }
+    .ttt-mini-cell.won {
+      cursor: default;
+      background: #f3f4f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="tictac-container">
+    <div class="ttt-title">Tic Tac Toe</div>
+    <div id="ttt-board" class="ttt-board"></div>
+    <div class="ttt-status" id="ttt-status"></div>
+    <div class="ttt-btn-row">
+      <button class="ttt-vscomp" id="ttt-vscomp">Play vs Computer</button>
+      <button class="ttt-advmode" id="ttt-advmode">Advanced Mode</button>
+      <button class="ttt-restart" id="ttt-restart">Restart</button>
+    </div>
+  </div>
+  <script>
+    const boardElem = document.getElementById('ttt-board');
+    const statusElem = document.getElementById('ttt-status');
+    const restartBtn = document.getElementById('ttt-restart');
+    const vsCompBtn = document.getElementById('ttt-vscomp');
+    const advModeBtn = document.getElementById('ttt-advmode');
+
+    // Mode flags
+    let vsComp = false;
+    let advMode = false;
+
+    // Normal mode variables
+    let board, xTurn, winner, finished;
+
+    // Advanced mode variables
+    // bigBoard: array of 9 mini-boards
+    // Each mini-board: { cells: Array(9), winner: null/'X'/'O'/'T' (tie) }
+    // xTurn: true if X's turn, false if O's turn
+    // finished: true if game over
+    // winner: 'X' or 'O' or null
+    // activeMiniBoard: index 0-8 for forced mini-board, or null if free choice
+    let bigBoard, advXTurn, advWinner, advFinished, activeMiniBoard;
+
+    // --- Normal Mode Functions ---
+    function initNormalBoard() {
+      board = Array(9).fill('');
+      xTurn = true;
+      winner = null;
+      finished = false;
+      renderNormalBoard();
+      setStatus("X's turn" + (vsComp ? " (You vs Computer)" : ""));
+      if (vsComp && !xTurn) setTimeout(computerMove, 480);
+    }
+    function renderNormalBoard() {
+      boardElem.className = 'ttt-board';
+      boardElem.innerHTML = '';
+      board.forEach((cell, idx) => {
+        const div = document.createElement('div');
+        div.className = `ttt-cell${cell ? ' ' + cell.toLowerCase() : ''}`;
+        div.textContent = cell;
+        div.onclick = () => handleNormalMove(idx);
+        boardElem.appendChild(div);
+      });
+    }
+    function setStatus(msg) {
+      statusElem.textContent = msg;
+    }
+    function handleNormalMove(idx) {
+      if (board[idx] || winner || finished) return;
+      if (vsComp && !xTurn) return; // Only let user move when it's X's turn
+      board[idx] = xTurn ? 'X' : 'O';
+      renderNormalBoard();
+      if (checkNormalWinner()) {
+        setStatus(`${winner} wins!`);
+        finished = true;
+      } else if (board.every(cell => cell)) {
+        setStatus("It's a tie!");
+        finished = true;
+      } else {
+        xTurn = !xTurn;
+        setStatus(xTurn
+          ? "X's turn" + (vsComp ? " (You)" : "")
+          : vsComp ? "O's turn (Computer...)" : "O's turn"
+        );
+        if (vsComp && !xTurn && !finished) setTimeout(computerMove, 480);
+      }
+    }
+    function checkNormalWinner() {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8], // rows
+        [0,3,6],[1,4,7],[2,5,8], // cols
+        [0,4,8],[2,4,6]          // diags
+      ];
+      for (let [a,b,c] of wins) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          winner = board[a];
+          highlightNormalWin([a,b,c]);
+          return true;
+        }
+      }
+      return false;
+    }
+    function highlightNormalWin(indices) {
+      [...boardElem.children].forEach((cell, idx) => {
+        if (indices.includes(idx)) cell.style.background = '#ffe4b3';
+      });
+    }
+    // Computer logic: win if possible, block if needed, otherwise random
+    function computerMove() {
+      if (winner || finished) return;
+      // 1. Try to win
+      let move = findBestMove('O') || findBestMove('X') || pickRandom();
+      if (move !== undefined) {
+        board[move] = 'O';
+        renderNormalBoard();
+        if (checkNormalWinner()) {
+          setStatus('O wins!');
+          finished = true;
+        } else if (board.every(cell => cell)) {
+          setStatus("It's a tie!");
+          finished = true;
+        } else {
+          xTurn = true;
+          setStatus("X's turn (You)");
+        }
+      }
+    }
+    function findBestMove(player) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let [a,b,c] of wins) {
+        const line = [board[a], board[b], board[c]];
+        if (line.filter(v => v === player).length === 2 && line.includes('')) {
+          return [a,b,c][line.indexOf('')];
+        }
+      }
+      return undefined;
+    }
+    function pickRandom() {
+      const empty = board.map((v,i) => v ? null : i).filter(i => i !== null);
+      return empty.length ? empty[Math.floor(Math.random() * empty.length)] : undefined;
+    }
+
+    // --- Advanced Mode Functions ---
+    function initAdvancedBoard() {
+      // Initialize 9 mini-boards
+      bigBoard = [];
+      for (let i=0; i<9; i++) {
+        bigBoard.push({
+          cells: Array(9).fill(''),
+          winner: null // 'X', 'O', 'T' (tie), or null
+        });
+      }
+      advXTurn = true;
+      advWinner = null;
+      advFinished = false;
+      activeMiniBoard = null; // null means player can choose any mini-board
+      renderAdvancedBoard();
+      setStatus("X's turn (Advanced Mode)");
+    }
+    function renderAdvancedBoard() {
+      boardElem.className = 'ttt-advboard';
+      boardElem.innerHTML = '';
+      for (let i=0; i<9; i++) {
+        const miniBoard = bigBoard[i];
+        const advcell = document.createElement('div');
+        advcell.className = 'ttt-advcell';
+        if (miniBoard.winner === 'X') advcell.classList.add('won-x');
+        else if (miniBoard.winner === 'O') advcell.classList.add('won-o');
+        if (activeMiniBoard === i) advcell.classList.add('highlight');
+        else if (activeMiniBoard !== null && activeMiniBoard !== i) advcell.style.cursor = 'default';
+
+        // Create 9 mini-cells inside this mini-board
+        for (let j=0; j<9; j++) {
+          const miniCell = document.createElement('div');
+          miniCell.className = 'ttt-mini-cell';
+          const val = miniBoard.cells[j];
+          if (val) miniCell.classList.add(val.toLowerCase());
+          miniCell.textContent = val;
+          // Disable clicks if mini-board is won or tie or game finished
+          if (miniBoard.winner || advFinished) {
+            miniCell.classList.add('won');
+            miniCell.style.cursor = 'default';
+          } else if (activeMiniBoard !== null && activeMiniBoard !== i) {
+            // Not the active mini-board
+            miniCell.classList.add('disabled');
+          } else {
+            miniCell.onclick = () => handleAdvancedMove(i, j);
+          }
+          advcell.appendChild(miniCell);
+        }
+        boardElem.appendChild(advcell);
+      }
+    }
+    function handleAdvancedMove(miniIdx, cellIdx) {
+      if (advFinished) return;
+      if (activeMiniBoard !== null && miniIdx !== activeMiniBoard) return; // Must play in active mini-board
+      const miniBoard = bigBoard[miniIdx];
+      if (miniBoard.winner) return; // Can't play in finished mini-board
+      if (miniBoard.cells[cellIdx]) return; // Cell occupied
+
+      // Make move
+      miniBoard.cells[cellIdx] = advXTurn ? 'X' : 'O';
+
+      // Check if this mini-board is now won or tied
+      if (checkMiniWinner(miniBoard)) {
+        miniBoard.winner = advXTurn ? 'X' : 'O';
+      } else if (miniBoard.cells.every(c => c)) {
+        miniBoard.winner = 'T'; // tie
+      }
+
+      // Check if big board is won
+      if (checkAdvancedWinner()) {
+        advFinished = true;
+        setStatus(`${advWinner} wins the game!`);
+        renderAdvancedBoard();
+        return;
+      }
+
+      // Check if big board tie (all mini-boards finished and no winner)
+      if (bigBoard.every(mb => mb.winner !== null) && !advWinner) {
+        advFinished = true;
+        setStatus("It's a tie!");
+        renderAdvancedBoard();
+        return;
+      }
+
+      // Update active mini-board for next player
+      if (bigBoard[cellIdx].winner === null) {
+        activeMiniBoard = cellIdx;
+      } else {
+        activeMiniBoard = null; // free choice
+      }
+
+      advXTurn = !advXTurn;
+      setStatus((advXTurn ? "X's" : "O's") + " turn (Advanced Mode)" + (activeMiniBoard !== null ? ` - Play in mini-board ${activeMiniBoard+1}` : " - Play in any mini-board"));
+      renderAdvancedBoard();
+    }
+    function checkMiniWinner(miniBoard) {
+      const c = miniBoard.cells;
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let [a,b,cIdx] of wins) {
+        if (c[a] && c[a] === c[b] && c[a] === c[cIdx]) return true;
+      }
+      return false;
+    }
+    function checkAdvancedWinner() {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let [a,b,c] of wins) {
+        if (bigBoard[a].winner && bigBoard[a].winner !== 'T' &&
+            bigBoard[a].winner === bigBoard[b].winner &&
+            bigBoard[a].winner === bigBoard[c].winner) {
+          advWinner = bigBoard[a].winner;
+          highlightAdvancedWin([a,b,c]);
+          return true;
+        }
+      }
+      return false;
+    }
+    function highlightAdvancedWin(indices) {
+      [...boardElem.children].forEach((cell, idx) => {
+        if (indices.includes(idx)) {
+          cell.style.boxShadow = '0 0 18px 5px #fbbf24cc';
+        }
+      });
+    }
+
+    // --- Mode switching ---
+    function initBoard() {
+      if (advMode) {
+        // Disable vsComp in advanced mode
+        vsComp = false;
+        vsCompBtn.classList.remove('selected');
+        vsCompBtn.disabled = true;
+        initAdvancedBoard();
+      } else {
+        vsCompBtn.disabled = false;
+        initNormalBoard();
+      }
+    }
+
+    restartBtn.onclick = () => {
+      setStatus('');
+      if (advMode) {
+        initAdvancedBoard();
+      } else {
+        initNormalBoard();
+      }
+    };
+    vsCompBtn.onclick = () => {
+      if (advMode) return; // Disabled in advanced mode
+      vsComp = !vsComp;
+      vsCompBtn.classList.toggle('selected', vsComp);
+      vsCompBtn.textContent = vsComp ? "Play vs Player" : "Play vs Computer";
+      initNormalBoard();
+    };
+    advModeBtn.onclick = () => {
+      advMode = !advMode;
+      advModeBtn.classList.toggle('selected', advMode);
+      advModeBtn.textContent = advMode ? "Normal Mode" : "Advanced Mode";
+      if (advMode) {
+        vsComp = false;
+        vsCompBtn.classList.remove('selected');
+        vsCompBtn.disabled = true;
+      } else {
+        vsCompBtn.disabled = false;
+      }
+      initBoard();
+    };
+
+    // Start game on load (default to 2 player normal mode)
+    vsComp = false;
+    advMode = false;
+    initBoard();
+  </script>
+</body>
+</html>

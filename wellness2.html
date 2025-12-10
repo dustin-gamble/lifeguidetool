@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Personal Weight Wellness Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap">
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: linear-gradient(120deg, #e6f7ff 0%, #fef6e7 100%);
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      max-width: 1050px;
+      margin: 48px auto 24px auto;
+      gap: 32px;
+      align-items: flex-start;
+    }
+    .inputs {
+      flex: 1;
+      background: #fff8e7;
+      padding: 36px 24px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px #0001;
+      min-width: 320px;
+      border: 2px solid #e0d7be;
+    }
+    .inputs h2 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .meal-section {
+      margin-bottom: 24px;
+      padding: 14px 0 6px 0;
+      border-bottom: 1px solid #ffe6b8;
+      position: relative;
+    }
+    .meal-icon {
+      font-size: 1.25em;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    .examples, .exercise-example, .waist-example {
+      font-size: 0.97em;
+      color: #57618b;
+      margin-top: 4px;
+      margin-left: 2px;
+      min-height: 1.4em;
+    }
+    input[type=range] {
+      width: 100%;
+      margin-bottom: 0.2em;
+      accent-color: #1cbf78;
+    }
+    .outputs {
+      flex: 2;
+      background: #e7f8fe;
+      padding: 36px 28px 24px 28px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px #0001;
+      min-width: 420px;
+      border: 2px solid #bee6f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .outputs h2 {
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    canvas {
+      width: 100% !important;
+      height: 330px !important;
+      background: #f6fcff;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1.5px solid #bbdeff;
+      box-shadow: 0 2px 8px #8ed5ff22;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px #0001;
+      min-width: 290px;
+      font-size: 1em;
+    }
+    th, td {
+      padding: 7px 10px;
+      border: 1px solid #e5e6f0;
+      text-align: center;
+    }
+    th {
+      background: #bee6f7;
+      font-weight: 700;
+    }
+    .emoji {
+      font-size: 1.2em;
+    }
+    .waist-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.3em;
+      margin-top: 1.2em;
+      font-size: 1em;
+    }
+    .waist-example {
+      margin-bottom: 0.8em;
+      margin-top: 0.2em;
+    }
+      .copyright {
+        margin-top: 3em;
+        text-align: center;
+        color: #567;
+        font-size: 0.95em;
+      }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="inputs">
+      <h2><span class="emoji">⚖️</span> Personal Wellness Tracker</h2>
+      <div>
+        <label class="slider-label">
+          <span><span class="emoji">🏋️</span> Starting Weight</span>
+          <span id="startWeightVal">170</span> lb
+        </label>
+        <input id="startWeight" type="range" min="100" max="300" value="170" step="1">
+      </div>
+      <div>
+        <label class="slider-label">
+          <span><span class="emoji">📏</span> Height</span>
+          <span><span id="heightVal">5ft 9in</span> (<span id="heightInVal">69</span> in)</span>
+        </label>
+        <input id="height" type="range" min="58" max="78" value="69" step="1">
+      </div>
+      <div class="waist-label">
+        <span><span class="emoji">👖</span> Waist Estimate</span>
+        <span id="waistVal"></span>
+      </div>
+      <div class="waist-example" id="waistCategory"></div>
+      <div class="meal-section">
+        <strong><span class="meal-icon">🍳</span>Breakfast</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="breakfastCalVal">400</span>
+        </label>
+        <input id="breakfastCal" type="range" min="0" max="2000" value="400" step="10">
+        <div class="examples" id="breakfastExamples"></div>
+      </div>
+      <div class="meal-section">
+        <strong><span class="meal-icon">🥪</span>Lunch</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="lunchCalVal">600</span>
+        </label>
+        <input id="lunchCal" type="range" min="0" max="2000" value="600" step="10">
+        <div class="examples" id="lunchExamples"></div>
+      </div>
+      <div class="meal-section">
+        <strong><span class="meal-icon">🍽️</span>Dinner</strong>
+        <label class="slider-label">
+          <span>Calories</span>
+          <span id="dinnerCalVal">800</span>
+        </label>
+        <input id="dinnerCal" type="range" min="0" max="2000" value="800" step="10">
+        <div class="examples" id="dinnerExamples"></div>
+      </div>
+      <div>
+        <label class="slider-label">
+          <span><span class="emoji">🏃</span> Exercise (min/week)</span>
+          <span id="exerciseVal">120</span> min
+        </label>
+        <input id="exercise" type="range" min="0" max="600" value="120" step="10">
+        <div class="exercise-example" id="exerciseExample"></div>
+      </div>
+    </div>
+    <div class="outputs">
+      <h2><span class="emoji">📈</span> Projected Weight (Weeks)</h2>
+      <canvas id="weightChart"></canvas>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Projected Weight (lb)</th>
+            <th>Waist Est. (in)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1 week</td>
+            <td id="week1Val">--</td>
+            <td id="week1Waist">--</td>
+          </tr>
+          <tr>
+            <td>4 weeks</td>
+            <td id="week4Val">--</td>
+            <td id="week4Waist">--</td>
+          </tr>
+          <tr>
+            <td>12 weeks</td>
+            <td id="week12Val">--</td>
+            <td id="week12Waist">--</td>
+          </tr>
+          <tr>
+            <td>52 weeks</td>
+            <td id="week52Val">--</td>
+            <td id="week52Waist">--</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="copyright">
+    For guidence only. You are beautiful just the way you are.
+    Developed by Dustin Gamble & ChatGPT.
+  </div>
+  <script>
+    // Improved waist formula: fits user data, e.g., 170 lb, 69 in -> 34 in; 150 lb, 69 in -> 30 in
+    function estimateWaist(weight, height) {
+      // waist = 0.19 * weight + 0.12 * (height-65)
+      return 0.20 * weight - 0.5 * height + 34.5;
+    }
+    function waistCategory(waist, height) {
+      let ratio = waist / height;
+      if (waist < 28) return "Very slim waist";
+      if (ratio < 0.45) return "Athletic/slim";
+      if (ratio < 0.52) return "Average";
+      if (ratio < 0.57) return "Above average";
+      if (ratio < 0.62) return "High risk (visceral fat)";
+      return "Very high risk";
+    }
+    // Helpers to display height as ft/in
+    function heightToFeetInches(h) {
+      const feet = Math.floor(h / 12);
+      const inches = h % 12;
+      return `${feet}ft ${inches}in`;
+    }
+
+    function getMealExamples(cal) {
+      if (cal === 0) return "Fasting";
+      if (cal < 100) return "Black coffee, apple, 1/2 toast";
+      if (cal < 300) return "1 yogurt, banana, boiled egg";
+      if (cal < 600) return "Bagel w/cream cheese, bowl cereal+milk, avocado toast";
+      if (cal < 900) return "Breakfast burrito, pancakes+2 eggs, smoothie w/protein";
+      if (cal < 1200) return "Eggs+bacon+toast, granola parfait, sausage & eggs";
+      if (cal < 1600) return "Big omelette+toast, full English, pancakes+fruit+side";
+      return "Stack pancakes+butter+sausage, diner skillet, 2 breakfast sandwiches";
+    }
+    function getLunchExamples(cal) {
+      if (cal === 0) return "Fasting";
+      if (cal < 150) return "Side salad, small soup, protein bar";
+      if (cal < 400) return "Turkey wrap, small sandwich, 2 sushi rolls";
+      if (cal < 700) return "Chicken salad, burrito bowl, grilled cheese+chips";
+      if (cal < 1100) return "Burger+fries, 2 pizza slices, large pasta bowl";
+      if (cal < 1500) return "Footlong sub+chips, double burger, fried chicken meal";
+      return "Big burrito+quesadilla, 2 burgers+fries, massive rice bowl";
+    }
+    function getDinnerExamples(cal) {
+      if (cal === 0) return "Fasting";
+      if (cal < 200) return "Soup, small veggie bowl, salad";
+      if (cal < 500) return "Stir fry, small pasta, baked potato+veg";
+      if (cal < 900) return "Chicken+rice+veg, steak+veg, salmon bowl";
+      if (cal < 1300) return "Lasagna, large tacos+beans, big sandwich/fries";
+      if (cal < 1700) return "Steak dinner+dessert, pizza+side, Chinese takeout";
+      return "Big pasta+dessert, large steak+potatoes, all-you-can-eat buffet";
+    }
+    function getExerciseExample(mins) {
+      if (mins === 0) return "No formal exercise (sedentary)";
+      if (mins <= 30) return "Short walks, stretching, light housework";
+      if (mins <= 90) return "Brisk walk 3x/week, weekend bike, casual tennis";
+      if (mins <= 180) return "Daily 25-min jog/walk, gym 3x/week, swim laps";
+      if (mins <= 300) return "Most days active: daily run, gym, cycling";
+      if (mins <= 450) return "Intense: training for race, HIIT, long hikes";
+      return "Athlete/ultra: double sessions, marathon/triathlon prep";
+    }
+
+    // Inputs
+    const startWeight = document.getElementById('startWeight');
+    const height = document.getElementById('height');
+    const breakfastCal = document.getElementById('breakfastCal');
+    const lunchCal = document.getElementById('lunchCal');
+    const dinnerCal = document.getElementById('dinnerCal');
+    const exercise = document.getElementById('exercise');
+    // Value displays
+    const startWeightVal = document.getElementById('startWeightVal');
+    const heightVal = document.getElementById('heightVal');
+    const heightInVal = document.getElementById('heightInVal');
+    const breakfastCalVal = document.getElementById('breakfastCalVal');
+    const lunchCalVal = document.getElementById('lunchCalVal');
+    const dinnerCalVal = document.getElementById('dinnerCalVal');
+    const exerciseVal = document.getElementById('exerciseVal');
+    const waistVal = document.getElementById('waistVal');
+    const waistCategoryDiv = document.getElementById('waistCategory');
+    // Example displays
+    const breakfastExamples = document.getElementById('breakfastExamples');
+    const lunchExamples = document.getElementById('lunchExamples');
+    const dinnerExamples = document.getElementById('dinnerExamples');
+    const exerciseExample = document.getElementById('exerciseExample');
+    // Table
+    const week1Val = document.getElementById('week1Val');
+    const week4Val = document.getElementById('week4Val');
+    const week12Val = document.getElementById('week12Val');
+    const week1Waist = document.getElementById('week1Waist');
+    const week4Waist = document.getElementById('week4Waist');
+    const week12Waist = document.getElementById('week12Waist');
+    const week52Val = document.getElementById('week52Val');
+    const week52Waist = document.getElementById('week52Waist');
+
+    // Chart
+    let chart;
+    function updateChart() {
+      // Calories per day
+      const b = Number(breakfastCal.value);
+      const l = Number(lunchCal.value);
+      const d = Number(dinnerCal.value);
+      const daily = b + l + d;
+      // Exercise calorie burn (average: 7 kcal/min)
+      const exMin = Number(exercise.value);
+      const weeklyBurn = exMin * 7;
+      const dailyBurn = weeklyBurn / 7;
+
+      // Maintenance cals/day = 13 x weight in lbs (simple model)
+      let weight = Number(startWeight.value);
+      const h = Number(height.value);
+      let weightArr = [weight];
+      let waistArr = [estimateWaist(weight, h)];
+      let weeks = [];
+      for (let w = 0; w <= 21; w++) {
+        weeks.push(w);
+        let maint = weight * 13;
+        let net = daily - dailyBurn - maint;
+        weight += (7 * net) / 3500;
+        weight = weight < 80 ? 80 : weight;
+        weightArr.push(weight);
+        waistArr.push(estimateWaist(weight, h));
+      }
+      chart.data.labels = weeks;
+      chart.data.datasets[0].data = weightArr.slice(0, weeks.length);
+      chart.update();
+
+      // 1, 4, 12 weeks out
+      week1Val.textContent = weightArr[1].toFixed(1);
+      week4Val.textContent = weightArr[4].toFixed(1);
+      week12Val.textContent = weightArr[12].toFixed(1);
+      week52Val.textContent = weightArr[52].toFixed(1);
+      week1Waist.textContent = waistArr[1].toFixed(1);
+      week4Waist.textContent = waistArr[4].toFixed(1);
+      week12Waist.textContent = waistArr[12].toFixed(1);
+      week52Waist.textContent = waistArr[52].toFixed(1);
+    }
+
+    function updateAllDisplays() {
+      startWeightVal.textContent = startWeight.value;
+      heightInVal.textContent = height.value;
+      heightVal.textContent = heightToFeetInches(Number(height.value));
+      breakfastCalVal.textContent = breakfastCal.value;
+      lunchCalVal.textContent = lunchCal.value;
+      dinnerCalVal.textContent = dinnerCal.value;
+      exerciseVal.textContent = exercise.value;
+
+      breakfastExamples.textContent = getMealExamples(Number(breakfastCal.value));
+      lunchExamples.textContent = getLunchExamples(Number(lunchCal.value));
+      dinnerExamples.textContent = getDinnerExamples(Number(dinnerCal.value));
+      exerciseExample.textContent = getExerciseExample(Number(exercise.value));
+
+      // Waist estimate for start
+      const w = Number(startWeight.value);
+      const h = Number(height.value);
+      const waist = estimateWaist(w, h);
+      waistVal.textContent = waist.toFixed(1) + ' in';
+      waistCategoryDiv.textContent = waistCategory(waist, h);
+
+      updateChart();
+    }
+
+    [startWeight, height, breakfastCal, lunchCal, dinnerCal, exercise].forEach(el =>
+      el.addEventListener('input', updateAllDisplays)
+    );
+
+    // Init Chart.js
+    chart = new Chart(document.getElementById('weightChart').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: Array.from({length: 22}, (_, i) => i),
+        datasets: [{
+          label: 'Weight (lb)',
+          data: Array(22).fill(Number(startWeight.value)),
+          borderWidth: 4,
+          pointRadius: 0,
+          borderColor: "#1cbf78",
+          backgroundColor: "rgba(28,191,120,0.14)",
+          fill: true,
+          tension: 0.16
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              title: ctx => `Week ${ctx[0].parsed.x}`,
+              label: ctx => `Weight: ${ctx.parsed.y.toFixed(1)} lb`
+            }
+          },
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Weeks',
+              font: { size: 16, weight: 700 }
+            },
+            grid: { color: "#d3ebfa" },
+            ticks: { font: { size: 14 } }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Weight (lb)',
+              font: { size: 16, weight: 700 }
+            },
+            min: 80,
+            max: 320,
+            grid: { color: "#d3ebfa" },
+            ticks: { font: { size: 14 } }
+          }
+        }
+      }
+    });
+
+    // Initial display
+    updateAllDisplays();
+  </script>
+</body>
+</html>

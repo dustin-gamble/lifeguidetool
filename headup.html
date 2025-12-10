@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heads Up Game</title>
+  <style>
+    :root {
+      --bg-movies: #1c1c1e;
+      --bg-animals: #f3e5ab;
+      --bg-science: #cce7ff;
+      --bg-silly: #ffe4f0;
+      --bg-travel: #c7f9cc;
+      --bg-food: #fff0c2;
+      --bg-funny: #fdfd96;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-default, #f0f8ff);
+      transition: background-color 0.5s ease;
+    }
+
+    h1, h2 { margin-top: 20px; }
+    .category-btn, .mode-btn {
+      padding: 1rem 2rem;
+      margin: 10px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    .game-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 70vh;
+      padding: 20px;
+    }
+
+    .word-display {
+      font-size: 2.8rem;
+      margin: 1rem;
+      max-width: 80%;
+    }
+
+    .countdown {
+      font-size: 2rem;
+      margin: 1rem;
+      color: #ff4500;
+    }
+
+    .next-btn, .pass-btn {
+      font-size: 1.2rem;
+      padding: 0.5rem 1.2rem;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .pass-btn { background-color: #888; }
+
+    .scoreboard {
+      font-size: 1.5rem;
+      margin-top: 10px;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>🎉 Heads Up Game</h1>
+
+  <div id="categorySelection"></div>
+
+  <div id="modeSelection" class="hidden">
+    <h2>Select Game Mode</h2>
+    <button class="mode-btn" onclick="startGame('infinite')">Infinite Mode</button>
+    <button class="mode-btn" onclick="startGame('timed')">60-Second Mode</button>
+  </div>
+
+  <div class="game-container" id="gameContainer">
+    <div class="word-display" id="wordDisplay">Get Ready!</div>
+    <div class="countdown" id="countdown"></div>
+    <div>
+      <button class="next-btn" onclick="correctWord()">✅ Correct</button>
+      <button class="pass-btn" onclick="passWord()">⏭️ Pass</button>
+    </div>
+    <div class="scoreboard" id="scoreboard"></div>
+  </div>
+
+  <script>
+    let terms = {};
+    let currentCategory = "";
+    let shuffledWords = [];
+    let currentIndex = 0;
+    let mode = 'infinite';
+    let score = 0;
+    let gameTime = 60;
+    let gameTimer;
+    let countdownInterval;
+
+    fetch('heads_up_terms_updated.json')
+      .then(res => res.json())
+      .then(data => {
+        terms = data;
+        showCategories();
+      });
+
+    function showCategories() {
+      const container = document.getElementById('categorySelection');
+      for (const category in terms) {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn';
+        btn.textContent = category;
+        btn.onclick = () => selectCategory(category);
+        container.appendChild(btn);
+      }
+    }
+
+    function selectCategory(category) {
+      currentCategory = category;
+      document.getElementById('categorySelection').style.display = 'none';
+      document.getElementById('modeSelection').classList.remove('hidden');
+      updateTheme(category);
+    }
+
+    function startGame(selectedMode) {
+      mode = selectedMode;
+      shuffledWords = shuffle([...terms[currentCategory]]);
+      currentIndex = 0;
+      score = 0;
+      gameTime = 60;
+      document.getElementById('modeSelection').style.display = 'none';
+      document.getElementById('gameContainer').style.display = 'flex';
+      document.getElementById('scoreboard').textContent = '';
+      showWord();
+
+      if (mode === 'timed') {
+        document.getElementById('countdown').textContent = gameTime + "s";
+        gameTimer = setInterval(() => {
+          gameTime--;
+          document.getElementById('countdown').textContent = gameTime + "s";
+          if (gameTime <= 0) {
+            clearInterval(gameTimer);
+            endGame();
+          }
+        }, 1000);
+      }
+    }
+
+    function showWord() {
+      if (currentIndex >= shuffledWords.length) {
+        shuffledWords = shuffle([...terms[currentCategory]]);
+        currentIndex = 0;
+      }
+      document.getElementById('wordDisplay').textContent = shuffledWords[currentIndex];
+    }
+
+    function correctWord() {
+      score++;
+      playSound("https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3");
+      nextWord();
+    }
+
+    function passWord() {
+      playSound("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3");
+      nextWord();
+    }
+
+    function nextWord() {
+      currentIndex++;
+      showWord();
+    }
+
+    function endGame() {
+      document.getElementById('wordDisplay').textContent = "⏳ Time's Up!";
+      document.getElementById('countdown').textContent = '';
+      document.getElementById('scoreboard').textContent = `Your Score: ${score}`;
+      document.querySelector('.next-btn').textContent = "Play Again";
+      document.querySelector('.next-btn').onclick = () => location.reload();
+      document.querySelector('.pass-btn').style.display = 'none';
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function playSound(url) {
+      const sound = new Audio(url);
+      sound.play();
+    }
+
+    function updateTheme(category) {
+      const themes = {
+        "Movies": "--bg-movies",
+        "Animals": "--bg-animals",
+        "Science": "--bg-science",
+        "Silly Actions": "--bg-silly",
+        "Travel": "--bg-travel",
+        "Food": "--bg-food",
+        "Funny Mode": "--bg-funny"
+      };
+      const themeVar = themes[category] || "--bg-default";
+      document.body.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue(themeVar);
+    }
+
+    // Mobile Swipe Support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      if (Math.abs(dx) > 50) {
+        if (dx > 0) correctWord(); // right swipe
+        else passWord();          // left swipe
+      }
+    });
+  </script>
+</footer>
+</body>
+</footer>
+  <footer style="margin-top: 40px; padding: 20px; font-size: 0.9rem; color: #555;">
+    <hr style="width: 80%; margin: 20px auto;">
+    <p><strong>Instructions:</strong> Select a category, choose a game mode, and try to get as many correct as possible. Use the “✅ Correct” button or swipe right when guessed correctly, and “⏭️ Pass” or swipe left to skip. Play solo or with friends!</p>
+    <p><strong>About:</strong> This Heads Up game was created as part of the Life Guide Tools project – a collection of fun, educational, and useful web tools for families, educators, and curious minds.</p>
+    <p style="margin-top: 10px;">&copy; 2025 Life Guide Tools. All rights reserved.</p>
+  </footer>
+</html>

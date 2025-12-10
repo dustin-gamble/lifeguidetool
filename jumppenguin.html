@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jump Penguin</title>
+  <style>
+    body {
+      background: #eaf7fc;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .jp-container {
+      margin-top: 34px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 40px #a2d1fc38;
+      padding: 18px 22px 20px 22px;
+      display: flex; flex-direction: column; align-items: center;
+      max-width: 410px;
+      width: 96vw;
+      position: relative;
+    }
+    .jp-title {
+      font-size: 2em;
+      font-weight: 800;
+      color: #2295be;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+      text-shadow: 0 2px 12px #baeaff36;
+    }
+    .jp-score {
+      font-size: 1.22em;
+      color: #225782;
+      font-weight: 700;
+      margin-bottom: 7px;
+      text-align: center;
+    }
+    #jp-canvas {
+      background: #cdf3fc;
+      border: 2.5px solid #3ab9e0;
+      border-radius: 13px;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .jp-btn {
+      padding: 10px 32px;
+      font-size: 1.16em;
+      font-weight: 700;
+      border: none;
+      border-radius: 9px;
+      background: linear-gradient(90deg, #5eead4 10%, #7bb8fa 100%);
+      color: #135e5b;
+      cursor: pointer;
+      box-shadow: 0 1px 10px #cdf3eb24;
+      margin-top: 7px;
+      margin-bottom: 9px;
+      transition: background 0.12s, color 0.11s;
+    }
+    .jp-btn:hover {
+      background: linear-gradient(90deg, #0ecbc1 0%, #4e98ea 100%);
+      color: #fff;
+    }
+    .jp-modifiers {
+      margin-top: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      justify-content: center;
+    }
+    .jp-mod {
+      padding: 6px 16px;
+      background: #f0f8ff;
+      color: #0a3854;
+      font-size: 1em;
+      font-weight: 600;
+      border: 1.3px solid #aee4fa;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.13s, color 0.13s;
+    }
+    .jp-mod:hover {
+      background: #bff3fc;
+      color: #077e88;
+      border-color: #52e8e1;
+    }
+    .jp-energy-bar {
+      position: absolute;
+      top: 25px;
+      left: -48px;
+      width: 32px;
+      height: 240px;
+      background: #e3f9fc;
+      border: 2px solid #39c3e9;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px #afeaff24;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .jp-energy-inner {
+      width: 100%;
+      border-radius: 14px 14px 14px 14px;
+      background: linear-gradient(180deg, #a3e635 0%, #facc15 100%);
+      box-shadow: 0 1.5px 12px #8dd13e3a;
+      transition: height 0.1s;
+    }
+    .jp-energy-label {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: -28px;
+      font-size: 1em;
+      color: #2493b8;
+      font-weight: 700;
+      opacity: 0.82;
+      user-select: none;
+    }
+    #jump-now-prompt {
+      font-size: 1em;
+      color: #186090;
+      font-weight: 700;
+      margin-top: 6px;
+      user-select: none;
+      display: none;
+    }
+    #timing-indicator {
+      font-size: 1em;
+      color: #186090;
+      font-weight: 700;
+      margin-top: 4px;
+      min-height: 22px;
+      user-select: none;
+      text-align: center;
+      height: 22px;
+    }
+    @media (max-width: 600px) {
+      .jp-container { max-width: 98vw; padding: 8px 1vw 10px 1vw;}
+      #jp-canvas { width: 92vw !important; height: 67vw !important;}
+      .jp-energy-bar { top: 10vw; left: -14vw; height: 46vw; width: 7vw; }
+      .jp-energy-label { top: -6vw; font-size: 0.9em; }
+    }
+  </style>
+</head>
+<body>
+  <div style="position:relative;">
+    <div class="jp-container">
+      <div class="jp-title">🐧 Jump Penguin</div>
+      <div class="jp-score" id="jp-score">Score: 0<br>Max Height: 0</div>
+      <canvas id="jp-canvas" width="340" height="340"></canvas>
+      <button class="jp-btn" id="jp-restart" style="display:none;">Restart</button>
+      <div class="jp-modifiers" id="jp-modifiers" style="display:none;"></div>
+      <div style="font-size:0.98em;color:#186090;opacity:0.80;margin-top:4px;">
+        Tap, click, or press Space to jump!
+      </div>
+      <div id="jump-now-prompt">Jump now!</div>
+      <div id="timing-indicator"></div>
+      <div class="jp-energy-bar" id="jp-energy-bar">
+        <div class="jp-energy-label">Energy</div>
+        <div class="jp-energy-inner" id="jp-energy-inner" style="height:100%;"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Canvas and context
+    const canvas = document.getElementById('jp-canvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElem = document.getElementById('jp-score');
+    const restartBtn = document.getElementById('jp-restart');
+    const modsDiv = document.getElementById('jp-modifiers');
+    const energyInner = document.getElementById('jp-energy-inner');
+    const jumpNowPrompt = document.getElementById('jump-now-prompt');
+    const timingIndicator = document.getElementById('timing-indicator');
+
+    // Physics and state
+    let y, vy, ay, score, best, jumping, onTrampoline, power, bounciness, weight, maxH, awaitingMod;
+    const GROUND = 308, BASE_TRAMP = 310, TRAMP_W = 110, TRAMP_H = 18;
+    let squashFrames = 0; // For penguin squash/stretch animation
+    let trampSquashFrames = 0; // For trampoline squash animation
+
+    // --- Energy bar variables ---
+    let energyValue = 1, energyFrozen = false;
+
+    // --- Spring physics variables ---
+    let springEnergy = 0;
+
+    // --- Trampoline oscillation for timing ---
+    let trampOsc = 0;
+    let trampOscDir = 1;
+
+    let lastVy = 0;
+
+    function resetGame() {
+      y = 90;
+      vy = 0;
+      ay = 0;
+      score = 0;
+      best = 0;
+      maxH = 0;
+      jumping = true;
+      onTrampoline = false;
+      power = 1.0;
+      bounciness = 1.0;
+      weight = 1.0;
+      awaitingMod = false;
+      restartBtn.style.display = 'none';
+      modsDiv.style.display = 'none';
+      jumpNowPrompt.style.display = 'none';
+      timingIndicator.textContent = '';
+      updateScore();
+      energyValue = 1;
+      energyFrozen = false;
+      springEnergy = 0;
+      trampOsc = 0;
+      trampOscDir = 1;
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop() {
+      if (awaitingMod) return;
+      lastVy = vy;
+      ay = 0.14 * weight;
+      vy += ay;
+      y += vy;
+
+      // Trampoline collision and onTrampoline logic
+      if (vy > 0 && y > BASE_TRAMP - 30) {
+        if (y > BASE_TRAMP - 6 && y < BASE_TRAMP + 12) {
+          y = BASE_TRAMP - 6;
+          vy = 0;
+          if (!onTrampoline) {
+            onTrampoline = true;
+            jumpNowPrompt.style.display = '';
+            springEnergy = Math.abs(lastVy) * 0.8;
+            springEnergy = Math.max(springEnergy, 9);
+            trampOsc = 0;
+            trampOscDir = 1;
+            timingIndicator.textContent = '';
+          }
+        } else if (y >= BASE_TRAMP + 12) {
+          gameOver();
+          return;
+        }
+      } else {
+        if (onTrampoline) {
+          onTrampoline = false;
+          jumpNowPrompt.style.display = 'none';
+          timingIndicator.textContent = '';
+        }
+      }
+
+      if (onTrampoline) {
+        trampOsc += 0.23 * trampOscDir;
+        if (Math.abs(trampOsc) > 1.0) trampOscDir *= -1;
+      }
+
+      if (y > canvas.height + 60) { gameOver(); return; }
+      if (squashFrames > 0) squashFrames--;
+      if (trampSquashFrames > 0) trampSquashFrames--;
+      updateEnergy();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function updateScore() {
+      scoreElem.innerHTML = `Score: ${score}<br>Max Height: ${maxH}`;
+    }
+
+    function drawPenguin(x, y, scale=1) {
+      ctx.save();
+      ctx.translate(x, y);
+      let squash = 1;
+      if (squashFrames > 0) {
+        squash = squashFrames > 4 ? 1.22 : 0.78;
+      }
+      ctx.scale(1/squash, squash);
+      // body
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 20, 32, 0, 0, 2 * Math.PI);
+      ctx.fillStyle = "#222"; ctx.fill();
+      // belly
+      ctx.beginPath();
+      ctx.ellipse(0, 10, 13, 20, 0, 0, 2 * Math.PI);
+      ctx.fillStyle = "#fff"; ctx.fill();
+      // beak
+      ctx.beginPath();
+      ctx.moveTo(0, -25); ctx.lineTo(7, -32); ctx.lineTo(-7, -32); ctx.closePath();
+      ctx.fillStyle = "#fcba03"; ctx.fill();
+      // left wing
+      ctx.save();
+      ctx.rotate(-0.5);
+      ctx.beginPath(); ctx.ellipse(-18, 8, 8, 22, 0, 0, 2 * Math.PI); ctx.fillStyle="#222"; ctx.fill();
+      ctx.restore();
+      // right wing
+      ctx.save();
+      ctx.rotate(0.5);
+      ctx.beginPath(); ctx.ellipse(18, 8, 8, 22, 0, 0, 2 * Math.PI); ctx.fillStyle="#222"; ctx.fill();
+      ctx.restore();
+      // eyes
+      ctx.beginPath(); ctx.arc(-7, -11, 3.2, 0, 2 * Math.PI); ctx.fillStyle="#fff"; ctx.fill();
+      ctx.beginPath(); ctx.arc(7, -11, 3.2, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(-7, -11, 1.2, 0, 2 * Math.PI); ctx.fillStyle="#252"; ctx.fill();
+      ctx.beginPath(); ctx.arc(7, -11, 1.2, 0, 2 * Math.PI); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawTrampoline() {
+      // Base ellipse (trampoline)
+      ctx.save();
+      ctx.translate(canvas.width/2, BASE_TRAMP+6);
+      let trampSquash = trampSquashFrames > 0 ? 1.6 : 1;
+      ctx.scale(1, 0.5 * trampSquash);
+      ctx.beginPath();
+      ctx.arc(0, 0, TRAMP_W/2, 0, 2 * Math.PI);
+      ctx.fillStyle = "#53bee6";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, TRAMP_W/2-8, 0, 2 * Math.PI);
+      ctx.fillStyle = "#3bb26b";
+      ctx.fill();
+      ctx.restore();
+      // Trampoline springs (lines)
+      for (let i=0;i<7;i++) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.width/2-TRAMP_W/2+6+i*TRAMP_W/6, BASE_TRAMP+6);
+        ctx.lineTo(canvas.width/2-TRAMP_W/2+10+i*TRAMP_W/6, BASE_TRAMP+TRAMP_H);
+        ctx.strokeStyle="#b5b3a5"; ctx.lineWidth=2.1; ctx.stroke();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Trampoline
+      drawTrampoline();
+      // Penguin
+      drawPenguin(canvas.width/2, y);
+      // Ground
+      ctx.fillStyle="#c5f7e3";
+      ctx.fillRect(0, BASE_TRAMP+TRAMP_H, canvas.width, 50);
+    }
+
+    function jump() {
+      if (awaitingMod) return;
+      if (!jumping) { resetGame(); return; }
+      if (onTrampoline) {
+        squashFrames = 8; // Animate penguin
+        trampSquashFrames = 7; // Animate trampoline
+        if (!energyFrozen) {
+          energyFrozen = true;
+          // Use springEnergy and energyValue for velocity
+          vy = -springEnergy * (0.39 + 0.85 * energyValue);
+          // Apply interference timing multipliers
+          if (Math.abs(trampOsc) < 0.4) {
+            vy *= 1.20;
+            timingIndicator.textContent = "Perfect Timing!";
+          } else if (Math.abs(trampOsc) > 0.95) {
+            vy *= 0.7;
+            timingIndicator.textContent = "Muffled Jump!";
+          } else {
+            timingIndicator.textContent = "";
+          }
+          springEnergy *= 0.94;
+          setTimeout(() => { energyFrozen = false; }, 400);
+        } else {
+          vy = -5 * power * bounciness * 0.5;
+          timingIndicator.textContent = "";
+        }
+        onTrampoline = false;
+        score++;
+        if (score > best) best = score;
+        if (canvas.height - y > maxH) maxH = Math.round(canvas.height - y);
+        updateScore();
+        jumpNowPrompt.style.display = 'none';
+      }
+    }
+
+    function showModifiers() {
+      modsDiv.innerHTML = '';
+      modsDiv.style.display = '';
+      const mods = [
+        { name:"Power +15%", func:()=>{ power += 0.15; }},
+        { name:"Bounciness +15%", func:()=>{ bounciness += 0.15; }},
+        { name:"Penguin Weight -10%", func:()=>{ weight *= 0.90; }}
+      ];
+      for (let mod of mods) {
+        const btn = document.createElement('button');
+        btn.textContent = mod.name;
+        btn.className = 'jp-mod';
+        btn.onclick = () => {
+          mod.func();
+          awaitingMod = false;
+          modsDiv.style.display = 'none';
+          requestAnimationFrame(gameLoop);
+        };
+        modsDiv.appendChild(btn);
+      }
+    }
+
+    function gameOver() {
+      jumping = false;
+      restartBtn.style.display = '';
+      jumpNowPrompt.style.display = 'none';
+      timingIndicator.textContent = '';
+    }
+
+    function updateEnergy() {
+      if (!energyFrozen) {
+        let t = (performance.now() / 1200) % (2*Math.PI);
+        energyValue = 0.5 + 0.5 * Math.sin(t);
+      }
+      energyInner.style.height = (100*energyValue).toFixed(1) + '%';
+    }
+
+    // Input
+    canvas.addEventListener('mousedown', jump);
+    canvas.addEventListener('touchstart', e => { jump(); e.preventDefault(); });
+    document.addEventListener('keydown', e => {
+      if (e.code === "Space") { jump(); e.preventDefault(); }
+      if (!jumping && (e.code === 'Space' || e.code === 'Enter')) restartBtn.click();
+    });
+    restartBtn.onclick = () => { resetGame(); };
+
+    // Start!
+    resetGame();
+  </script>
+</body>
+</html>

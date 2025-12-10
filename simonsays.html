@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simon Says Game</title>
+  <style>
+    body { background: #f7fbfd; font-family: 'Segoe UI', Arial, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    h1 { color: #27739e; font-size: 2.2em; margin: 34px 0 18px 0;}
+    .simon-board { display: grid; grid-template-columns: 90px 90px; gap: 18px; }
+    .btn { width: 90px; height: 90px; border-radius: 22px; cursor: pointer; border: 2px solid #e4e8ef; box-shadow: 0 2px 10px #aedffb36; font-size: 2.2em; display: flex; align-items: center; justify-content: center; transition: filter 0.09s;}
+    .btn-red { background: #f87171;}
+    .btn-green { background: #34d399;}
+    .btn-blue { background: #60a5fa;}
+    .btn-yellow { background: #facc15;}
+    .btn.active { filter: brightness(2) drop-shadow(0 0 8px #bdf0ff);}
+    .score { font-size: 1.11em; color: #17658d; margin-top: 18px; }
+    .start-btn { margin-top: 24px; padding: 12px 32px; font-size: 1.13em; border-radius: 9px; border: none; font-weight: 700; background: linear-gradient(90deg, #bae6fd 0%, #a7f3d0 100%); color: #156c4d; cursor: pointer;}
+    .start-btn:hover { background: linear-gradient(90deg, #5eead4 0%, #60a5fa 100%);}
+    .msg { color:#b91c1c; margin-top:12px; font-size:1.1em;}
+  </style>
+</head>
+<body>
+  <h1>🟢🔴🟡🔵 Simon Says</h1>
+  <div class="simon-board">
+    <div class="btn btn-green" id="btn0"></div>
+    <div class="btn btn-red" id="btn1"></div>
+    <div class="btn btn-yellow" id="btn2"></div>
+    <div class="btn btn-blue" id="btn3"></div>
+  </div>
+  <button class="start-btn" id="startBtn">Start Game</button>
+  <div class="score" id="score">Score: 0 | High: 0</div>
+  <div class="msg" id="msg"></div>
+  <script>
+    const btns = [document.getElementById('btn0'),document.getElementById('btn1'),document.getElementById('btn2'),document.getElementById('btn3')];
+    const sounds = [new AudioContext(), new AudioContext(), new AudioContext(), new AudioContext()];
+    function beep(idx) {
+      let ctx = sounds[idx];
+      let o = ctx.createOscillator();
+      let g = ctx.createGain();
+      o.frequency.value = [330,440,550,660][idx];
+      o.type = "sine";
+      g.gain.value = 0.07;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime+0.21);
+    }
+    let pattern = [], playerPos = 0, playing = false, canPress = false, score = 0, high = 0;
+    const scoreDiv = document.getElementById('score'), msg = document.getElementById('msg'), startBtn = document.getElementById('startBtn');
+    function updateScore() { scoreDiv.textContent = `Score: ${score} | High: ${high}`; }
+    function flash(idx, dur=400) {
+      btns[idx].classList.add('active');
+      beep(idx);
+      setTimeout(()=>btns[idx].classList.remove('active'), dur);
+    }
+    async function playPattern() {
+      canPress = false;
+      for(let i=0;i<pattern.length;i++) {
+        flash(pattern[i]);
+        await new Promise(r=>setTimeout(r,470));
+      }
+      canPress = true;
+    }
+    function nextRound() {
+      score++;
+      if(score>high) high=score;
+      updateScore();
+      msg.textContent = '';
+      pattern.push(Math.floor(Math.random()*4));
+      playerPos = 0;
+      setTimeout(playPattern, 700);
+    }
+    function startGame() {
+      pattern = []; score = 0; playerPos = 0;
+      updateScore(); msg.textContent = '';
+      startBtn.disabled = true;
+      nextRound();
+    }
+    btns.forEach((btn, idx) => {
+      btn.onclick = () => {
+        if(!canPress) return;
+        flash(idx,120);
+        if(idx===pattern[playerPos]) {
+          playerPos++;
+          if(playerPos===pattern.length) setTimeout(nextRound, 600);
+        } else {
+          msg.textContent = 'Wrong! Game over.';
+          startBtn.disabled = false;
+          canPress = false;
+        }
+      }
+    });
+    startBtn.onclick = startGame;
+    updateScore();
+  </script>
+</body>
+</html>

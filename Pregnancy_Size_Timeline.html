@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pregnancy Size and Weight Timeline</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <style>
+    body { font-family: Arial,sans-serif; background: #faf8f2; }
+    .container { display: flex; max-width: 1100px; margin: 48px auto; gap: 36px; }
+    .inputs {
+      width: 32%;
+      background: #fffbe8;
+      padding: 34px 24px 24px 24px;
+      border-radius: 18px;
+      box-shadow: 0 6px 20px #0001;
+      min-width: 220px;
+    }
+    .outputs {
+      width: 68%;
+      background: #f0faff;
+      padding: 34px 32px 24px 32px;
+      border-radius: 18px;
+      box-shadow: 0 6px 20px #0001;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    h2 { margin-top: 0; }
+    label { display: block; margin-top: 16px; }
+    .slider-wrap { margin-bottom: 16px; }
+    .slider-row { display: flex; align-items: center; justify-content: space-between; }
+    .slider-val { font-weight: bold; font-size: 1.09em; margin-left: 12px;}
+    input[type="range"] {
+      width: 100%;
+      accent-color: #5b93e6;
+      margin-top: 2px;
+    }
+    .summary { font-size: 1.07em; background: #e5f6ee; border-radius: 10px; padding: 12px 18px; margin-top: 10px;}
+    .timeline-plot { width: 100% !important; height: 280px !important; min-height: 210px; background: #f4fafd; border-radius: 12px; border: 1px solid #c9e5fa; margin-bottom: 12px;}
+    .milestone-list { margin-top: 8px;}
+    .milestone { font-size: 1em; color: #347272; margin: 2px 0;}
+    .today-fetus-detail { margin-top: 8px; font-size: 1.06em; color: #31729b;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="inputs">
+      <h2>🤰 Pregnancy Tracker</h2>
+
+      <!-- LMP slider -->
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <label for="lmpSlider">Last Menstrual Period (LMP):</label>
+          <span class="slider-val" id="lmpDisplay"></span>
+        </div>
+        <input type="range" id="lmpSlider" min="0" max="280" value="0">
+      </div>
+
+      <!-- Cycle length slider -->
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <label for="cycleSlider">Cycle Length:</label>
+          <span class="slider-val" id="cycleDisplay">28</span>
+        </div>
+        <input type="range" id="cycleSlider" min="21" max="40" value="28">
+      </div>
+
+      <!-- Starting Mom Weight -->
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <label for="startWeightSlider">Starting Weight (lb):</label>
+          <span class="slider-val" id="startWeightDisplay">160</span>
+        </div>
+        <input type="range" id="startWeightSlider" min="90" max="300" value="160">
+      </div>
+
+      <!-- Conception date -->
+      <label style="margin-top:12px;">
+        <input type="checkbox" id="useConception">
+        I know the conception date
+      </label>
+      <label id="conceptionLabel" style="display:none;">
+        Conception Date
+        <input type="date" id="conceptionDate">
+      </label>
+    </div>
+    <div class="outputs">
+      <h2>📏 Baby Size & Mom Weight Timeline</h2>
+      <div class="summary" id="summary"></div>
+      <div class="today-fetus-detail" id="fetusDetails"></div>
+      <canvas id="timeline" class="timeline-plot"></canvas>
+      <div class="milestone-list" id="milestones"></div>
+    </div>
+  </div>
+  <script>
+    // Key baby size and weight data (average US, per week)
+    const babySizePoints = [
+      { week: 8,  cm: 1.6,   g: 1,     emoji: "🍇", name: "Grape" },
+      { week: 12, cm: 5.4,   g: 14,    emoji: "🍒", name: "Cherry" },
+      { week: 16, cm: 11.6,  g: 100,   emoji: "🍎", name: "Apple" },
+      { week: 20, cm: 16.5,  g: 300,   emoji: "🥑", name: "Avocado" },
+      { week: 24, cm: 30.0,  g: 600,   emoji: "🌽", name: "Corn" },
+      { week: 28, cm: 37.5,  g: 1100,  emoji: "🍆", name: "Eggplant" },
+      { week: 32, cm: 42.4,  g: 1700,  emoji: "🍈", name: "Melon" },
+      { week: 36, cm: 47.4,  g: 2600,  emoji: "🍉", name: "Watermelon" },
+      { week: 40, cm: 51.5,  g: 3400,  emoji: "👶", name: "Baby" }
+    ];
+
+    // Healthy recommended weight gain curve by starting BMI (simplified US CDC)
+    // We'll use 25-35 lb gain for normal BMI, show healthy band (+/-5 lb).
+    function getMomWeightGain(week, startWeight) {
+      // Only gain a few lbs in first trimester, then steady per week
+      if (week <= 12) return 2 + (week - 4) * 0.25;
+      else return 2 + (week - 12) * 1; // About 1lb per week after 12w
+    }
+
+    function getMomWeightGainLow(week) { // min healthy
+      if (week <= 12) return 0.5 + (week - 4) * 0.18;
+      else return 0.5 + (week - 12) * 0.8;
+    }
+    function getMomWeightGainHigh(week) { // max healthy
+      if (week <= 12) return 3 + (week - 4) * 0.35;
+      else return 3 + (week - 12) * 1.3;
+    }
+
+    function getBabySizeCM(week) {
+      for (let i = 0; i < babySizePoints.length - 1; i++) {
+        let p0 = babySizePoints[i], p1 = babySizePoints[i + 1];
+        if (week >= p0.week && week <= p1.week) {
+          let frac = (week - p0.week) / (p1.week - p0.week);
+          return p0.cm + frac * (p1.cm - p0.cm);
+        }
+      }
+      if (week < babySizePoints[0].week) return babySizePoints[0].cm;
+      return babySizePoints[babySizePoints.length - 1].cm;
+    }
+    function getBabyWeightG(week) {
+      for (let i = 0; i < babySizePoints.length - 1; i++) {
+        let p0 = babySizePoints[i], p1 = babySizePoints[i + 1];
+        if (week >= p0.week && week <= p1.week) {
+          let frac = (week - p0.week) / (p1.week - p0.week);
+          return p0.g + frac * (p1.g - p0.g);
+        }
+      }
+      if (week < babySizePoints[0].week) return babySizePoints[0].g;
+      return babySizePoints[babySizePoints.length - 1].g;
+    }
+
+    // Elements
+    const lmpSlider = document.getElementById('lmpSlider');
+    const lmpDisplay = document.getElementById('lmpDisplay');
+    const cycleSlider = document.getElementById('cycleSlider');
+    const cycleDisplay = document.getElementById('cycleDisplay');
+    const startWeightSlider = document.getElementById('startWeightSlider');
+    const startWeightDisplay = document.getElementById('startWeightDisplay');
+    const useConception = document.getElementById('useConception');
+    const conceptionDate = document.getElementById('conceptionDate');
+    const conceptionLabel = document.getElementById('conceptionLabel');
+    const summary = document.getElementById('summary');
+    const milestones = document.getElementById('milestones');
+    const timelineCanvas = document.getElementById('timeline');
+    const fetusDetails = document.getElementById('fetusDetails');
+    let chart = null;
+    let today = new Date();
+
+    function dateAddDays(date, days) {
+      let d = new Date(date);
+      d.setDate(d.getDate() - days);
+      return d;
+    }
+    function dateAddDaysFwd(date, days) {
+      let d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
+    function updateLmpDisplay() {
+      let daysAgo = Number(lmpSlider.value);
+      let lmpDate = dateAddDays(today, daysAgo);
+      lmpDisplay.textContent = lmpDate.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+    }
+    function updateCycleDisplay() {
+      cycleDisplay.textContent = cycleSlider.value;
+    }
+    function updateStartWeightDisplay() {
+      startWeightDisplay.textContent = startWeightSlider.value;
+    }
+
+    function plotTimeline(startDate, dueDate, gestDays, currentDate, startWeight) {
+      let timeline = [], momWeight = [], momWeightLow = [], momWeightHigh = [];
+      for (let w = 8; w <= 40; w += 0.2) {
+        let date = dateAddDaysFwd(startDate, Math.round(w * 7));
+        timeline.push({ x: date, y: getBabySizeCM(w) });
+        momWeight.push({ x: date, y: Number(startWeight) + getMomWeightGain(w, startWeight) });
+        momWeightLow.push({ x: date, y: Number(startWeight) + getMomWeightGainLow(w) });
+        momWeightHigh.push({ x: date, y: Number(startWeight) + getMomWeightGainHigh(w) });
+      }
+      // Milestones
+      let msPoints = babySizePoints.map(pt => ({
+        x: dateAddDaysFwd(startDate, pt.week * 7),
+        y: pt.cm,
+        emoji: pt.emoji,
+        label: pt.name + ` (${pt.cm} cm / ${pt.g} g)`,
+        weight: pt.g
+      }));
+      // Current marker
+      let gestWeeks = gestDays / 7;
+      let todayPoint = {
+        x: currentDate,
+        y: getBabySizeCM(gestWeeks)
+      };
+      let todayMomWeight = {
+        x: currentDate,
+        y: Number(startWeight) + getMomWeightGain(gestWeeks, startWeight)
+      };
+      if (chart) chart.destroy();
+      chart = new Chart(timelineCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          datasets: [
+            // Mom weight gain
+            {
+              label: 'Mom Weight (lb)',
+              data: momWeight,
+              yAxisID: 'momWeight',
+              borderColor: '#a8db8e',
+              backgroundColor: 'rgba(168,219,142,0.15)',
+              borderWidth: 4,
+              pointRadius: 0,
+              fill: false,
+              order: 0,
+              tension: 0.01
+            },
+            // Healthy range shading
+            {
+              label: 'Healthy Range',
+              data: momWeightHigh,
+              yAxisID: 'momWeight',
+              borderColor: 'rgba(184,215,150,0.0)',
+              backgroundColor: 'rgba(176, 214, 148, 0.19)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: {
+                target: {datasetIndex: 2},
+                above: 'rgba(176,214,148,0.14)',
+                below: 'rgba(176,214,148,0.14)'
+              },
+              order: 0,
+            },
+            {
+              label: 'Healthy Range Low',
+              data: momWeightLow,
+              yAxisID: 'momWeight',
+              borderColor: 'rgba(184,215,150,0.0)',
+              backgroundColor: 'rgba(176,214,148,0.0)',
+              pointRadius: 0,
+              borderWidth: 0,
+              fill: false,
+              order: 0,
+            },
+            // Baby size
+            {
+              label: 'Baby Length (cm)',
+              data: timeline,
+              borderColor: '#72c7d2',
+              borderWidth: 5,
+              pointRadius: 0,
+              fill: false,
+              order: 1,
+            },
+            // Milestones
+            {
+              type: 'scatter',
+              label: 'Milestones',
+              data: msPoints,
+              pointStyle: msPoints.map(p => p.emoji),
+              pointRadius: 19,
+              backgroundColor: "#fcad03",
+              borderColor: "#e5b100",
+              showLine: false,
+              order: 2,
+            },
+            // Today's baby marker
+            {
+              type: 'scatter',
+              label: 'Today (Baby)',
+              data: [todayPoint],
+              pointStyle: 'circle',
+              backgroundColor: '#e9529e',
+              borderColor: '#b51357',
+              pointRadius: 23,
+              borderWidth: 7,
+              showLine: false,
+              order: 3,
+            },
+            // Today's mom marker
+            {
+              type: 'scatter',
+              label: 'Today (Mom)',
+              data: [todayMomWeight],
+              yAxisID: 'momWeight',
+              pointStyle: 'circle',
+              backgroundColor: '#f3bb38',
+              borderColor: '#b8972d',
+              pointRadius: 19,
+              borderWidth: 6,
+              showLine: false,
+              order: 3,
+            }
+          ]
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  if (ctx.dataset.label === "Today (Baby)") {
+                    let week = gestDays / 7;
+                    let cm = getBabySizeCM(week).toFixed(1);
+                    let g = getBabyWeightG(week).toFixed(0);
+                    return `Today: ~${cm} cm, ~${g} g (${week.toFixed(1)} weeks)`;
+                  }
+                  if (ctx.dataset.label === "Today (Mom)") {
+                    return `Mom: ${todayMomWeight.y.toFixed(1)} lb today`;
+                  }
+                  if (ctx.dataset.label === "Milestones") {
+                    return `${ctx.raw.emoji} ${ctx.raw.label} (${ctx.parsed.x.toLocaleDateString()})`;
+                  }
+                  if (ctx.dataset.label === "Baby Length (cm)") {
+                    return `~${ctx.parsed.y.toFixed(1)} cm (${ctx.parsed.x.toLocaleDateString()})`;
+                  }
+                  if (ctx.dataset.label === "Mom Weight (lb)") {
+                    return `Mom: ${ctx.parsed.y.toFixed(1)} lb`;
+                  }
+                  return '';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              min: dateAddDaysFwd(startDate, 8*7),
+              max: dueDate,
+              time: { unit: 'month', tooltipFormat: 'MMM d, yyyy', displayFormats: {month: 'MMM yyyy'} },
+              title: { display: true, text: 'Date', font: { size: 15, weight: 700 } },
+              grid: { color: "#ececec" },
+              ticks: { font: { size: 14 } }
+            },
+            y: {
+              min: 0, max: 55,
+              title: { display: true, text: 'Baby Length (cm)', font: { size: 15, weight: 700 } },
+              position: 'left',
+              ticks: { stepSize: 10, font: { size: 13 } }
+            },
+            momWeight: {
+              min: Math.max(80, Number(startWeightSlider.value) - 1),
+              max: Number(startWeightSlider.value) + 42,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: 'Mom Weight (lb)', font: { size: 15, weight: 700 } },
+              ticks: { stepSize: 10, font: { size: 13 } }
+            }
+          }
+        }
+      });
+    }
+
+    function calcDueDate() {
+      let dueDate, startDate, conception = false;
+      let totalDays = 280;
+      let startWeight = startWeightSlider.value
+      let gestDays, gestWeeks, gestExtra, percent, trimester;
+      if (useConception.checked && conceptionDate.value) {
+        conception = true;
+        startDate = new Date(conceptionDate.value);
+        dueDate = new Date(startDate);
+        totalDays = 266;
+        dueDate.setDate(dueDate.getDate() + 266);
+      } else {
+        let daysAgo = Number(lmpSlider.value);
+        startDate = dateAddDays(today, daysAgo);
+        let cycleAdj = Number(cycleSlider.value) - 28;
+        startDate.setDate(startDate.getDate() + cycleAdj);
+        dueDate = new Date(startDate);
+        dueDate.setDate(dueDate.getDate() + 280);
+      }
+
+      // Calculate gestational age
+      gestDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      gestWeeks = Math.floor(gestDays / 7);
+      gestExtra = gestDays % 7;
+      percent = Math.min(100, Math.max(0, Math.round((gestDays / 280) * 100)));
+      if (gestDays < 0) {
+        summary.innerHTML = "Pregnancy has not started yet.";
+        milestones.innerHTML = "";
+        fetusDetails.innerHTML = "";
+        if (chart) chart.destroy();
+        return;
+      }
+      trimester = gestWeeks < 13 ? 1 : (gestWeeks < 28 ? 2 : 3);
+
+      summary.innerHTML = `
+        <b>Due Date:</b> ${dueDate.toLocaleDateString()}<br>
+        <b>Gestational Age:</b> ${gestWeeks} weeks, ${gestExtra} days<br>
+        <b>Trimester:</b> ${trimester}<br>
+        <b>Progress:</b> ${percent}% complete
+      `;
+
+      // Baby size today
+      let babyLengthCm = getBabySizeCM(gestDays / 7).toFixed(1);
+      let babyWeightG = getBabyWeightG(gestDays / 7);
+      let babyWeightLb = (babyWeightG * 0.00220462).toFixed(2);
+      let fruitInfo = "";
+      for (let i = babySizePoints.length - 1; i >= 0; i--) {
+        if (gestDays / 7 >= babySizePoints[i].week) {
+          fruitInfo = `<span style="font-size:1.2em">${babySizePoints[i].emoji}</span> (${babySizePoints[i].name})`;
+          break;
+        }
+      }
+      fetusDetails.innerHTML = `Baby today: <b>${babyLengthCm} cm</b> long, <b>${babyWeightG.toFixed(0)} g</b> (${babyWeightLb} lb) ${fruitInfo}`;
+
+      // Fruit/size milestone list below chart
+      let msHtml = babySizePoints.map(m => {
+        let weekDate = dateAddDaysFwd(startDate, m.week * 7);
+        let diffDays = Math.floor((weekDate - today) / (1000 * 60 * 60 * 24));
+        let info = diffDays > 0 ? `in ${diffDays} days (${weekDate.toLocaleDateString()})` :
+          diffDays === 0 ? "now!" : `${-diffDays} days ago (${weekDate.toLocaleDateString()})`;
+        return `<div class="milestone">${m.emoji} <b>Week ${m.week} (${m.name}):</b> ${info} – <b>${m.cm} cm</b>, <b>${m.g} g</b></div>`;
+      }).join('');
+      milestones.innerHTML = msHtml;
+
+      // Draw timeline plot
+      plotTimeline(startDate, dueDate, gestDays, today, startWeight);
+    }
+
+    // Input event wiring
+    lmpSlider.addEventListener('input', () => {
+      updateLmpDisplay();
+      calcDueDate();
+    });
+    cycleSlider.addEventListener('input', () => {
+      updateCycleDisplay();
+      calcDueDate();
+    });
+    startWeightSlider.addEventListener('input', () => {
+      updateStartWeightDisplay();
+      calcDueDate();
+    });
+    useConception.addEventListener('change', () => {
+      conceptionLabel.style.display = useConception.checked ? "block" : "none";
+      calcDueDate();
+    });
+    conceptionDate.addEventListener('input', calcDueDate);
+
+    // Initial UI setup
+    updateLmpDisplay();
+    updateCycleDisplay();
+    updateStartWeightDisplay();
+    calcDueDate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test - Life Guide Tool</title>
+    <!-- Google Fonts: Poppins & Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-green: #244332;
+            --accent-green: #35644a;
+            --light-green-bg: #e7f3ea;
+            --text-primary: #2c2c2c;
+            --text-secondary: #41484f;
+            --background: #f9fafb;
+            --card-background: #ffffff;
+            --border-color: #e5e7eb;
+            --correct-color: #22c55e;
+            --incorrect-color: #ef4444;
+            --cursor-color: var(--accent-green);
+        }
+
+        body {
+            background: var(--background);
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            align-items: center;
+        }
+        
+        /* --- Header Section --- */
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 1.5rem;
+            background: var(--card-background);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+        .header-text {
+            color: var(--primary-green);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* --- Main Content: Typing Test --- */
+        .typing-test-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .test-wrapper {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-background);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Test Options (Time/Mode) */
+        .test-options {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .option-group {
+            display: flex;
+            gap: 6px;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .option-button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-button.active {
+            background: var(--accent-green);
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Stats Display (WPM, Accuracy, etc.) */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: 16px;
+            text-align: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .stat-label { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 2.2em; font-weight: 700; color: var(--primary-green); font-family: 'Roboto Mono', monospace; }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+        #progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--accent-green);
+            border-radius: 4px;
+            transition: width 0.5s linear;
+        }
+
+        /* Text to be typed */
+        .text-container {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            user-select: none;
+            margin-bottom: 24px;
+            height: 150px;
+            overflow: hidden;
+            position: relative;
+        }
+        .text-container p { margin: 0; }
+        .correct { color: var(--correct-color); }
+        .incorrect { background-color: var(--incorrect-color); color: white; border-radius: 3px; }
+        .current::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; width: 100%;
+            height: 3px; background: var(--cursor-color); animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Restart Button */
+        .restart-button {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 24px; font-family: 'Poppins', sans-serif; font-size: 1em;
+            font-weight: 500; color: var(--card-background); background-color: var(--accent-green);
+            border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; margin: 0 auto;
+        }
+        .restart-button:hover { background-color: var(--primary-green); transform: translateY(-2px); }
+        .restart-button svg { width: 20px; height: 20px; }
+
+        /* Results Modal */
+        .results-modal {
+            display: none; /* Initially hidden */
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .results-modal-content {
+            background: white; padding: 40px; border-radius: 16px;
+            text-align: center; max-width: 450px; width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .results-title { font-size: 2rem; font-weight: 700; color: var(--primary-green); margin-top: 0; }
+        .results-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; margin: 30px 0;
+        }
+        .result-stat .stat-label { font-size: 1em; }
+        .result-stat .stat-value { font-size: 2.5em; }
+        
+        /* --- Footer --- */
+        footer { width: 100%; text-align: center; padding: 24px; font-size: 0.9em; color: #5a6877; box-sizing: border-box; }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 768px) {
+            .test-wrapper { padding: 24px; }
+            .stat-value { font-size: 1.8em; }
+            .text-container { font-size: 1.1rem; height: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-text">Typing Speed Test</div>
+  </header>
+
+  <main class="typing-test-container">
+    <div class="test-wrapper">
+      
+      <div class="test-options">
+        <div class="option-group" id="mode-options">
+            <button class="option-button active" data-mode="text">Text</button>
+            <button class="option-button" data-mode="words">Words</button>
+            <button class="option-button" data-mode="code">Code</button>
+        </div>
+        <div class="option-group" id="time-options">
+            <button class="option-button" data-time="30">30s</button>
+            <button class="option-button active" data-time="60">60s</button>
+            <button class="option-button" data-time="90">90s</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-label">WPM</div><div id="wpm" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label">Accuracy</div><div id="accuracy" class="stat-value">100</div></div>
+        <div class="stat"><div class="stat-label">Time</div><div id="time" class="stat-value">60s</div></div>
+      </div>
+
+      <div class="progress-bar-container">
+        <div id="progress-bar"></div>
+      </div>
+
+      <div id="text-container" class="text-container">
+        <p>Click here or start typing to begin the test...</p>
+      </div>
+      
+      <button id="restart-button" class="restart-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"></path><path d="M13.293 6.293 8.586 11H18v2H8.586l4.707 4.707-1.414 1.414L5.757 12l6.122-6.121z"></path></svg>
+        <span>Restart Test</span>
+      </button>
+    </div>
+  </main>
+
+  <div id="results-modal" class="results-modal">
+    <div class="results-modal-content">
+        <h2 class="results-title">Test Results</h2>
+        <div class="results-grid">
+            <div class="result-stat"><div class="stat-label">WPM</div><div id="modal-wpm" class="stat-value">0</div></div>
+            <div class="result-stat"><div class="stat-label">Accuracy</div><div id="modal-accuracy" class="stat-value">100</div></div>
+            <div class="result-stat"><div class="stat-label">Characters</div><div id="modal-chars" class="stat-value">0</div></div>
+            <div class="result-stat"><div class="stat-label">Errors</div><div id="modal-errors" class="stat-value">0</div></div>
+        </div>
+        <button id="modal-restart-button" class="restart-button">Try Again</button>
+    </div>
+  </div>
+
+  <footer>
+    <div>A tool from LifeGuideTool.com. Use 'Tab' then 'Enter' on the restart button for keyboard navigation.</div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const textContainer = document.getElementById('text-container');
+        const wpmEl = document.getElementById('wpm');
+        const accuracyEl = document.getElementById('accuracy');
+        const timeEl = document.getElementById('time');
+        const restartButton = document.getElementById('restart-button');
+        const progressBar = document.getElementById('progress-bar');
+        const timeOptions = document.getElementById('time-options');
+        const modeOptions = document.getElementById('mode-options');
+        const resultsModal = document.getElementById('results-modal');
+        const modalRestartButton = document.getElementById('modal-restart-button');
+        
+        // --- Test Content ---
+        const content = {
+            text: [ "The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet.", "Never underestimate the power of a good book. It can transport you to different worlds.", "Technology has revolutionized the way we live and work. From smartphones to artificial intelligence.", "The journey of a thousand miles begins with a single step. Consistency is key.", "A healthy lifestyle involves a balanced diet, regular exercise, and sufficient sleep." ],
+            words: ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me'],
+            code: [ "function factorial(n) {\n  if (n === 0) return 1;\n  return n * factorial(n - 1);\n}", "const arr = [1, 2, 3, 4, 5];\nconst sum = arr.reduce((a, b) => a + b, 0);", "const person = {\n  name: 'Alex',\n  age: 30\n};", "for (let i = 0; i < 5; i++) {\n  console.log(i);\n}" ]
+        };
+
+        // --- State Variables ---
+        let currentText = '';
+        let currentIndex = 0;
+        let errors = 0;
+        let totalTyped = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let testActive = false;
+        let testFinished = false;
+        let testDuration = 60;
+        let timeLeft = 60;
+        let testMode = 'text';
+
+        // --- Functions ---
+        
+        function generateTestText() {
+            let text = '';
+            if (testMode === 'text') {
+                text = content.text[Math.floor(Math.random() * content.text.length)];
+            } else if (testMode === 'words') {
+                let wordList = [];
+                for(let i=0; i<100; i++) {
+                    wordList.push(content.words[Math.floor(Math.random() * content.words.length)]);
+                }
+                text = wordList.join(' ');
+            } else if (testMode === 'code') {
+                text = content.code[Math.floor(Math.random() * content.code.length)];
+            }
+            return text;
+        }
+
+        function loadNewTest() {
+            if (timerInterval) clearInterval(timerInterval);
+            resultsModal.style.display = 'none';
+            testActive = false; testFinished = false; currentIndex = 0;
+            errors = 0; totalTyped = 0; startTime = null;
+            
+            currentText = generateTestText();
+            
+            textContainer.innerHTML = '';
+            currentText.split('').forEach(char => {
+                const span = document.createElement('span');
+                if (char === '\n') {
+                    span.innerHTML = '&#9166;<br>'; // Render newline character and a line break
+                } else {
+                    span.innerText = char;
+                }
+                textContainer.appendChild(span);
+            });
+            textContainer.querySelector('span').classList.add('current');
+            
+            timeLeft = testDuration;
+            wpmEl.textContent = '0';
+            accuracyEl.textContent = '100';
+            timeEl.textContent = `${timeLeft}s`;
+            progressBar.style.width = '100%';
+            textContainer.focus();
+        }
+
+        function startTest() {
+            if (testActive) return;
+            testActive = true;
+            startTime = new Date();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const elapsedTime = testDuration - timeLeft;
+                timeEl.textContent = `${timeLeft}s`;
+                progressBar.style.width = `${(timeLeft / testDuration) * 100}%`;
+                
+                if (startTime) {
+                    const elapsedTimeInMinutes = (new Date() - startTime) / 1000 / 60;
+                    const wpm = elapsedTimeInMinutes > 0 ? Math.round(((totalTyped - errors) / 5) / elapsedTimeInMinutes) : 0;
+                    wpmEl.textContent = Math.max(0, wpm);
+                }
+
+                if (timeLeft <= 0) {
+                    finishTest();
+                }
+            }, 1000);
+        }
+
+        function updateStats() {
+            const accuracy = totalTyped > 0 ? Math.round(((totalTyped - errors) / totalTyped) * 100) : 100;
+            accuracyEl.textContent = accuracy;
+        }
+        
+        function finishTest() {
+            clearInterval(timerInterval);
+            testActive = false;
+            testFinished = true;
+            
+            const finalWPM = wpmEl.textContent;
+            const finalAccuracy = accuracyEl.textContent;
+
+            document.getElementById('modal-wpm').textContent = finalWPM;
+            document.getElementById('modal-accuracy').textContent = finalAccuracy;
+            document.getElementById('modal-chars').textContent = `${totalTyped - errors}/${totalTyped}`;
+            document.getElementById('modal-errors').textContent = errors;
+            
+            resultsModal.style.display = 'flex';
+        }
+
+        function handleKeyDown(e) {
+            if (testFinished) return;
+            const key = e.key;
+            const spans = textContainer.querySelectorAll('span');
+            
+            if (!testActive && key.length === 1 && currentIndex === 0) {
+                startTest();
+            }
+
+            if (key === 'Backspace') {
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    spans[currentIndex]?.classList.remove('current');
+                    currentIndex--;
+                    if (spans[currentIndex].classList.contains('incorrect')) { errors--; }
+                    spans[currentIndex].classList.remove('correct', 'incorrect');
+                    spans[currentIndex].classList.add('current');
+                    updateStats();
+                }
+            } else if (key.length === 1) { // Handle character input
+                e.preventDefault();
+                const currentSpan = spans[currentIndex];
+                let expectedChar = currentSpan.innerText;
+                if (currentSpan.innerHTML.includes('<br>')) { // Handle newline character
+                    expectedChar = 'Enter';
+                }
+
+                if ((key === 'Enter' && expectedChar === 'Enter') || (key === expectedChar)) {
+                    currentSpan.classList.add('correct');
+                } else {
+                    currentSpan.classList.add('incorrect');
+                    errors++;
+                }
+                totalTyped++;
+                updateStats();
+                
+                currentSpan.classList.remove('current');
+                currentIndex++;
+                if (currentIndex < spans.length) {
+                    spans[currentIndex].classList.add('current');
+                } else {
+                    finishTest();
+                }
+            }
+        }
+        
+        function setupOptionButtons(container, stateKey, callback) {
+            container.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    container.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    const value = e.target.dataset[stateKey === 'duration' ? 'time' : 'mode'];
+                    if (stateKey === 'duration') testDuration = parseInt(value);
+                    else testMode = value;
+                    callback();
+                }
+            });
+        }
+        
+        // --- Event Listeners ---
+        document.addEventListener('keydown', handleKeyDown);
+        restartButton.addEventListener('click', loadNewTest);
+        modalRestartButton.addEventListener('click', loadNewTest);
+        setupOptionButtons(timeOptions, 'duration', loadNewTest);
+        setupOptionButtons(modeOptions, 'mode', loadNewTest);
+
+        // Initial load
+        loadNewTest();
+    });
+  </script>
+
+</body>
+</html>
+

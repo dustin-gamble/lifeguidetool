@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hyperspace Shooter</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      cursor: crosshair;
+      font-family: monospace;
+    }
+    canvas {
+      display: block;
+    }
+    #hud {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      color: rgba(200, 200, 200, 0.6);
+      font-size: 16px;
+      letter-spacing: 2px;
+      user-select: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="hud">🚀 Hyperspace Shooter | Score: <span id="score">0</span></div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
+
+let mouseX = width / 2;
+let mouseY = height / 2;
+let score = 0;
+
+const STAR_COUNT = 300;
+const STAR_SPEED = 2.5;     // FASTER
+const ENEMY_SPEED = 2;      // FASTER
+const MAX_ENEMIES = 5;
+const BEAM_DURATION = 18;   // frames (~1/3 second)
+const BEAM_WIDTH = 32;      // px, can adjust wider/narrower
+
+let stars = [];
+let enemies = [];
+let particles = [];
+let beams = [];
+
+// Init stars
+for (let i = 0; i < STAR_COUNT; i++) {
+  stars.push({
+    x: Math.random() * width - width / 2,
+    y: Math.random() * height - height / 2,
+    z: Math.random() * width
+  });
+}
+
+function createEnemy() {
+  if (enemies.length < MAX_ENEMIES) {
+    const size = 20 + Math.random() * 20;
+    enemies.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      z: width + Math.random() * 500,
+      size: size,
+      hit: false
+    });
+  }
+}
+
+function spawnParticles(x, y) {
+  for (let i = 0; i < 16; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      dx: (Math.random() - 0.5) * 6,
+      dy: (Math.random() - 0.5) * 6,
+      life: 24
+    });
+  }
+}
+
+function drawStars() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+  for (let s of stars) {
+    s.z -= STAR_SPEED;
+    if (s.z <= 0) s.z = width;
+    let sx = (s.x / s.z) * width + width / 2;
+    let sy = (s.y / s.z) * height + height / 2;
+    let radius = (1 - s.z / width) * 3;
+    ctx.beginPath();
+    ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+  }
+}
+
+function drawEnemies() {
+  for (let e of enemies) {
+    e.z -= ENEMY_SPEED;
+    if (e.z <= 0) {
+      e.z = width + Math.random() * 500;
+      e.x = Math.random() * width;
+      e.y = Math.random() * height;
+      e.hit = false;
+    }
+    const ex = (e.x - width / 2) / e.z * width + width / 2;
+    const ey = (e.y - height / 2) / e.z * height + height / 2;
+    const size = (1 - e.z / (width + 500)) * e.size;
+    ctx.beginPath();
+    ctx.arc(ex, ey, size, 0, Math.PI * 2);
+    ctx.fillStyle = e.hit ? "red" : "lime";
+    ctx.shadowColor = e.hit ? "red" : "lime";
+    ctx.shadowBlur = e.hit ? 30 : 15;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawParticles() {
+  for (let p of particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life / 24;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "yellow";
+    ctx.shadowColor = "orange";
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    p.x += p.dx;
+    p.y += p.dy;
+    p.life -= 1;
+  }
+  particles = particles.filter(p => p.life > 0);
+}
+
+function drawBeams() {
+  for (let b of beams) {
+    ctx.save();
+    // Make the beam a glowing round line
+    ctx.globalAlpha = Math.max(0, b.life / BEAM_DURATION);
+    let grad = ctx.createLinearGradient(width/2, height/2, b.x, b.y);
+    grad.addColorStop(0, 'rgba(0,255,255,1)');
+    grad.addColorStop(0.4, 'rgba(0,255,255,0.7)');
+    grad.addColorStop(1, 'rgba(255,255,255,0.85)');
+    ctx.strokeStyle = grad;
+    ctx.shadowColor = "cyan";
+    ctx.shadowBlur = 30;
+    ctx.lineWidth = BEAM_WIDTH;
+    ctx.beginPath();
+    ctx.moveTo(width/2, height/2);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    b.life--;
+  }
+  beams = beams.filter(b => b.life > 0);
+}
+
+function drawCrosshair() {
+  ctx.strokeStyle = 'cyan';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(mouseX - 10, mouseY);
+  ctx.lineTo(mouseX + 10, mouseY);
+  ctx.moveTo(mouseX, mouseY - 10);
+  ctx.lineTo(mouseX, mouseY + 10);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+}
+
+function animate() {
+  drawStars();
+  drawEnemies();
+  drawParticles();
+  drawBeams();
+  drawCrosshair();
+  requestAnimationFrame(animate);
+}
+
+// Helper: distance from point to beam (line segment)
+function pointToBeam(px, py, x1, y1, x2, y2) {
+  // Closest approach from px,py to line x1,y1 -> x2,y2
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+
+  const dot = A * C + B * D;
+  const len_sq = C * C + D * D;
+  let param = -1;
+  if (len_sq !== 0) param = dot / len_sq;
+  let xx, yy;
+
+  if (param < 0) { xx = x1; yy = y1; }
+  else if (param > 1) { xx = x2; yy = y2; }
+  else { xx = x1 + param * C; yy = y1 + param * D; }
+
+  const dx = px - xx;
+  const dy = py - yy;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function shoot() {
+  beams.push({ x: mouseX, y: mouseY, life: BEAM_DURATION });
+
+  // For all enemies, see if their center is within beam width
+  for (let e of enemies) {
+    if (e.hit) continue;
+    const ex = (e.x - width / 2) / e.z * width + width / 2;
+    const ey = (e.y - height / 2) / e.z * height + height / 2;
+    const size = (1 - e.z / (width + 500)) * e.size;
+
+    // Distance from center of enemy to beam
+    let d = pointToBeam(ex, ey, width/2, height/2, mouseX, mouseY);
+    if (d < BEAM_WIDTH/2 + size) {
+      e.hit = true;
+      spawnParticles(ex, ey);
+      score++;
+      document.getElementById("score").textContent = score;
+      setTimeout(() => {
+        e.z = width + Math.random() * 500;
+        e.x = Math.random() * width;
+        e.y = Math.random() * height;
+        e.hit = false;
+      }, 200);
+      // allow multi kills!
+    }
+  }
+}
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+window.addEventListener('click', shoot);
+
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+});
+
+// Spawn enemies
+setInterval(createEnemy, 1200);
+
+animate();
+</script>
+</body>
+</html>

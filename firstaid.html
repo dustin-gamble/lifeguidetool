@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>First Aid & Emergency Response Quiz</title>
+  <style>
+    body { background: #f8fafd; font-family: 'Segoe UI', Arial, sans-serif; margin:0;padding:0; display:flex; flex-direction:column; align-items:center;}
+    .quiz-container { background:#fff; border-radius:14px; box-shadow:0 8px 34px #8cd7ed2a; max-width:420px; width:95vw; margin:38px auto 0 auto; padding:32px 24px 28px 24px; }
+    .quiz-title { font-size:2em; font-weight:900; color:#197a87; margin-bottom:10px;}
+    .quiz-desc { color:#3b6472; font-size:1.07em; margin-bottom:20px;}
+    .question { font-size:1.12em; font-weight:600; margin-bottom:18px; color:#185663;}
+    .answers { display:flex; flex-direction:column; gap:14px; margin-bottom:22px;}
+    .ans-btn { background:#e8f2fc; border:none; border-radius:8px; padding:12px; font-size:1.05em; color:#1d4052; cursor:pointer; transition:background 0.13s, color 0.12s;}
+    .ans-btn:hover, .ans-btn.selected { background:#b9ecff; color:#185663;}
+    .ans-btn.correct { background:#d9fcd9; color:#15803d;}
+    .ans-btn.incorrect { background:#fed7d7; color:#b91c1c;}
+    .feedback { min-height:24px; font-size:1.04em; margin-bottom:14px;}
+    .progress { font-size:1em; color:#7696b1; margin-bottom:6px;}
+    .score-final { font-size:1.16em; font-weight:700; color:#217c7c; margin-top:12px;}
+    .restart-btn { margin-top:20px; padding:12px 32px; border-radius:8px; border:none; background:linear-gradient(90deg,#93e7e6 0%,#60a5fa 100%); color:#165d8a; font-weight:700; font-size:1.1em; cursor:pointer;}
+    .restart-btn:hover { background:linear-gradient(90deg,#5eead4 0%,#60a5fa 100%); color:#fff;}
+    .disclaimer { color:#677a87; font-size:0.97em; opacity:0.7; text-align:center; margin:22px 0 0 0;}
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="quiz-title">🚑 First Aid & Emergency Response Quiz</div>
+    <div class="quiz-desc">Practice quick thinking in emergencies—learn what to do, and why. (For awareness, not certification!)</div>
+    <div class="progress" id="progress"></div>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="restart-btn" id="restart" style="display:none;">Restart Quiz</button>
+    <div class="score-final" id="score-final"></div>
+    <div class="disclaimer">
+      <b>Disclaimer:</b> This quiz is for awareness and practice only, not for official certification. Always call emergency services and seek real training for first aid and CPR.
+    </div>
+  </div>
+  <script>
+    const questions = [
+      {
+        q: "Someone is choking and cannot speak or cough. What should you do first?",
+        a: ["Perform abdominal thrusts (Heimlich maneuver) immediately", "Give them water", "Slap them on the back repeatedly", "Wait to see if they recover"],
+        c: 0,
+        f: "Abdominal thrusts (Heimlich) can dislodge the object. Don't give water or wait; act quickly if they can't breathe."
+      },
+      {
+        q: "A person has a severe burn on their arm. What is the best immediate action?",
+        a: ["Cool the burn with running water", "Apply butter or oil", "Cover with ice directly", "Break any blisters"],
+        c: 0,
+        f: "Cool with clean running water for at least 10 minutes. Do not use butter, oil, or ice."
+      },
+      {
+        q: "You find someone collapsed and unresponsive. What is your very first step?",
+        a: ["Check for safety and tap their shoulder", "Begin chest compressions", "Give two rescue breaths", "Call their family"],
+        c: 0,
+        f: "Ensure the area is safe, then check for response before starting CPR or calling for help."
+      },
+      {
+        q: "Someone is bleeding heavily from a wound. What's your first response?",
+        a: ["Apply direct pressure with a clean cloth", "Wash the wound thoroughly", "Elevate the limb and leave it", "Remove any large objects stuck in the wound"],
+        c: 0,
+        f: "Stop bleeding by applying firm direct pressure. Don't remove embedded objects—pack around them and seek help."
+      },
+      {
+        q: "A person is having a seizure. What should you do?",
+        a: ["Clear the area of objects and cushion their head", "Hold them down", "Put something in their mouth", "Leave the room"],
+        c: 0,
+        f: "Keep them safe, cushion their head, but don't restrain or put anything in their mouth."
+      },
+      {
+        q: "A child drinks household cleaner. What is your first action?",
+        a: ["Call poison control or emergency services", "Make them vomit", "Give milk", "Wait to see what happens"],
+        c: 0,
+        f: "Call poison control or 911 for immediate advice. Don't induce vomiting unless told to."
+      },
+      {
+        q: "You suspect someone is having a heart attack. What do you do first?",
+        a: ["Call emergency services immediately", "Give them a glass of water", "Let them walk it off", "Check their temperature"],
+        c: 0,
+        f: "Time is critical. Call 911 or local emergency services right away."
+      },
+      {
+        q: "Someone is shivering, skin is cold and pale, after falling into cold water. What do you do?",
+        a: ["Remove wet clothing and warm them gradually", "Rub their skin hard", "Give them hot drinks quickly", "Have them exercise"],
+        c: 0,
+        f: "Gently remove wet clothes, wrap in blankets, and warm gradually. No hot drinks or rough rubbing."
+      },
+      {
+        q: "A person is stung by a bee and is allergic. They have an EpiPen. What do you do?",
+        a: ["Help them use the EpiPen immediately", "Wait to see if they develop symptoms", "Give them water", "Tell them to lie down and wait"],
+        c: 0,
+        f: "Epinephrine (EpiPen) should be used at the first sign of an allergic reaction."
+      },
+      {
+        q: "A friend has a nosebleed. What is the correct position?",
+        a: ["Sit up and lean forward", "Lie down flat", "Lean the head back", "Put their head between knees"],
+        c: 0,
+        f: "Sit and lean forward, pinching the soft part of the nose. Never lean back or lie down."
+      },
+      {
+        q: "What number should you call for emergency help in the US?",
+        a: ["911", "112", "411", "211"],
+        c: 0,
+        f: "Call 911 for medical, fire, or police emergencies in the US."
+      },
+      {
+        q: "A person with diabetes is confused and shaky. What should you do first?",
+        a: ["Give a sugary drink or snack", "Call 911 immediately", "Have them exercise", "Check their temperature"],
+        c: 0,
+        f: "Low blood sugar—give something sugary if the person is awake and can swallow."
+      },
+      {
+        q: "You see someone collapse after being stung by an insect. What’s the most likely emergency?",
+        a: ["Anaphylaxis (severe allergic reaction)", "Heat exhaustion", "Broken bone", "Epilepsy"],
+        c: 0,
+        f: "Sudden collapse after a sting suggests anaphylaxis—seek immediate emergency help."
+      },
+      {
+        q: "What is the correct way to perform chest compressions on an adult?",
+        a: ["Push hard and fast in the center of the chest", "Use only one hand", "Compress lightly", "Push on the lower abdomen"],
+        c: 0,
+        f: "Compress the center of the chest at least 2 inches deep, fast (100-120 per minute)."
+      },
+      {
+        q: "A person faints. What is your first action?",
+        a: ["Lay them flat and elevate their legs", "Give them water right away", "Sit them up quickly", "Leave them alone"],
+        c: 0,
+        f: "Lay them flat, raise legs to help blood flow. Only give water once fully alert."
+      },
+      {
+        q: "Someone cuts their finger and it's bleeding. What's the best thing to use?",
+        a: ["Clean, absorbent cloth or gauze", "Paper towel", "Cotton balls", "Plastic wrap"],
+        c: 0,
+        f: "Clean cloth or gauze absorbs and protects best. Cotton balls can leave fibers, plastic wrap isn't absorbent."
+      },
+      {
+        q: "A child is running a high fever (104°F) but is alert and drinking fluids. What should you do?",
+        a: ["Monitor, keep cool, give fluids, and consult a doctor if needed", "Give a cold bath", "Give aspirin", "Bundle them in blankets"],
+        c: 0,
+        f: "Monitor, fluids, keep cool—seek advice if the fever is persistent or child seems very unwell."
+      },
+      {
+        q: "What’s the best way to help someone with a broken bone?",
+        a: ["Immobilize and support the area, seek medical help", "Move the limb to test it", "Give painkillers only", "Wrap tightly with tape"],
+        c: 0,
+        f: "Keep the limb still, supported, and get medical care. Don’t move or tightly wrap the area."
+      },
+      {
+        q: "Someone is bitten by a dog. What is the first step?",
+        a: ["Wash the bite with soap and water", "Bandage immediately without cleaning", "Apply butter", "Suck out the poison"],
+        c: 0,
+        f: "Wash thoroughly to reduce infection risk, then seek medical attention."
+      },
+      {
+        q: "A person is dizzy and sweating after working in the sun. What do you do?",
+        a: ["Move to shade, give fluids, cool them down", "Give them a salt tablet", "Wrap them in blankets", "Have them run it off"],
+        c: 0,
+        f: "Signs of heat exhaustion—move to shade, cool down, hydrate."
+      }
+    ];
+    let qIdx = 0, correct = 0, answered = false;
+    function showQ() {
+      document.getElementById('score-final').textContent = '';
+      document.getElementById('restart').style.display = 'none';
+      const q = questions[qIdx];
+      document.getElementById('progress').textContent = `Question ${qIdx+1} of ${questions.length}`;
+      document.getElementById('question').textContent = q.q;
+      const ans = document.getElementById('answers');
+      ans.innerHTML = '';
+      q.a.forEach((choice, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'ans-btn';
+        btn.textContent = choice;
+        btn.onclick = () => checkAns(i, btn);
+        ans.appendChild(btn);
+      });
+      document.getElementById('feedback').textContent = '';
+      answered = false;
+    }
+    function checkAns(i, btn) {
+      if(answered) return;
+      answered = true;
+      const q = questions[qIdx];
+      const ans = document.getElementById('answers').children;
+      for(let j=0;j<ans.length;j++) {
+        ans[j].classList.remove('selected');
+        if(j===q.c) ans[j].classList.add('correct');
+        if(j===i && i!==q.c) ans[j].classList.add('incorrect');
+      }
+      btn.classList.add('selected');
+      if(i===q.c) {
+        document.getElementById('feedback').textContent = "✅ Correct!";
+        correct++;
+      } else {
+        document.getElementById('feedback').textContent = `❌ ${q.f}`;
+      }
+      setTimeout(() => {
+        qIdx++;
+        if(qIdx<questions.length) showQ();
+        else showScore();
+      }, 1550);
+    }
+    function showScore() {
+      document.getElementById('answers').innerHTML = '';
+      document.getElementById('question').textContent = 'Quiz Complete!';
+      document.getElementById('progress').textContent = '';
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('score-final').textContent = `You got ${correct} out of ${questions.length} correct!`;
+      document.getElementById('restart').style.display = '';
+    }
+    document.getElementById('restart').onclick = function() {
+      qIdx = 0; correct = 0; showQ();
+    };
+    // Start
+    showQ();
+  </script>
+</body>
+</html>
