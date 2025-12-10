@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #instructions {
+            width: 50%;
+            background: rgba(255,255,255,0.9);
+            color: #111;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border: 1px solid white;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        #toolbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background-color: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #555;
+            margin: 0 5px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+        }
+        .slot.active {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+
+    <div id="blocker">
+        <div id="instructions">
+            <h1 class="text-3xl font-bold mb-2">Click to Play</h1>
+            <p class="text-lg">W, A, S, D = Move | SPACE = Jump | CLICK = Place/Break Block</p>
+            <p class="mt-2 text-sm">Press ESC to release mouse and select blocks.</p>
+        </div>
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="toolbar">
+        <div class="slot active" data-block="grass" style="background-image: url('https://placehold.co/64x64/4A7A2A/FFFFFF?text=Grass')"></div>
+        <div class="slot" data-block="dirt" style="background-image: url('https://placehold.co/64x64/8B4513/FFFFFF?text=Dirt')"></div>
+        <div class="slot" data-block="stone" style="background-image: url('https://placehold.co/64x64/808080/FFFFFF?text=Stone')"></div>
+        <div class="slot" data-block="wood" style="background-image: url('https://placehold.co/64x64/966F33/FFFFFF?text=Wood')"></div>
+        <div class="slot" data-block="sand" style="background-image: url('https://placehold.co/64x64/F4A460/FFFFFF?text=Sand')"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+
+    <script type="module">
+        // --- Basic Scene Setup ---
+        let scene, camera, renderer;
+        let world; // Cannon.js physics world
+        let playerBody; // Cannon.js player body
+        const objects = []; // Store all interactive objects (cubes)
+
+        // --- Player Movement ---
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let moveForward = false;
+        let moveBackward = false;
+        let moveLeft = false;
+        let moveRight = false;
+        let canJump = false;
+
+        // --- Block Interaction ---
+        let raycaster;
+        const pointer = new THREE.Vector2();
+        let selectedBlock = 'grass';
+        const textures = {
+            grass: new THREE.TextureLoader().load('https://placehold.co/256x256/4A7A2A/FFFFFF?text=Grass+Top', (tex) => tex.wrapS = tex.wrapT = THREE.RepeatWrapping),
+            dirt: new THREE.TextureLoader().load('https://placehold.co/256x256/8B4513/FFFFFF?text=Dirt', (tex) => tex.wrapS = tex.wrapT = THREE.RepeatWrapping),
+            stone: new THREE.TextureLoader().load('https://placehold.co/256x256/808080/FFFFFF?text=Stone', (tex) => tex.wrapS = tex.wrapT = THREE.RepeatWrapping),
+            wood: new THREE.TextureLoader().load('https://placehold.co/256x256/966F33/FFFFFF?text=Wood', (tex) => tex.wrapS = tex.wrapT = THREE.RepeatWrapping),
+            sand: new THREE.TextureLoader().load('https://placehold.co/256x256/F4A460/FFFFFF?text=Sand', (tex) => tex.wrapS = tex.wrapT = THREE.RepeatWrapping),
+        };
+
+        const materials = {
+            grass: [
+                new THREE.MeshLambertMaterial({ map: textures.dirt }), // right
+                new THREE.MeshLambertMaterial({ map: textures.dirt }), // left
+                new THREE.MeshLambertMaterial({ map: textures.grass }), // top
+                new THREE.MeshLambertMaterial({ map: textures.dirt }), // bottom
+                new THREE.MeshLambertMaterial({ map: textures.dirt }), // front
+                new THREE.MeshLambertMaterial({ map: textures.dirt }), // back
+            ],
+            dirt: new THREE.MeshLambertMaterial({ map: textures.dirt }),
+            stone: new THREE.MeshLambertMaterial({ map: textures.stone }),
+            wood: new THREE.MeshLambertMaterial({ map: textures.wood }),
+            sand: new THREE.MeshLambertMaterial({ map: textures.sand }),
+        };
+
+        var lastTime = performance.now();
+        init();
+        animate();
+
+        function init() {
+            // --- Scene ---
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 0, 50);
+
+            // --- Camera ---
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 0);
+
+            // --- Renderer ---
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // --- Physics World ---
+            world = new CANNON.World();
+            world.gravity.set(0, -20, 0); // Stronger gravity
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+
+            // --- Lighting ---
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight.position.set(50, 50, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // --- Player ---
+            const playerShape = new CANNON.Sphere(0.5);
+            playerBody = new CANNON.Body({ mass: 5, shape: playerShape });
+            playerBody.position.set(0, 15, 0);
+            playerBody.linearDamping = 0.9; // friction
+            world.addBody(playerBody);
+
+            // --- JUMP LOGIC ---
+            // This is the updated collision listener for jumping
+            playerBody.addEventListener("collide", (event) => {
+                const contact = event.contact;
+                // The contact normal is a vector pointing out from the body that was collided with.
+                // We want to check if the contact is with a surface below the player.
+                // The contact normal on the player (ni) should be pointing up (positive y).
+                let contactNormal = new CANNON.Vec3();
+                if (contact.bi.id === playerBody.id) {
+                    contact.ni.negate(contactNormal);
+                } else {
+                    contactNormal.copy(contact.ni);
+                }
+                // If the contact normal has a strong upward component, we're on the ground.
+                if (contactNormal.y > 0.5) {
+                    canJump = true;
+                }
+            });
+
+            // --- World Generation ---
+            const worldSize = 20;
+            const cubeSize = 1;
+            for (let x = -worldSize / 2; x < worldSize / 2; x++) {
+                for (let z = -worldSize / 2; z < worldSize / 2; z++) {
+                    const height = Math.round(Math.sin(x * 0.2) * 2 + Math.cos(z * 0.2) * 2) + 4;
+                    for (let y = 0; y < height; y++) {
+                        let blockType = 'dirt';
+                        if (y === height - 1) blockType = 'grass';
+                        if (y < height - 3) blockType = 'stone';
+                        createCube(x, y, z, cubeSize, blockType);
+                    }
+                }
+            }
+
+            // --- Controls ---
+            initPointerLock();
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousedown', onMouseDown);
+
+            // --- Raycaster ---
+            raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, -1, 0), 0, 5);
+
+            // --- Toolbar ---
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.addEventListener('click', () => {
+                    if (document.pointerLockElement === document.body) return; // Don't select if playing
+                    document.querySelector('.slot.active').classList.remove('active');
+                    slot.classList.add('active');
+                    selectedBlock = slot.dataset.block;
+                });
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createCube(x, y, z, size, type) {
+            const geo = new THREE.BoxGeometry(size, size, size);
+            const mat = materials[type];
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData.blockType = type;
+            scene.add(mesh);
+
+            const shape = new CANNON.Box(new CANNON.Vec3(size / 2, size / 2, size / 2));
+            const body = new CANNON.Body({ mass: 0 }); // static
+            body.addShape(shape);
+            body.position.copy(mesh.position);
+            world.addBody(body);
+
+            objects.push({ mesh, body });
+        }
+
+        function initPointerLock() {
+            const blocker = document.getElementById('blocker');
+            const instructions = document.getElementById('instructions');
+            let isLocked = false;
+
+            instructions.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            }, false);
+
+            document.addEventListener('pointerlockchange', () => {
+                isLocked = document.pointerLockElement === document.body;
+                blocker.style.display = isLocked ? 'none' : 'flex';
+            }, false);
+            
+            const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+            const PI_2 = Math.PI / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                if (!isLocked) return;
+                const movementX = event.movementX || 0;
+                const movementY = event.movementY || 0;
+                euler.setFromQuaternion(camera.quaternion);
+                euler.y -= movementX * 0.002;
+                euler.x -= movementY * 0.002;
+                euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+                camera.quaternion.setFromEuler(euler);
+            });
+        }
+
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onKeyDown(event) {
+            switch (event.code) {
+                case 'KeyW': moveForward = true; break;
+                case 'KeyA': moveLeft = true; break;
+                case 'KeyS': moveBackward = true; break;
+                case 'KeyD': moveRight = true; break;
+                case 'Space': if (canJump) { playerBody.velocity.y = 10; } canJump = false; break;
+            }
+        }
+
+        function onKeyUp(event) {
+            switch (event.code) {
+                case 'KeyW': moveForward = false; break;
+                case 'KeyA': moveLeft = false; break;
+                case 'KeyS': moveBackward = false; break;
+                case 'KeyD': moveRight = false; break;
+            }
+        }
+
+        function onMouseDown(event) {
+            if (document.pointerLockElement !== document.body) return;
+
+            pointer.x = 0;
+            pointer.y = 0;
+
+            raycaster.setFromCamera(pointer, camera);
+            const intersects = raycaster.intersectObjects(objects.map(o => o.mesh));
+
+            if (intersects.length > 0) {
+                const intersect = intersects[0];
+
+                if (event.button === 2) { // Right click - place block
+                    const newPos = new THREE.Vector3().copy(intersect.point).add(intersect.face.normal);
+                    newPos.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                    createCube(newPos.x, newPos.y, newPos.z, 1, selectedBlock);
+                } else if (event.button === 0) { // Left click - remove block
+                    const objectToRemove = objects.find(o => o.mesh === intersect.object);
+                    if (objectToRemove) {
+                        scene.remove(objectToRemove.mesh);
+                        world.remove(objectToRemove.body);
+                        objects.splice(objects.indexOf(objectToRemove), 1);
+                    }
+                }
+            }
+        }
+        
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - lastTime) / 1000;
+
+            world.step(1 / 60, delta, 3);
+
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
+
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
+            if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
+
+            const moveVector = new THREE.Vector3(velocity.x, 0, velocity.z);
+            moveVector.applyQuaternion(camera.quaternion);
+            playerBody.velocity.x = moveVector.x;
+            playerBody.velocity.z = moveVector.z;
+            
+            camera.position.copy(playerBody.position);
+            camera.position.y += 0.5;
+
+            renderer.render(scene, camera);
+            lastTime = time;
+        }
+
+    </script>
+</body>
+</html>
+
