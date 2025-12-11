@@ -60,7 +60,7 @@
 
 <script type="text/babel">
 
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, forwardRef, useImperativeHandle } = React;
     
     // --- Icons ---
     const Icons = {
@@ -335,6 +335,9 @@
     // --- Components ---
 
     const TripCard = ({ item, isLast, isActive, onClick }) => {
+        const mapLink = item.coords ? `https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}` : null;
+        const hasLinks = (item.links && item.links.length > 0) || mapLink;
+
         const getBgColor = (loc, active) => {
             if (active) return "bg-pink-100 border-pink-400 ring-2 ring-pink-300";
             if (loc === "Tokyo") return "bg-blue-50 border-blue-200 hover:bg-blue-100";
@@ -392,9 +395,21 @@
                             </p>
                         )}
                         
-                        {item.links && item.links.length > 0 && (
+                        {hasLinks && (
                             <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-gray-200/50">
-                                {item.links.map((link, idx) => (
+                                {mapLink && (
+                                    <a
+                                        href={mapLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-pink-600 hover:bg-pink-50 hover:border-pink-200 transition-colors"
+                                    >
+                                        <Icons.MapPin />
+                                        View {item.loc} map
+                                    </a>
+                                )}
+                                {item.links?.map((link, idx) => (
                                     <a
                                         key={idx}
                                         href={link.url}
@@ -420,16 +435,39 @@
         );
     };
 
-    const MapView = ({ data, activeView, activeDay }) => {
-        const mapRef = useRef(null);
+    const MapView = forwardRef(({ data, activeView, activeDay }, ref) => {
+        const mapContainerRef = useRef(null);
         const mapInstance = useRef(null);
+        const markersRef = useRef({}); // Store references to markers by day index
+        const [mapReady, setMapReady] = useState(false);
+
+        const focusStop = (stop, options = {}) => {
+            if (!mapInstance.current || !stop?.coords) return;
+
+            const marker = markersRef.current[stop.day];
+            if (marker) {
+                marker.openPopup();
+            }
+
+            const zoomLevel = options.zoom || 12;
+            const duration = options.duration ?? 1.5;
+
+            mapInstance.current.flyTo(stop.coords, zoomLevel, {
+                animate: true,
+                duration
+            });
+        };
+
+        useImperativeHandle(ref, () => ({
+            focusStop
+        }));
 
         useEffect(() => {
-            if (!document.getElementById('map')) return;
+            if (!mapContainerRef.current) return;
 
             // Initialize map only once
             if (!mapInstance.current) {
-                const map = L.map('map').setView([35.3606, 138.7274], 6);
+                const map = L.map(mapContainerRef.current).setView([35.3606, 138.7274], 6);
                 mapInstance.current = map;
 
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -454,9 +492,12 @@
                             iconAnchor: [7, 7]
                         });
 
-                        L.marker(stop.coords, { icon: customIcon })
+                        const marker = L.marker(stop.coords, { icon: customIcon })
                          .addTo(map)
                          .bindPopup(`<b>${stop.date} - ${stop.loc}</b><br>${stop.title}`);
+                        
+                         // Store marker reference
+                         markersRef.current[stop.day] = marker;
                     }
                 });
 
@@ -486,6 +527,8 @@
                     opacity: 0.6,
                     dashArray: '4, 8'
                 }).addTo(map);
+
+                setMapReady(true);
             }
             
             // Fix map size when switching views or resizing
@@ -498,20 +541,39 @@
 
         // Effect to handle zooming to active day
         useEffect(() => {
-            if (mapInstance.current && activeDay && activeDay.coords) {
-                mapInstance.current.flyTo(activeDay.coords, 12, {
-                    animate: true,
-                    duration: 1.5
-                });
-            }
-        }, [activeDay]);
+            if (!mapReady || !activeDay || !activeDay.coords) return;
 
-        return <div id="map" className="w-full h-full bg-gray-100"></div>;
-    };
+            // If on mobile, wait a bit for the view transition
+            const isMobile = window.innerWidth < 1024;
+            const delay = isMobile ? 300 : 0;
+
+            const timer = setTimeout(() => {
+                focusStop(activeDay);
+            }, delay);
+
+            return () => clearTimeout(timer);
+        }, [activeDay, mapReady]);
+
+        return <div ref={mapContainerRef} className="w-full h-full bg-gray-100"></div>;
+    });
 
     const App = () => {
         const [view, setView] = useState('itinerary');
         const [activeDay, setActiveDay] = useState(null);
+        const mapRef = useRef(null);
+
+        const handleSelectDay = (item) => {
+            setActiveDay(item);
+
+            if (mapRef.current) {
+                mapRef.current.focusStop(item);
+            }
+
+            // On mobile, switch to map view when clicking a card
+            if (window.innerWidth < 1024 && item.coords) {
+                setView('map');
+            }
+        };
 
         return (
             <div className="h-screen flex flex-col bg-white overflow-hidden">
@@ -561,13 +623,7 @@
                                     item={item}
                                     isLast={index === tripData.length - 1}
                                     isActive={activeDay?.day === item.day}
-                                    onClick={() => {
-                                        setActiveDay(item);
-                                        // On mobile, switch to map view when clicking a card
-                                        if (window.innerWidth < 1024 && item.coords) {
-                                            setView('map');
-                                        }
-                                    }}
+                                    onClick={() => handleSelectDay(item)}
                                 />
                             ))}
                             
@@ -588,7 +644,7 @@
                         ${view === 'map' ? 'block' : 'hidden'} 
                         lg:block lg:w-1/2
                     `}>
-                        <MapView data={tripData} activeView={view} activeDay={activeDay} />
+                        <MapView ref={mapRef} data={tripData} activeView={view} activeDay={activeDay} />
                     </div>
 
                 </div>
