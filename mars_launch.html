@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Trajectory Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent scrollbars from layout shift */
+        }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        input[type=range]:disabled::-webkit-slider-thumb {
+            background: #9ca3af;
+        }
+        input[type=range]:disabled::-moz-range-thumb {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex h-screen">
+
+    <!-- 3D Visualization -->
+    <div id="canvas-container" class="flex-grow w-2/3 h-full"></div>
+
+    <!-- Control Panel -->
+    <div class="w-1/3 max-w-sm h-full bg-gray-800/50 backdrop-blur-sm p-6 overflow-y-auto border-l border-gray-700">
+        <div class="flex flex-col h-full">
+            <h1 class="text-2xl font-bold text-center mb-6">Mission Control</h1>
+
+            <div class="space-y-6 flex-grow">
+                <!-- Launch Angle -->
+                <div>
+                    <label for="launchAngle" class="block mb-2 text-sm font-medium text-gray-300">Launch Angle (degrees)</label>
+                    <div class="flex items-center space-x-4">
+                        <input id="launchAngle" type="range" min="-180" max="180" value="0" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                        <span id="launchAngleValue" class="font-mono text-lg text-blue-400 w-20 text-center">0°</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Angle relative to Earth's direction of travel. 0° is a prograde burn (most efficient).</p>
+                </div>
+
+                <!-- Launch Velocity -->
+                <div>
+                    <label for="launchVelocity" class="block mb-2 text-sm font-medium text-gray-300">Launch Velocity (km/s relative to Earth)</label>
+                    <div class="flex items-center space-x-4">
+                        <input id="launchVelocity" type="range" min="2.0" max="5.0" value="2.95" step="0.05" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                         <div class="flex flex-col items-center w-28">
+                            <span id="launchVelocityValue" class="font-mono text-lg text-blue-400">2.95</span>
+                            <span id="launchVelocityPercentC" class="font-mono text-xs text-blue-600"></span>
+                         </div>
+                    </div>
+                     <p class="text-xs text-gray-500 mt-2">The "kick" the spacecraft gets. Approx 2.9 km/s is needed for a Hohmann transfer.</p>
+                </div>
+
+                <!-- Auto Track Checkbox -->
+                <div class="pt-4">
+                    <label for="autoTrack" class="flex items-center cursor-pointer">
+                        <input id="autoTrack" type="checkbox" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800">
+                        <span class="ml-3 text-sm font-medium text-gray-300">Auto-Track Angle</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 pl-7">Automatically finds the best launch angle for the current planetary alignment.</p>
+                </div>
+            </div>
+
+            <!-- Status Display -->
+            <div id="status-panel" class="bg-gray-900/70 p-4 rounded-lg my-6 text-center">
+                <h3 class="font-semibold text-lg">Mission Status</h3>
+                <p id="status-text" class="text-xl text-yellow-400 font-mono mt-2 transition-all">Awaiting Launch</p>
+                <p id="details-text" class="text-sm text-gray-400 mt-1 h-4"></p>
+            </div>
+
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-4">
+                <button id="launchButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    Launch
+                </button>
+                <button id="resetButton" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- DOM Elements ---
+        const canvasContainer = document.getElementById('canvas-container');
+        const launchAngleSlider = document.getElementById('launchAngle');
+        const launchVelocitySlider = document.getElementById('launchVelocity');
+        const autoTrackCheckbox = document.getElementById('autoTrack');
+        const launchAngleValue = document.getElementById('launchAngleValue');
+        const launchVelocityValue = document.getElementById('launchVelocityValue');
+        const launchVelocityPercentC = document.getElementById('launchVelocityPercentC');
+        const launchButton = document.getElementById('launchButton');
+        const resetButton = document.getElementById('resetButton');
+        const statusText = document.getElementById('status-text');
+        const detailsText = document.getElementById('details-text');
+
+        // --- Simulation State ---
+        let isSimulating = false;
+        let simTime = 0;
+        let spacecraft = null;
+        let trajectoryLine = null;
+        let launchArrow = null;
+        let explosionParticles = null;
+        let isAutoTracking = false;
+        let autoTrackUpdateCounter = 0;
+        const AUTO_TRACK_UPDATE_INTERVAL = 10;
+
+        // --- Constants (scaled for visualization) ---
+        const AU = 150;
+        const EARTH_ORBIT_RADIUS = AU;
+        const MARS_ORBIT_RADIUS = AU * 1.52;
+        const EARTH_YEAR = 365.25;
+        const MARS_YEAR = 687;
+        const EARTH_ORBITAL_SPEED = (2 * Math.PI * EARTH_ORBIT_RADIUS) / EARTH_YEAR;
+        const SIM_TIME_STEP = 0.25; // Slowed down simulation
+        const VELOCITY_SCALE_FACTOR = 11;
+        const C_KPS = 299792.458; // Speed of light in km/s
+        const SUN_RADIUS = 15;
+        const SUN_GRAVITATIONAL_PARAMETER = EARTH_ORBITAL_SPEED * EARTH_ORBITAL_SPEED * EARTH_ORBIT_RADIUS;
+        const EARTH_GRAVITATIONAL_PARAMETER = SUN_GRAVITATIONAL_PARAMETER * 0.008;
+        const MARS_GRAVITATIONAL_PARAMETER = SUN_GRAVITATIONAL_PARAMETER * 0.0008;
+
+        // --- Three.js Setup ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 5000);
+        camera.position.set(0, AU * 2, AU * 2);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        canvasContainer.appendChild(renderer.domElement);
+
+        // --- Controls ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = AU * 10;
+        controls.minDistance = AU * 0.5;
+
+        // --- Scene Objects ---
+        const sunGeometry = new THREE.SphereGeometry(SUN_RADIUS, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdd00, emissive: 0xffdd00, emissiveIntensity: 0.9 });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+        const sunLight = new THREE.PointLight(0xffffff, 2.5, AU * 10);
+        scene.add(sunLight);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+        const starVertices = [];
+        for (let i = 0; i < 10000; i++) starVertices.push(THREE.MathUtils.randFloatSpread(4000), THREE.MathUtils.randFloatSpread(4000), THREE.MathUtils.randFloatSpread(4000));
+        const starGeometry = new THREE.BufferGeometry();
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        function createOrbit(radius) {
+            const points = [];
+            for (let i = 0; i <= 128; i++) {
+                const theta = (i / 128) * Math.PI * 2;
+                points.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
+            }
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
+            return new THREE.Line(geometry, material);
+        }
+
+        const earthOrbit = createOrbit(EARTH_ORBIT_RADIUS);
+        scene.add(earthOrbit);
+        const earthGeometry = new THREE.SphereGeometry(6, 32, 32);
+        const earthMaterial = new THREE.MeshStandardMaterial({ color: 0x6495ED, emissive: 0x6495ED, emissiveIntensity: 0.4, roughness: 0.8 });
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        scene.add(earth);
+        
+        const marsOrbit = createOrbit(MARS_ORBIT_RADIUS);
+        scene.add(marsOrbit);
+        const marsGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const marsMaterial = new THREE.MeshStandardMaterial({ color: 0xE57373, emissive: 0xE57373, emissiveIntensity: 0.4, roughness: 0.8 });
+        const mars = new THREE.Mesh(marsGeometry, marsMaterial);
+        scene.add(mars);
+
+        const scGeometry = new THREE.ConeGeometry(2.5, 8, 8);
+        const scMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+        spacecraft = new THREE.Mesh(scGeometry, scMaterial);
+        spacecraft.visible = false;
+        scene.add(spacecraft);
+
+        launchArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), earth.position, 40, 0xffff00);
+        scene.add(launchArrow);
+
+
+        // --- UI Event Listeners ---
+        function updateVelocityDisplay(value) {
+            const kmps = parseFloat(value).toFixed(2);
+            launchVelocityValue.textContent = kmps;
+            const percentC = (kmps / C_KPS * 100).toExponential(2);
+            launchVelocityPercentC.textContent = `(${percentC} %c)`;
+        }
+
+        launchAngleSlider.addEventListener('input', (e) => { launchAngleValue.textContent = `${e.target.value}°`; });
+        launchVelocitySlider.addEventListener('input', (e) => { updateVelocityDisplay(e.target.value); });
+        launchButton.addEventListener('click', () => {
+            if (isSimulating) return;
+            resetSimulation(false);
+            isSimulating = true;
+            spacecraft.visible = true;
+            launchArrow.visible = false;
+            launchButton.disabled = true;
+            launchButton.classList.add('opacity-50', 'cursor-not-allowed');
+            statusText.textContent = "In Flight";
+            statusText.className = 'text-xl text-cyan-400 font-mono mt-2 transition-all';
+        });
+        resetButton.addEventListener('click', () => { resetSimulation(true); });
+        autoTrackCheckbox.addEventListener('change', (e) => {
+            isAutoTracking = e.target.checked;
+            launchAngleSlider.disabled = isAutoTracking;
+            launchAngleSlider.classList.toggle('opacity-50', isAutoTracking);
+        });
+        window.addEventListener('resize', () => {
+            camera.aspect = canvasContainer.clientWidth / canvasContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        });
+        
+        // --- Core Simulation Logic ---
+        let scState = { position: new THREE.Vector3(), velocity: new THREE.Vector3(), acceleration: new THREE.Vector3() };
+        const trajectoryPoints = [];
+
+        function resetSimulation(hardReset = true) {
+            if (hardReset) simTime = 0;
+            if (explosionParticles) {
+                scene.remove(explosionParticles);
+                explosionParticles.geometry.dispose();
+                explosionParticles.material.dispose();
+                explosionParticles = null;
+            }
+            isSimulating = false;
+            if (trajectoryLine) {
+                scene.remove(trajectoryLine);
+                trajectoryLine.geometry.dispose();
+                trajectoryLine.material.dispose();
+                trajectoryLine = null;
+            }
+            trajectoryPoints.length = 0;
+            spacecraft.visible = false;
+            launchArrow.visible = true;
+            launchButton.disabled = false;
+            launchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            statusText.textContent = "Awaiting Launch";
+            statusText.className = 'text-xl text-yellow-400 font-mono mt-2 transition-all';
+            detailsText.textContent = '';
+            updatePlanetPositions(simTime);
+            updateLaunchArrow();
+        }
+
+        function getEarthVelocity(time) {
+            const earthAngle = (time / EARTH_YEAR) * 2 * Math.PI;
+            return new THREE.Vector3(-Math.sin(earthAngle) * EARTH_ORBITAL_SPEED, 0, Math.cos(earthAngle) * EARTH_ORBITAL_SPEED);
+        }
+
+        function updatePlanetPositions(time) {
+            const earthAngle = (time / EARTH_YEAR) * 2 * Math.PI;
+            earth.position.set(Math.cos(earthAngle) * EARTH_ORBIT_RADIUS, 0, Math.sin(earthAngle) * EARTH_ORBIT_RADIUS);
+            const marsAngle = (time / MARS_YEAR) * 2 * Math.PI + Math.PI / 4;
+            mars.position.set(Math.cos(marsAngle) * MARS_ORBIT_RADIUS, 0, Math.sin(marsAngle) * MARS_ORBIT_RADIUS);
+        }
+
+        function updateLaunchArrow() {
+            if (!launchArrow.visible) return;
+            const earthVel = getEarthVelocity(simTime);
+            const launchAngleRad = parseFloat(launchAngleSlider.value) * (Math.PI / 180);
+            const launchDir = new THREE.Vector3().copy(earthVel).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), launchAngleRad);
+            launchArrow.position.copy(earth.position);
+            launchArrow.setDirection(launchDir);
+        }
+
+        function calculateAndLaunchSpacecraft() {
+            const earthPos = new THREE.Vector3().copy(earth.position);
+            const earthVel = getEarthVelocity(simTime);
+            const launchAngleRad = parseFloat(launchAngleSlider.value) * (Math.PI / 180);
+            const launchSpeed = parseFloat(launchVelocitySlider.value) * VELOCITY_SCALE_FACTOR;
+            const launchDir = new THREE.Vector3().copy(earthVel).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), launchAngleRad);
+            const launchVelRelative = launchDir.multiplyScalar(launchSpeed);
+            scState.velocity.addVectors(earthVel, launchVelRelative);
+            scState.position.copy(earthPos);
+            scState.acceleration.set(0, 0, 0);
+            spacecraft.position.copy(scState.position);
+            trajectoryPoints.push(scState.position.clone());
+        }
+        
+        function calculateAcceleration(scPos, earthPos, marsPos) {
+            const totalAcceleration = new THREE.Vector3();
+            const vecToSun = new THREE.Vector3().copy(scPos).negate();
+            const rSunSq = vecToSun.lengthSq();
+            if (rSunSq > 1) totalAcceleration.add(vecToSun.normalize().multiplyScalar(SUN_GRAVITATIONAL_PARAMETER / rSunSq));
+            const vecToEarth = new THREE.Vector3().subVectors(earthPos, scPos);
+            const rEarthSq = vecToEarth.lengthSq();
+            if (rEarthSq > 1) totalAcceleration.add(vecToEarth.normalize().multiplyScalar(EARTH_GRAVITATIONAL_PARAMETER / rEarthSq));
+            const vecToMars = new THREE.Vector3().subVectors(marsPos, scPos);
+            const rMarsSq = vecToMars.lengthSq();
+            if (rMarsSq > 1) totalAcceleration.add(vecToMars.normalize().multiplyScalar(MARS_GRAVITATIONAL_PARAMETER / rMarsSq));
+            return totalAcceleration;
+        }
+
+        function updateSpacecraft() {
+            const dt = SIM_TIME_STEP;
+            scState.position.add(scState.velocity.clone().multiplyScalar(dt)).add(scState.acceleration.clone().multiplyScalar(0.5 * dt * dt));
+            const newAcceleration = calculateAcceleration(scState.position, earth.position, mars.position);
+            scState.velocity.add(scState.acceleration.clone().add(newAcceleration).multiplyScalar(0.5 * dt));
+            scState.acceleration.copy(newAcceleration);
+            spacecraft.position.copy(scState.position);
+            spacecraft.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), scState.velocity.clone().normalize());
+
+            trajectoryPoints.push(scState.position.clone());
+            if (trajectoryLine) {
+                scene.remove(trajectoryLine);
+                trajectoryLine.geometry.dispose();
+                trajectoryLine.material.dispose();
+            }
+            const lineGeom = new THREE.BufferGeometry().setFromPoints(trajectoryPoints);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x3b82f6, linewidth: 2 });
+            trajectoryLine = new THREE.Line(lineGeom, lineMat);
+            scene.add(trajectoryLine);
+        }
+
+        function createExplosion(position) {
+            const particles = 500;
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const velocities = [];
+
+            for (let i = 0; i < particles; i++) {
+                vertices.push(position.x, position.y, position.z);
+                const vel = new THREE.Vector3().randomDirection().multiplyScalar(Math.random() * 30);
+                velocities.push(vel);
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({
+                color: 0xffa500,
+                size: 1.5,
+                transparent: true,
+                opacity: 1.0,
+                blending: THREE.AdditiveBlending
+            });
+            
+            explosionParticles = new THREE.Points(geometry, material);
+            explosionParticles.userData.velocities = velocities;
+            explosionParticles.userData.life = 1.0; // 1 second life
+            scene.add(explosionParticles);
+        }
+
+        function updateExplosion() {
+            if (!explosionParticles) return;
+            explosionParticles.userData.life -= 0.01;
+            explosionParticles.material.opacity = explosionParticles.userData.life;
+            const positions = explosionParticles.geometry.attributes.position;
+            const velocities = explosionParticles.userData.velocities;
+            
+            for(let i = 0; i < positions.count; i++){
+                positions.setX(i, positions.getX(i) + velocities[i].x * SIM_TIME_STEP);
+                positions.setY(i, positions.getY(i) + velocities[i].y * SIM_TIME_STEP);
+                positions.setZ(i, positions.getZ(i) + velocities[i].z * SIM_TIME_STEP);
+            }
+            positions.needsUpdate = true;
+
+            if (explosionParticles.userData.life <= 0) {
+                scene.remove(explosionParticles);
+                explosionParticles.geometry.dispose();
+                explosionParticles.material.dispose();
+                explosionParticles = null;
+            }
+        }
+
+        function checkMissionStatus() {
+            if (!isSimulating) return;
+
+            // Check Sun collision
+            const distanceToSun = spacecraft.position.length();
+            if(distanceToSun < SUN_RADIUS) {
+                isSimulating = false;
+                createExplosion(spacecraft.position);
+                spacecraft.visible = false;
+                statusText.textContent = "DESTROYED";
+                statusText.className = 'text-xl text-red-500 font-mono mt-2 transition-all';
+                detailsText.textContent = 'Collided with the Sun.';
+                launchButton.disabled = false;
+                launchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                return; // Stop further checks
+            }
+
+            // Check Mars intercept
+            const distanceToMars = spacecraft.position.distanceTo(mars.position);
+            if (distanceToMars < 20) {
+                isSimulating = false;
+                statusText.textContent = "SUCCESS!";
+                statusText.className = 'text-xl text-green-400 font-mono mt-2 transition-all';
+                detailsText.textContent = `Mars Intercepted in ${Math.round(simTime)} days.`;
+                launchButton.disabled = false;
+                launchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            // Check if lost in space
+            if (isSimulating && (distanceToSun > MARS_ORBIT_RADIUS * 2.5 || simTime > 2000)) {
+                 isSimulating = false;
+                 statusText.textContent = "MISSION FAILED";
+                 statusText.className = 'text-xl text-red-500 font-mono mt-2 transition-all';
+                 detailsText.textContent = simTime > 2000 ? `Lost in space after ${Math.round(simTime)} days.` : 'Trajectory escaped system.';
+                 launchButton.disabled = false;
+                 launchButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        // --- Auto-Track Logic ---
+        function testTrajectory(angle, velocityKmS, startTime) {
+            let testSimTime = startTime;
+            const earthVel = getEarthVelocity(startTime);
+            const launchSpeed = velocityKmS * VELOCITY_SCALE_FACTOR;
+            
+            const startEarthPos = new THREE.Vector3();
+            const startMarsPos = new THREE.Vector3();
+            const earthAngleStart = (startTime / EARTH_YEAR) * 2 * Math.PI;
+            startEarthPos.set(Math.cos(earthAngleStart) * EARTH_ORBIT_RADIUS, 0, Math.sin(earthAngleStart) * EARTH_ORBIT_RADIUS);
+            const marsAngleStart = (startTime / MARS_YEAR) * 2 * Math.PI + Math.PI / 4;
+            startMarsPos.set(Math.cos(marsAngleStart) * MARS_ORBIT_RADIUS, 0, Math.sin(marsAngleStart) * MARS_ORBIT_RADIUS);
+
+            const launchAngleRad = angle * (Math.PI / 180);
+            const launchDir = new THREE.Vector3().copy(earthVel).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), launchAngleRad);
+            
+            let pos = new THREE.Vector3().copy(startEarthPos);
+            let vel = new THREE.Vector3().addVectors(earthVel, launchDir.multiplyScalar(launchSpeed));
+            let accel = calculateAcceleration(pos, startEarthPos, startMarsPos);
+            
+            let minDistance = Infinity;
+            const testEarthPos = new THREE.Vector3();
+            const testMarsPos = new THREE.Vector3();
+
+            for (let i = 0; i < 800; i++) { // Increased steps for slower sim speed
+                testSimTime += SIM_TIME_STEP;
+                const dt = SIM_TIME_STEP;
+                pos.add(vel.clone().multiplyScalar(dt)).add(accel.clone().multiplyScalar(0.5 * dt * dt));
+                const earthAngle = (testSimTime / EARTH_YEAR) * 2 * Math.PI;
+                testEarthPos.set(Math.cos(earthAngle) * EARTH_ORBIT_RADIUS, 0, Math.sin(earthAngle) * EARTH_ORBIT_RADIUS);
+                const marsAngle = (testSimTime / MARS_YEAR) * 2 * Math.PI + Math.PI / 4;
+                testMarsPos.set(Math.cos(marsAngle) * MARS_ORBIT_RADIUS, 0, Math.sin(marsAngle) * MARS_ORBIT_RADIUS);
+                const newAccel = calculateAcceleration(pos, testEarthPos, testMarsPos);
+                vel.add(accel.clone().add(newAccel).multiplyScalar(0.5 * dt));
+                accel.copy(newAccel);
+                const distance = pos.distanceTo(testMarsPos);
+                if (distance < minDistance) minDistance = distance;
+            }
+            return minDistance;
+        }
+
+        function autoTrackAngle() {
+            const currentVelocity = parseFloat(launchVelocitySlider.value);
+            let bestAngle = 0;
+            let minDistance = Infinity;
+
+            for (let angle = -180; angle <= 180; angle += 5) { // Wider search
+                const distance = testTrajectory(angle, currentVelocity, simTime);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestAngle = angle;
+                }
+            }
+            launchAngleSlider.value = bestAngle;
+            launchAngleValue.textContent = `${bestAngle}°`;
+        }
+        
+        // --- Animation Loop ---
+        let frameCount = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            simTime += SIM_TIME_STEP;
+            updatePlanetPositions(simTime);
+            updateExplosion();
+            
+            if (!isSimulating) {
+                updateLaunchArrow();
+                if (isAutoTracking) {
+                    autoTrackUpdateCounter++;
+                    if (autoTrackUpdateCounter >= AUTO_TRACK_UPDATE_INTERVAL) {
+                        autoTrackUpdateCounter = 0;
+                        autoTrackAngle();
+                    }
+                }
+            }
+            
+            if (isSimulating) {
+                if (frameCount === 0) calculateAndLaunchSpacecraft();
+                updateSpacecraft();
+                checkMissionStatus();
+                frameCount++;
+            } else {
+                frameCount = 0;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Initial setup
+        updateVelocityDisplay(launchVelocitySlider.value);
+        resetSimulation(true);
+        animate();
+    </script>
+</body>
+</html>

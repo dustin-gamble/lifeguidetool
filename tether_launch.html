@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbiting Tether Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .label-style {
+            @apply text-sm font-medium text-gray-300;
+        }
+        .value-style {
+            @apply text-sm font-bold text-white ml-2;
+        }
+        .control-panel {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        canvas {
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center h-screen w-screen">
+
+    <!-- Main Container -->
+    <div class="w-full h-full flex flex-col md:flex-row bg-black">
+
+        <!-- Simulation Canvas -->
+        <div id="canvas-container" class="flex-grow h-full w-full relative">
+            <canvas id="simulationCanvas"></canvas>
+            <div id="zoom-info" class="absolute bottom-4 right-4 text-xs text-gray-400 bg-gray-800 bg-opacity-50 px-2 py-1 rounded">Zoom: 100%</div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="w-full md:w-80 lg:w-96 p-4 space-y-4 overflow-y-auto control-panel border-l border-gray-700 h-full">
+            <h1 class="text-xl font-bold text-center text-cyan-400">Tether Controls</h1>
+
+            <!-- Tether Type -->
+            <div>
+                <label class="label-style">Tether Type</label>
+                <div class="flex bg-gray-800 rounded-lg p-1 mt-1">
+                    <button id="btnGravity" class="flex-1 p-2 rounded-md text-sm transition-colors bg-cyan-600">Gravity Gradient</button>
+                    <button id="btnRotating" class="flex-1 p-2 rounded-md text-sm transition-colors">Rotating</button>
+                </div>
+            </div>
+
+            <!-- Simulation Controls -->
+            <div>
+                <label class="label-style">Simulation</label>
+                <div class="flex space-x-2 mt-1">
+                    <button id="btnStartStop" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Start</button>
+                    <button id="btnReset" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Reset</button>
+                </div>
+            </div>
+
+            <!-- Tether Parameters -->
+            <div class="space-y-3 pt-2">
+                <div>
+                    <label for="tetherLength" class="label-style">Tether Length: <span id="tetherLengthValue" class="value-style">100 km</span></label>
+                    <input type="range" id="tetherLength" min="10" max="500" value="100" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+                <div id="rotationSpeedControl">
+                    <label for="rotationSpeed" class="label-style">Rotation Speed: <span id="rotationSpeedValue" class="value-style">1.0 rpm</span></label>
+                    <input type="range" id="rotationSpeed" min="0.1" max="5" value="1.0" step="0.1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+                 <div>
+                    <label for="stationAltitude" class="label-style">Station Altitude: <span id="stationAltitudeValue" class="value-style">400 km</span></label>
+                    <input type="range" id="stationAltitude" min="200" max="1000" value="400" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+            </div>
+
+            <!-- Payload Controls -->
+            <div class="pt-2">
+                <label class="label-style">Payload</label>
+                <button id="btnReleasePayload" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg mt-1 transition-colors">Release Payload</button>
+                 <button id="btnClearPayloads" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg mt-2 transition-colors">Clear Payloads</button>
+            </div>
+
+            <!-- Data Display -->
+            <div class="pt-2 space-y-2 text-xs text-gray-300">
+                <h2 class="text-lg font-semibold text-center text-cyan-400">System Data</h2>
+                <div class="bg-gray-800 p-3 rounded-lg space-y-1">
+                    <p>Station Velocity: <span id="stationVel" class="font-mono text-white float-right">0.00 km/s</span></p>
+                    <p>Tip Velocity (Abs): <span id="tipVel" class="font-mono text-white float-right">0.00 km/s</span></p>
+                    <p>Tip Altitude: <span id="tipAlt" class="font-mono text-white float-right">0 km</span></p>
+                    <p>Tether Tension: <span id="tension" class="font-mono text-white float-right">0.00 N</span></p>
+                </div>
+            </div>
+             <!-- Instructions -->
+            <div class="pt-4 text-xs text-gray-400">
+                <h3 class="font-semibold text-gray-300 mb-1">Instructions:</h3>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Click and drag to pan the view.</li>
+                    <li>Use the mouse wheel to zoom in and out.</li>
+                    <li>Release a payload from the tether's tip to see its new trajectory.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const tetherLengthSlider = document.getElementById('tetherLength');
+        const tetherLengthValue = document.getElementById('tetherLengthValue');
+        const rotationSpeedSlider = document.getElementById('rotationSpeed');
+        const rotationSpeedValue = document.getElementById('rotationSpeedValue');
+        const rotationSpeedControl = document.getElementById('rotationSpeedControl');
+        const stationAltitudeSlider = document.getElementById('stationAltitude');
+        const stationAltitudeValue = document.getElementById('stationAltitudeValue');
+        const btnStartStop = document.getElementById('btnStartStop');
+        const btnReset = document.getElementById('btnReset');
+        const btnGravity = document.getElementById('btnGravity');
+        const btnRotating = document.getElementById('btnRotating');
+        const btnReleasePayload = document.getElementById('btnReleasePayload');
+        const btnClearPayloads = document.getElementById('btnClearPayloads');
+        const stationVelDisplay = document.getElementById('stationVel');
+        const tipVelDisplay = document.getElementById('tipVel');
+        const tipAltDisplay = document.getElementById('tipAlt');
+        const tensionDisplay = document.getElementById('tension');
+        const zoomInfo = document.getElementById('zoom-info');
+
+        // --- Simulation Constants ---
+        const G = 6.67430e-11; // Gravitational constant
+        const EARTH_MASS = 5.972e24; // kg
+        const EARTH_RADIUS_KM = 6371; // km
+        const STATION_MASS = 420000; // kg (ISS mass)
+        const PAYLOAD_MASS = 1000; // kg
+        const PIXELS_PER_KM = 0.1;
+
+        // --- Simulation State ---
+        let simState = {
+            isRunning: false,
+            tetherType: 'gravity', // 'gravity' or 'rotating'
+            stationAltitude: 400, // km
+            tetherLength: 100, // km
+            rotationSpeedRpm: 1.0, // rpm
+            stationAngle: 0, // radians
+            tetherAngle: 0, // radians, relative to station's vertical
+            payloads: [],
+            lastTime: 0,
+            timeScale: 100 // Speeds up simulation time
+        };
+
+        // --- Viewport State ---
+        let view = {
+            zoom: 1,
+            offsetX: 0,
+            offsetY: 0,
+            isDragging: false,
+            lastMouseX: 0,
+            lastMouseY: 0
+        };
+
+        // --- Utility Functions ---
+        const resizeCanvas = () => {
+            const container = document.getElementById('canvas-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            view.offsetX = canvas.width / 2;
+            view.offsetY = canvas.height / 2;
+            draw(); // Redraw after resize
+        };
+
+        const kmToPixels = (km) => km * PIXELS_PER_KM * view.zoom;
+        const pixelsToKm = (px) => px / (PIXELS_PER_KM * view.zoom);
+
+        // --- Physics Calculations ---
+        const calculateOrbitalVelocity = (altitudeKm) => {
+            const r = (EARTH_RADIUS_KM + altitudeKm) * 1000; // in meters
+            return Math.sqrt(G * EARTH_MASS / r) / 1000; // in km/s
+        };
+
+        // --- Drawing Functions ---
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(view.offsetX, view.offsetY);
+
+            // Draw Earth
+            const earthRadiusPx = kmToPixels(EARTH_RADIUS_KM);
+            ctx.beginPath();
+            ctx.arc(0, 0, earthRadiusPx, 0, 2 * Math.PI);
+            const earthGrad = ctx.createRadialGradient(0, 0, earthRadiusPx * 0.9, 0, 0, earthRadiusPx);
+            earthGrad.addColorStop(0, '#3b82f6');
+            earthGrad.addColorStop(1, '#1e3a8a');
+            ctx.fillStyle = earthGrad;
+            ctx.fill();
+            
+            // Draw atmosphere
+            ctx.beginPath();
+            ctx.arc(0, 0, earthRadiusPx * 1.02, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(173, 216, 230, 0.2)';
+            ctx.fill();
+
+            // --- Calculate current positions ---
+            const stationOrbitRadius = kmToPixels(EARTH_RADIUS_KM + simState.stationAltitude);
+            const stationX = stationOrbitRadius * Math.cos(simState.stationAngle);
+            const stationY = stationOrbitRadius * Math.sin(simState.stationAngle);
+
+            const tetherLengthPx = kmToPixels(simState.tetherLength);
+            const totalTetherAngle = simState.stationAngle + Math.PI / 2 + simState.tetherAngle;
+            const tipX = stationX + tetherLengthPx * Math.cos(totalTetherAngle);
+            const tipY = stationY + tetherLengthPx * Math.sin(totalTetherAngle);
+
+            // Draw Payloads' trajectories
+            simState.payloads.forEach(p => {
+                ctx.beginPath();
+                ctx.moveTo(kmToPixels(p.path[0].x), kmToPixels(p.path[0].y));
+                for (let i = 1; i < p.path.length; i++) {
+                    ctx.lineTo(kmToPixels(p.path[i].x), kmToPixels(p.path[i].y));
+                }
+                ctx.strokeStyle = p.color;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Draw payload itself
+                const lastPoint = p.path[p.path.length - 1];
+                ctx.beginPath();
+                ctx.arc(kmToPixels(lastPoint.x), kmToPixels(lastPoint.y), 3, 0, 2 * Math.PI);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+            });
+
+            // Draw Tether
+            ctx.beginPath();
+            ctx.moveTo(stationX, stationY);
+            ctx.lineTo(tipX, tipY);
+            ctx.strokeStyle = '#fde047'; // yellow-300
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw Station
+            ctx.beginPath();
+            ctx.arc(stationX, stationY, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = '#10b981'; // emerald-500
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Draw Tether Tip (Subsatellite)
+            ctx.beginPath();
+            ctx.arc(tipX, tipY, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = '#a855f7'; // purple-500
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.restore();
+        };
+
+        // --- Simulation Update Logic ---
+        const update = (timestamp) => {
+            if (!simState.isRunning) return;
+
+            const deltaTime = (timestamp - (simState.lastTime || timestamp)) / 1000;
+            simState.lastTime = timestamp;
+            const scaledDeltaTime = deltaTime * simState.timeScale;
+
+            // Update station orbit
+            const stationVel = calculateOrbitalVelocity(simState.stationAltitude);
+            const stationOrbitRadiusM = (EARTH_RADIUS_KM + simState.stationAltitude) * 1000;
+            const angularVelocity = (stationVel * 1000) / stationOrbitRadiusM;
+            simState.stationAngle += angularVelocity * scaledDeltaTime;
+
+            // Update tether angle
+            if (simState.tetherType === 'rotating') {
+                const tetherAngularVel = simState.rotationSpeedRpm * 2 * Math.PI / 60;
+                simState.tetherAngle += tetherAngularVel * scaledDeltaTime;
+            } else { // Gravity gradient
+                 // Simple model: tether tries to align vertically. A real model is much more complex (libration).
+                 // We'll just keep it vertical for simplicity in this visualization.
+                 simState.tetherAngle = 0;
+            }
+
+            // Update payloads
+            simState.payloads.forEach(p => {
+                const r_vec = { x: p.x, y: p.y };
+                const r_mag = Math.sqrt(r_vec.x**2 + r_vec.y**2);
+                const r_m = r_mag * 1000; // in meters
+
+                const F_g_mag = (G * EARTH_MASS * PAYLOAD_MASS) / (r_m**2);
+                const a_g_vec = {
+                    x: -F_g_mag * (r_vec.x / r_mag) / PAYLOAD_MASS,
+                    y: -F_g_mag * (r_vec.y / r_mag) / PAYLOAD_MASS
+                };
+
+                p.vx += (a_g_vec.x / 1000) * scaledDeltaTime; // km/s
+                p.vy += (a_g_vec.y / 1000) * scaledDeltaTime; // km/s
+                p.x += p.vx * scaledDeltaTime;
+                p.y += p.vy * scaledDeltaTime;
+                
+                if (p.path.length < 2000) { // Limit path length
+                    p.path.push({ x: p.x, y: p.y });
+                } else {
+                    p.path.shift();
+                    p.path.push({ x: p.x, y: p.y });
+                }
+
+                // Check for re-entry
+                const altitude = r_mag - EARTH_RADIUS_KM;
+                if (altitude < 100) { // 100km Karman line
+                    p.path = []; // Effectively remove it
+                }
+            });
+            simState.payloads = simState.payloads.filter(p => p.path.length > 0);
+
+
+            // Update data display
+            updateDataDisplay(stationVel);
+        };
+
+        const updateDataDisplay = (stationVel) => {
+            const stationOrbitRadius = EARTH_RADIUS_KM + simState.stationAltitude;
+            const stationX = stationOrbitRadius * Math.cos(simState.stationAngle);
+            const stationY = stationOrbitRadius * Math.sin(simState.stationAngle);
+
+            // Tip velocity calculation
+            const tetherAngularVel = (simState.tetherType === 'rotating') ? (simState.rotationSpeedRpm * 2 * Math.PI / 60) : 0;
+            const tipSpeedRelativeToStation = (tetherAngularVel * simState.tetherLength * 1000) / 1000; // km/s
+
+            const stationVelVec = {
+                x: -stationVel * Math.sin(simState.stationAngle),
+                y:  stationVel * Math.cos(simState.stationAngle)
+            };
+
+            const totalTetherAngle = simState.stationAngle + Math.PI / 2 + simState.tetherAngle;
+            const tipVelVecRelative = {
+                x: -tipSpeedRelativeToStation * Math.sin(totalTetherAngle),
+                y:  tipSpeedRelativeToStation * Math.cos(totalTetherAngle)
+            };
+
+            const tipVelAbsolute = {
+                x: stationVelVec.x + tipVelVecRelative.x,
+                y: stationVelVec.y + tipVelVecRelative.y
+            };
+            const tipVelMag = Math.sqrt(tipVelAbsolute.x**2 + tipVelAbsolute.y**2);
+            
+            const tetherLengthPx = simState.tetherLength;
+            const tipX = stationX + tetherLengthPx * Math.cos(totalTetherAngle);
+            const tipY = stationY + tetherLengthPx * Math.sin(totalTetherAngle);
+            const tipAlt = Math.sqrt(tipX**2 + tipY**2) - EARTH_RADIUS_KM;
+
+            // Tension calculation (simplified)
+            // Centrifugal force from rotation + gravity gradient
+            const tetherAngularVelRadS = simState.rotationSpeedRpm * 2 * Math.PI / 60;
+            const centrifugalForce = PAYLOAD_MASS * (tetherAngularVelRadS**2) * (simState.tetherLength * 1000);
+            
+            const r_tip = (EARTH_RADIUS_KM + tipAlt) * 1000;
+            const g_tip = G * EARTH_MASS / (r_tip**2);
+            const gravityGradientForce = PAYLOAD_MASS * g_tip; // Very simplified
+            
+            let tension = 0;
+            if (simState.tetherType === 'rotating') {
+                tension = centrifugalForce;
+            } else {
+                 // Simplified gravity gradient tension
+                 const r_station = (EARTH_RADIUS_KM + simState.stationAltitude) * 1000;
+                 const omega_orbit = stationVel * 1000 / r_station;
+                 tension = 3 * PAYLOAD_MASS * omega_orbit**2 * (simState.tetherLength * 1000);
+            }
+
+
+            stationVelDisplay.textContent = `${stationVel.toFixed(2)} km/s`;
+            tipVelDisplay.textContent = `${tipVelMag.toFixed(2)} km/s`;
+            tipAltDisplay.textContent = `${tipAlt.toFixed(0)} km`;
+            tensionDisplay.textContent = `${(tension).toExponential(2)} N`;
+        };
+
+        // --- Main Simulation Loop ---
+        const gameLoop = (timestamp) => {
+            update(timestamp);
+            draw();
+            requestAnimationFrame(gameLoop);
+        };
+
+        // --- Event Handlers ---
+        const setupEventListeners = () => {
+            window.addEventListener('resize', resizeCanvas);
+
+            btnStartStop.addEventListener('click', () => {
+                simState.isRunning = !simState.isRunning;
+                btnStartStop.textContent = simState.isRunning ? 'Stop' : 'Start';
+                btnStartStop.classList.toggle('bg-green-600', !simState.isRunning);
+                btnStartStop.classList.toggle('hover:bg-green-700', !simState.isRunning);
+                btnStartStop.classList.toggle('bg-red-600', simState.isRunning);
+                btnStartStop.classList.toggle('hover:bg-red-700', simState.isRunning);
+                if (simState.isRunning) {
+                    simState.lastTime = performance.now();
+                }
+            });
+
+            const resetSimulation = () => {
+                simState.stationAngle = 0;
+                simState.tetherAngle = 0;
+                simState.payloads = [];
+                simState.stationAltitude = parseInt(stationAltitudeSlider.value);
+                simState.tetherLength = parseInt(tetherLengthSlider.value);
+                simState.rotationSpeedRpm = parseFloat(rotationSpeedSlider.value);
+                updateDataDisplay(calculateOrbitalVelocity(simState.stationAltitude));
+                draw();
+            };
+            btnReset.addEventListener('click', resetSimulation);
+
+            btnGravity.addEventListener('click', () => {
+                simState.tetherType = 'gravity';
+                rotationSpeedControl.style.display = 'none';
+                btnGravity.classList.add('bg-cyan-600');
+                btnRotating.classList.remove('bg-cyan-600');
+            });
+
+            btnRotating.addEventListener('click', () => {
+                simState.tetherType = 'rotating';
+                rotationSpeedControl.style.display = 'block';
+                btnRotating.classList.add('bg-cyan-600');
+                btnGravity.classList.remove('bg-cyan-600');
+            });
+
+            tetherLengthSlider.addEventListener('input', (e) => {
+                simState.tetherLength = parseInt(e.target.value);
+                tetherLengthValue.textContent = `${simState.tetherLength} km`;
+            });
+            stationAltitudeSlider.addEventListener('input', (e) => {
+                simState.stationAltitude = parseInt(e.target.value);
+                stationAltitudeValue.textContent = `${simState.stationAltitude} km`;
+            });
+            rotationSpeedSlider.addEventListener('input', (e) => {
+                simState.rotationSpeedRpm = parseFloat(e.target.value);
+                rotationSpeedValue.textContent = `${simState.rotationSpeedRpm.toFixed(1)} rpm`;
+            });
+
+            btnReleasePayload.addEventListener('click', () => {
+                const stationVel = calculateOrbitalVelocity(simState.stationAltitude);
+                const stationOrbitRadius = EARTH_RADIUS_KM + simState.stationAltitude;
+                
+                const tetherAngularVel = (simState.tetherType === 'rotating') ? (simState.rotationSpeedRpm * 2 * Math.PI / 60) : 0;
+                const tipSpeedRelativeToStation = (tetherAngularVel * simState.tetherLength * 1000) / 1000;
+
+                const stationVelVec = {
+                    x: -stationVel * Math.sin(simState.stationAngle),
+                    y:  stationVel * Math.cos(simState.stationAngle)
+                };
+
+                const totalTetherAngle = simState.stationAngle + Math.PI / 2 + simState.tetherAngle;
+                const tipVelVecRelative = {
+                    x: -tipSpeedRelativeToStation * Math.sin(totalTetherAngle),
+                    y:  tipSpeedRelativeToStation * Math.cos(totalTetherAngle)
+                };
+                
+                const tipVelAbsolute = {
+                    x: stationVelVec.x + tipVelVecRelative.x,
+                    y: stationVelVec.y + tipVelVecRelative.y
+                };
+
+                const stationPos = {
+                    x: stationOrbitRadius * Math.cos(simState.stationAngle),
+                    y: stationOrbitRadius * Math.sin(simState.stationAngle)
+                }
+                const tipPos = {
+                    x: stationPos.x + simState.tetherLength * Math.cos(totalTetherAngle),
+                    y: stationPos.y + simState.tetherLength * Math.sin(totalTetherAngle)
+                }
+
+                simState.payloads.push({
+                    x: tipPos.x,
+                    y: tipPos.y,
+                    vx: tipVelAbsolute.x,
+                    vy: tipVelAbsolute.y,
+                    path: [{x: tipPos.x, y: tipPos.y}],
+                    color: `hsl(${Math.random() * 360}, 90%, 70%)`
+                });
+            });
+            
+            btnClearPayloads.addEventListener('click', () => {
+                simState.payloads = [];
+            });
+
+            // Mouse controls for pan and zoom
+            canvas.addEventListener('mousedown', (e) => {
+                view.isDragging = true;
+                view.lastMouseX = e.clientX;
+                view.lastMouseY = e.clientY;
+                canvas.style.cursor = 'grabbing';
+            });
+            canvas.addEventListener('mouseup', () => {
+                view.isDragging = false;
+                canvas.style.cursor = 'grab';
+            });
+            canvas.addEventListener('mouseleave', () => {
+                view.isDragging = false;
+                 canvas.style.cursor = 'grab';
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (view.isDragging) {
+                    const dx = e.clientX - view.lastMouseX;
+                    const dy = e.clientY - view.lastMouseY;
+                    view.offsetX += dx;
+                    view.offsetY += dy;
+                    view.lastMouseX = e.clientX;
+                    view.lastMouseY = e.clientY;
+                }
+            });
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                const zoomFactor = Math.exp(wheel * zoomIntensity);
+                
+                const newZoom = view.zoom * zoomFactor;
+                if (newZoom < 0.05 || newZoom > 20) return; // Zoom limits
+
+                const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+                const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+                
+                const worldX = (mouseX - view.offsetX) / view.zoom;
+                const worldY = (mouseY - view.offsetY) / view.zoom;
+
+                view.zoom = newZoom;
+
+                view.offsetX = mouseX - worldX * view.zoom;
+                view.offsetY = mouseY - worldY * view.zoom;
+                
+                zoomInfo.textContent = `Zoom: ${Math.round(view.zoom * 100)}%`;
+            });
+        };
+
+        // --- Initialization ---
+        const init = () => {
+            resizeCanvas();
+            setupEventListeners();
+            btnGravity.click(); // Start in gravity gradient mode
+            btnReset.click(); // Set initial state
+            requestAnimationFrame(gameLoop);
+        };
+
+        init();
+    </script>
+</body>
+</html>
+

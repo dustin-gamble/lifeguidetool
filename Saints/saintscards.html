@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saints & Martyrs: Legacy Deck - Interactive Edition</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Marcellus&display=swap');
+
+    body {
+      font-family: 'Marcellus', serif;
+      background: #fdfaf5;
+      color: #4a3f35;
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      border-bottom: 3px double #d4b76f;
+      padding-bottom: 1.5rem;
+    }
+    h1 {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 4rem;
+      margin-bottom: 0.5rem;
+      color: #5b4025;
+    }
+    h2 {
+      font-family: 'IM Fell English SC', serif;
+      color: #5b4025;
+      margin-top: 2.5rem;
+      border-bottom: 1px solid #d4b76f;
+      padding-bottom: 0.5rem;
+    }
+    h3 {
+        font-family: 'IM Fell English SC', serif;
+        color: #5b4025;
+        margin-top: 1.5rem;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .card img {
+      width: 100%;
+      max-width: 400px;
+      display: block;
+      margin: 0 auto;
+      border-radius: 8px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+    .card img:hover {
+        transform: scale(1.05);
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    .quote {
+      font-style: italic;
+      color: #555;
+      font-size: 1.1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #d4b76f;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #e0d4bc;
+      cursor: pointer;
+      font-family: 'IM Fell English SC', serif;
+    }
+    th:hover {
+        background-color: #d4b76f;
+    }
+    .interactive-section {
+      padding: 2rem;
+      background: #fffbe7;
+      border: 2px solid #d4b76f;
+      border-radius: 10px;
+      margin-top: 2rem;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 30px;
+        border: 3px solid #d4b76f;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 600px;
+        text-align: center;
+        position: relative;
+    }
+    .close-button {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    #saintFilter {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 1rem;
+        border: 1px solid #d4b76f;
+        border-radius: 5px;
+    }
+    #drawn-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .drawn-card {
+        border: 2px solid #d4b76f;
+        border-radius: 8px;
+        padding: 1rem;
+        background-color: #fffbe7;
+        text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Saints & Martyrs</h1>
+    <p class="quote">An enhanced interactive collectible storytelling card game of virtue, faith, and legacy.</p>
+  </header>
+
+  <section class="section">
+    <h2>Sample Cards</h2>
+    <div class="card-grid">
+      <div class="card">
+        <a href="saint_joan_of_arc_card.png" target="_blank"><img src="saint_joan_of_arc_card.png" alt="Saint Joan of Arc card with stats Resolve 9, Spirit 8, Influence 7, Knowledge 5"></a>
+      </div>
+      <div class="card">
+        <a href="saint_francis_of_assisi_card.png" target="_blank"><img src="saint_francis_of_assisi_card.png" alt="Saint Francis of Assisi card with stats Resolve 3, Spirit 3, Influence 3, Knowledge 3"></a>
+      </div>
+      <div class="card">
+        <a href="challenge_escape_from_prison..png" target="_blank"><img src="challenge_escape_from_prison.png" alt="Challenge card Escape from Prison requiring Resolve, Spirit, and Influence"></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>The Art of Storytelling: Gameplay</h2>
+    <p>Saints & Martyrs is a game about narrative creativity. Victory is not about defeating an opponent, but about weaving a compelling story of faith, virtue, and legacy in the face of adversity.</p>
+    
+    <h3>Game Objective</h3>
+    <p>The goal is to earn "Legacy Points" by successfully overcoming dramatic Challenge cards. These points are a measure of your storytelling skill and your ability to creatively apply your Saints' strengths to the problems they face. The player with the most Legacy Points at the end of the game builds the most enduring legacy.</p>
+
+    <h3>Deck Building & Setup</h3>
+    <p>Each player begins with a pre-built 10-card deck containing 8 Saint cards and 2 Challenge cards. For a more advanced experience, players can mix and match Saints from different decks to create a custom team of historical figures whose virtues and skills complement one another.</p>
+
+    <h3>On Your Turn</h3>
+    <p>A turn is simple yet filled with creative choices:</p>
+    <ol>
+        <li><strong>Draw a Challenge:</strong> Draw the top card from your Challenge deck. This will present a historical or allegorical crisis that needs a virtuous response.</li>
+        <li><strong>Assemble Your Saints:</strong> From your hand of Saint cards, choose one or more Saints you believe are best suited to tackle the Challenge.</li>
+        <li><strong>Tell Your Story:</strong> This is the core of the game. You must narrate how your chosen Saint(s) use their unique talents, personalities, and stats (Resolve, Spirit, Influence, Knowledge) to overcome the Challenge. There is no single correct solution—the more creative and thematically fitting your story, the better.</li>
+        <li><strong>Resolve the Challenge:</strong> Based on the strength of your story and how well your Saints' stats and domains align with the Challenge's requirements, you and the other players will determine if you succeed. Successful resolutions earn you Legacy Points.</li>
+    </ol>
+    <p>With countless combinations of Saints and Challenges, no two games are ever the same, ensuring endless replayability.</p>
+  </section>
+
+  <section class="section interactive-section">
+      <h2>Draw a Hand of Cards</h2>
+      <button onclick="drawHand()">Draw 5 Saint Cards</button>
+      <div id="drawn-cards"></div>
+  </section>
+
+  <section class="section">
+    <h2>Saint Cards</h2>
+    <p>Each Saint card is a historical figure, defined by their key Domains, four core stats, a special ability reflecting their life, and an inspiring quote.</p>
+    <input type="text" id="saintFilter" onkeyup="filterSaints()" placeholder="Search for a Saint by name...">
+    <div style="overflow-x:auto;">
+        <table id="saintsTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Name</th>
+              <th onclick="sortTable(1)">Domains</th>
+              <th onclick="sortTable(2)">Resolve</th>
+              <th onclick="sortTable(3)">Spirit</th>
+              <th onclick="sortTable(4)">Influence</th>
+              <th onclick="sortTable(5)">Knowledge</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>St. Joan of Arc</td><td>Courage / Leadership</td><td>9</td><td>8</td><td>7</td><td>5</td></tr>
+            <tr><td>St. Francis of Assisi</td><td>Faith / Compassion</td><td>3</td><td>3</td><td>3</td><td>3</td></tr>
+            <tr><td>St. Teresa of Ávila</td><td>Wisdom / Faith</td><td>7</td><td>9</td><td>7</td><td>8</td></tr>
+            <tr><td>St. Maximilian Kolbe</td><td>Sacrifice / Faith</td><td>10</td><td>9</td><td>5</td><td>5</td></tr>
+            <tr><td>St. Ignatius of Loyola</td><td>Discipline / Leadership</td><td>8</td><td>8</td><td>8</td><td>7</td></tr>
+            <tr><td>St. Catherine of Siena</td><td>Courage / Wisdom</td><td>8</td><td>9</td><td>6</td><td>8</td></tr>
+            <tr><td>St. Oscar Romero</td><td>Justice / Faith</td><td>9</td><td>8</td><td>9</td><td>6</td></tr>
+            <tr><td>St. Damien of Molokai</td><td>Compassion / Sacrifice</td><td>7</td><td>8</td><td>5</td><td>6</td></tr>
+            <tr><td>St. Hildegard of Bingen</td><td>Vision / Healing</td><td>6</td><td>8</td><td>7</td><td>9</td></tr>
+            <tr><td>St. Martin de Porres</td><td>Healing / Humility</td><td>6</td><td>9</td><td>6</td><td>5</td></tr>
+            <tr><td>St. Edith Stein</td><td>Philosophy / Faith</td><td>7</td><td>8</td><td>7</td><td>9</td></tr>
+            <tr><td>St. Patrick</td><td>Evangelism / Resolve</td><td>9</td><td>7</td><td>8</td><td>6</td></tr>
+          </tbody>
+        </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Challenge Cards</h2>
+    <p>Challenges present dramatic moments where players must choose Saints who could rise to the occasion. Winning is based on stats and, most importantly, the story you tell.</p>
+    <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Challenge</th>
+              <th>Era</th>
+              <th>Domains Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Escape from Prison</td><td>Any</td><td>Resolve / Spirit / Influence</td><td>Imprisoned unjustly, your saint must persevere or escape with dignity.</td></tr>
+            <tr><td>Survive the Inquisition</td><td>1200s–1600s</td><td>Wisdom / Faith</td><td>Maintain your beliefs and integrity during trials by fire.</td></tr>
+            <tr><td>Inspire a Broken People</td><td>Any</td><td>Courage / Spirit</td><td>Bring hope to those in despair and lead them with light.</td></tr>
+            <tr><td>Convert a Hostile Kingdom</td><td>Medieval</td><td>Faith / Courage</td><td>Use your virtue and strength to transform hearts and minds.</td></tr>
+            <tr><td>Face Death for Your Beliefs</td><td>Ancient / Modern</td><td>Resolve / Faith</td><td>Stay true to your calling even in the face of martyrdom.</td></tr>
+            <tr><td>Heal the Sick Without Hope</td><td>Any</td><td>Compassion / Knowledge</td><td>Tend to the forgotten and bring healing through grace.</td></tr>
+          </tbody>
+        </table>
+    </div>
+  </section>
+
+  <section class="section interactive-section">
+    <h2>Challenge Resolution</h2>
+    <p>Select a Saint and a Challenge below to see how they might overcome it:</p>
+    <label for="saint">Choose a Saint:</label>
+    <select id="saintSelect">
+        </select>
+    <br><br>
+    <label for="challenge">Choose a Challenge:</label>
+    <select id="challengeSelect">
+        </select>
+    <br><br>
+    <button onclick="attemptChallenge()">Attempt Challenge</button>
+  </section>
+
+  <div id="storyModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2 id="modalTitle"></h2>
+      <p id="modalStory"></p>
+      <h3 id="modalSuccess"></h3>
+    </div>
+  </div>
+
+  <footer style="text-align:center; margin-top: 4rem; font-size: 0.9rem; color: #666;">
+    © 2025. Developed by Dustin Gamble for Josh Funderburk. Not for commercial distribution. All rights reserved. Enhanced by AI.
+  </footer>
+
+<script>
+const saints = [
+    { name: "St. Joan of Arc", domains: "Courage / Leadership", stats: { resolve: 9, spirit: 8, influence: 7, knowledge: 5 } },
+    { name: "St. Francis of Assisi", domains: "Faith / Compassion", stats: { resolve: 3, spirit: 3, influence: 3, knowledge: 3 } },
+    { name: "St. Teresa of Ávila", domains: "Wisdom / Faith", stats: { resolve: 7, spirit: 9, influence: 7, knowledge: 8 } },
+    { name: "St. Maximilian Kolbe", domains: "Sacrifice / Faith", stats: { resolve: 10, spirit: 9, influence: 5, knowledge: 5 } },
+    { name: "St. Ignatius of Loyola", domains: "Discipline / Leadership", stats: { resolve: 8, spirit: 8, influence: 8, knowledge: 7 } },
+    { name: "St. Catherine of Siena", domains: "Courage / Wisdom", stats: { resolve: 8, spirit: 9, influence: 6, knowledge: 8 } },
+    { name: "St. Oscar Romero", domains: "Justice / Faith", stats: { resolve: 9, spirit: 8, influence: 9, knowledge: 6 } },
+    { name: "St. Damien of Molokai", domains: "Compassion / Sacrifice", stats: { resolve: 7, spirit: 8, influence: 5, knowledge: 6 } },
+    { name: "St. Hildegard of Bingen", domains: "Vision / Healing", stats: { resolve: 6, spirit: 8, influence: 7, knowledge: 9 } },
+    { name: "St. Martin de Porres", domains: "Healing / Humility", stats: { resolve: 6, spirit: 9, influence: 6, knowledge: 5 } },
+    { name: "St. Edith Stein", domains: "Philosophy / Faith", stats: { resolve: 7, spirit: 8, influence: 7, knowledge: 9 } },
+    { name: "St. Patrick", domains: "Evangelism / Resolve", stats: { resolve: 9, spirit: 7, influence: 8, knowledge: 6 } },
+];
+
+const challenges = [
+    { name: "Escape from Prison", required: ["resolve", "spirit", "influence"] },
+    { name: "Survive the Inquisition", required: ["knowledge", "spirit"] },
+    { name: "Inspire a Broken People", required: ["influence", "spirit"] },
+    { name: "Convert a Hostile Kingdom", required: ["influence", "resolve"] },
+    { name: "Face Death for Your Beliefs", required: ["resolve", "spirit"] },
+    { name: "Heal the Sick Without Hope", required: ["knowledge", "spirit"] },
+];
+
+function populateSelects() {
+    const saintSelect = document.getElementById('saintSelect');
+    const challengeSelect = document.getElementById('challengeSelect');
+    saints.forEach(saint => {
+        const option = document.createElement('option');
+        option.value = saint.name;
+        option.textContent = saint.name;
+        saintSelect.appendChild(option);
+    });
+    challenges.forEach(challenge => {
+        const option = document.createElement('option');
+        option.value = challenge.name;
+        option.textContent = challenge.name;
+        challengeSelect.appendChild(option);
+    });
+}
+
+function sortTable(n) {
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("saintsTable");
+  switching = true;
+  dir = "asc";
+  while (switching) {
+    switching = false;
+    rows = table.rows;
+    for (i = 1; i < (rows.length - 1); i++) {
+      shouldSwitch = false;
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      var xContent = isNaN(parseInt(x.innerHTML)) ? x.innerHTML.toLowerCase() : parseInt(x.innerHTML);
+      var yContent = isNaN(parseInt(y.innerHTML)) ? y.innerHTML.toLowerCase() : parseInt(y.innerHTML);
+      if (dir == "asc") {
+        if (xContent > yContent) {
+          shouldSwitch = true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if (xContent < yContent) {
+          shouldSwitch = true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      switchcount ++;
+    } else {
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+
+function filterSaints() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("saintFilter");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("saintsTable");
+    tr = table.getElementsByTagName("tr");
+    for (i = 1; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+}
+
+function attemptChallenge() {
+    const saintName = document.getElementById('saintSelect').value;
+    const challengeName = document.getElementById('challengeSelect').value;
+    const saint = saints.find(s => s.name === saintName);
+    const challenge = challenges.find(c => c.name === challengeName);
+
+    let totalScore = 0;
+    
+    challenge.required.forEach(stat => {
+        totalScore += saint.stats[stat] || 0;
+    });
+
+    const successChance = Math.min(Math.round((totalScore / 20) * 100), 100);
+
+    const modal = document.getElementById('storyModal');
+    document.getElementById('modalTitle').innerText = `${saint.name} faces '${challenge.name}'`;
+    document.getElementById('modalStory').innerText = `Narrate how ${saint.name}, known for ${saint.domains}, would use their virtues to ${challenge.name.toLowerCase()}. Their combined ${challenge.required.join(' and ')} will be put to the test.`;
+    document.getElementById('modalSuccess').innerText = `Success Chance: ${successChance}%`;
+    modal.style.display = "block";
+}
+
+function drawHand() {
+    const cardsContainer = document.getElementById('drawn-cards');
+    cardsContainer.innerHTML = '';
+    let shuffledSaints = [...saints].sort(() => 0.5 - Math.random());
+    let hand = shuffledSaints.slice(0, 5);
+
+    hand.forEach(saint => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('drawn-card');
+        cardElement.innerHTML = `<strong>${saint.name}</strong><br><small>${saint.domains}</small><br>R:${saint.stats.resolve} S:${saint.stats.spirit} I:${saint.stats.influence} K:${saint.stats.knowledge}`;
+        cardsContainer.appendChild(cardElement);
+    });
+}
+
+
+// Modal functionality
+const modal = document.getElementById('storyModal');
+const closeButton = document.getElementsByClassName("close-button")[0];
+closeButton.onclick = function() {
+  modal.style.display = "none";
+}
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+// Initial population of dropdowns
+window.onload = populateSelects;
+</script>
+
+</body>
+</html>

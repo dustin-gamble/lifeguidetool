@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyhook Tether Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .label-style { @apply text-sm font-medium text-gray-300; }
+        .value-style { @apply text-sm font-bold text-white ml-2; }
+        .control-panel {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        canvas { cursor: grab; }
+        canvas.grabbing { cursor: grabbing; }
+        .btn-primary { @apply w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors; }
+        .btn-secondary { @apply w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors; }
+        .btn-danger { @apply w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg mt-2 transition-colors; }
+        .btn-action { @apply w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:bg-indigo-900 disabled:text-gray-400 disabled:cursor-not-allowed; }
+        .btn-toggle-active { @apply bg-cyan-600; }
+        .toggle-switch { @apply relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer; }
+        .toggle-switch-handle { @apply inline-block w-4 h-4 transform bg-white rounded-full transition-transform; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center h-screen w-screen">
+
+    <div class="w-full h-full flex flex-col md:flex-row bg-black">
+        <!-- Simulation Canvas -->
+        <div id="canvas-container" class="flex-grow h-full w-full relative">
+            <canvas id="simulationCanvas"></canvas>
+            <div id="zoom-info" class="absolute bottom-4 right-4 text-xs text-gray-400 bg-gray-800 bg-opacity-50 px-2 py-1 rounded">Zoom: 100%</div>
+            <div id="status-display" class="absolute top-4 left-4 text-lg font-bold text-yellow-300 bg-gray-900 bg-opacity-60 px-3 py-1 rounded-lg"></div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="w-full md:w-80 lg:w-96 p-4 space-y-3 overflow-y-auto control-panel border-l border-gray-700 h-full">
+            <h1 class="text-xl font-bold text-center text-cyan-400">Skyhook Controls</h1>
+
+            <!-- Simulation & Camera -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="label-style">Simulation</label>
+                    <div class="flex space-x-2 mt-1">
+                        <button id="btnStartStop" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-2 rounded-lg transition-colors text-sm">Start</button>
+                        <button id="btnReset" class="flex-1 btn-secondary py-2 px-2 text-sm">Reset</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="label-style">Camera Mode</label>
+                    <div class="flex bg-gray-800 rounded-lg p-1 mt-1">
+                        <button id="btnCamFree" class="flex-1 p-1 rounded-md text-xs transition-colors btn-toggle-active">Free</button>
+                        <button id="btnCamFollow" class="flex-1 p-1 rounded-md text-xs transition-colors">Follow Tip</button>
+                        <button id="btnCamAircraft" class="flex-1 p-1 rounded-md text-xs transition-colors">Follow Craft</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skyhook Parameters -->
+            <div class="space-y-3 pt-2">
+                 <h2 class="text-lg font-semibold text-cyan-400">Skyhook Parameters</h2>
+                <div>
+                    <label for="skyhookLength" class="label-style">Total Length: <span id="skyhookLengthValue" class="value-style">600 km</span></label>
+                    <input type="range" id="skyhookLength" min="200" max="1500" value="600" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+                 <div>
+                    <label for="cmAltitude" class="label-style">CM Altitude: <span id="cmAltitudeValue" class="value-style">700 km</span></label>
+                    <input type="range" id="cmAltitude" min="400" max="2000" value="700" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+                <div>
+                    <label for="rotationSpeed" class="label-style">Rotation Speed: <span id="rotationSpeedValue" class="value-style">0.0 rpm</span></label>
+                    <input type="range" id="rotationSpeed" min="0.01" max="1.0" value="0.24" step="0.01" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                </div>
+                <button id="btnSyncSpeed" class="btn-primary text-sm">Sync Speed for Catch</button>
+            </div>
+
+            <!-- Aircraft Operations -->
+            <div class="pt-2 space-y-3">
+                 <h2 class="text-lg font-semibold text-cyan-400">Aircraft Operations</h2>
+                <div class="flex justify-between items-center">
+                     <label for="autoLaunchToggle" class="label-style">Auto-Launch</label>
+                     <button id="autoLaunchToggle" class="toggle-switch bg-gray-700">
+                         <span class="toggle-switch-handle translate-x-1"></span>
+                     </button>
+                </div>
+                <div id="autoLaunchControls" class="space-y-3 hidden">
+                    <div>
+                        <label for="launchFrequency" class="label-style">Launch Every: <span id="launchFrequencyValue" class="value-style">2 rots</span></label>
+                        <input type="range" id="launchFrequency" min="1" max="10" value="2" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                     <div>
+                        <label for="launchSync" class="label-style">Launch Phase Sync: <span id="launchSyncValue" class="value-style">0.00</span></label>
+                        <input type="range" id="launchSync" min="0" max="1" value="0" step="0.01" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer mt-1">
+                    </div>
+                </div>
+                <button id="btnLaunchPayload" class="btn-action">Manual Launch</button>
+                <button id="btnReleasePayload" class="btn-action" disabled>Release Payload</button>
+                <button id="btnClearPayloads" class="btn-danger">Clear All</button>
+            </div>
+
+            <!-- Data Display -->
+            <div class="pt-2 space-y-2 text-xs text-gray-300">
+                <h2 class="text-lg font-semibold text-center text-cyan-400">System Data</h2>
+                <div class="bg-gray-800 p-3 rounded-lg space-y-1">
+                    <p class="text-cyan-400 font-bold">Skyhook Tip</p>
+                    <p>Altitude: <span id="tipAlt" class="font-mono text-white float-right">0 km</span></p>
+                    <p>Ground Vel: <span id="tipGroundVel" class="font-mono text-white float-right">0.00 km/s</span></p>
+                    <hr class="border-gray-600 my-1">
+                    <p class="text-amber-400 font-bold">Aircraft</p>
+                    <p>Status: <span id="payloadStatus" class="font-mono text-white float-right">Grounded</span></p>
+                    <p>Altitude: <span id="payloadAlt" class="font-mono text-white float-right">0 km</span></p>
+                    <p>Speed: <span id="payloadSpeed" class="font-mono text-white float-right">0.00 km/s</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDisplay = document.getElementById('status-display');
+        const btnStartStop = document.getElementById('btnStartStop');
+        const btnReset = document.getElementById('btnReset');
+        const btnSyncSpeed = document.getElementById('btnSyncSpeed');
+        const btnLaunchPayload = document.getElementById('btnLaunchPayload');
+        const btnReleasePayload = document.getElementById('btnReleasePayload');
+        const btnClearPayloads = document.getElementById('btnClearPayloads');
+        const btnCamFree = document.getElementById('btnCamFree');
+        const btnCamFollow = document.getElementById('btnCamFollow');
+        const btnCamAircraft = document.getElementById('btnCamAircraft');
+        const tipGroundVelDisplay = document.getElementById('tipGroundVel');
+        const tipAltDisplay = document.getElementById('tipAlt');
+        const payloadStatusDisplay = document.getElementById('payloadStatus');
+        const payloadAltDisplay = document.getElementById('payloadAlt');
+        const payloadSpeedDisplay = document.getElementById('payloadSpeed');
+        const zoomInfo = document.getElementById('zoom-info');
+        const skyhookLengthSlider = document.getElementById('skyhookLength');
+        const skyhookLengthValue = document.getElementById('skyhookLengthValue');
+        const cmAltitudeSlider = document.getElementById('cmAltitude');
+        const cmAltitudeValue = document.getElementById('cmAltitudeValue');
+        const rotationSpeedSlider = document.getElementById('rotationSpeed');
+        const rotationSpeedValue = document.getElementById('rotationSpeedValue');
+        const autoLaunchToggle = document.getElementById('autoLaunchToggle');
+        const autoLaunchControls = document.getElementById('autoLaunchControls');
+        const launchFrequencySlider = document.getElementById('launchFrequency');
+        const launchFrequencyValue = document.getElementById('launchFrequencyValue');
+        const launchSyncSlider = document.getElementById('launchSync');
+        const launchSyncValue = document.getElementById('launchSyncValue');
+
+        // --- Constants ---
+        const G = 6.67430e-11;
+        const EARTH_MASS = 5.972e24;
+        const EARTH_RADIUS_KM = 6371;
+        const SKYHOOK_MASS = 100000;
+        const PAYLOAD_MASS = 10000;
+        const PIXELS_PER_KM = 0.05;
+        const CATCH_PROXIMITY_KM = 50;
+        const RENDEZVOUS_ALTITUDE_KM = 150;
+        const AIRCRAFT_ASCENT_SPEED_KPS = 2.0;
+        const AIRCRAFT_COAST_SPEED_KPS = 4.0;
+        const LAUNCH_LEAD_ANGLE = 0.15; // Radians ahead of CM
+        const LOITER_TIME_S = 5; // Real seconds
+
+        // --- State ---
+        let sim, view;
+
+        function getDefaultSimState() {
+            return {
+                isRunning: false, time: 0, lastTime: 0, timeScale: 50, cameraMode: 'FREE',
+                cmAltitude: 700, skyhookLength: 600, rotationRpm: 0.24, cmAngle: 0, tetherAngle: Math.PI,
+                flyingPayloads: [], attachedPayload: null, releasedPayloads: [], totalMass: SKYHOOK_MASS,
+                autoLaunch: false, launchFrequency: 2, launchSync: 0, rotationCount: 0, lastLaunchRotation: -1,
+            };
+        }
+        
+        const calculateOrbitalVelocity = (altitudeKm, mass = EARTH_MASS) => {
+            const r = (EARTH_RADIUS_KM + altitudeKm) * 1000;
+            return r <= 0 ? 0 : Math.sqrt(G * mass / r) / 1000;
+        };
+
+        const getSyncRotationSpeed = (cmAltitude, tetherLength) => {
+            const vOrbit = calculateOrbitalVelocity(cmAltitude);
+            const tetherRadiusM = (tetherLength / 2) * 1000;
+            if (tetherRadiusM === 0) return 0;
+            const omega = (vOrbit * 1000) / tetherRadiusM;
+            return (omega * 60) / (2 * Math.PI);
+        };
+        
+        function update(timestamp) {
+            if (!sim.isRunning) {
+                sim.lastTime = timestamp; // Keep lastTime updated even when paused
+                return;
+            }
+            const deltaTime = (timestamp - sim.lastTime) / 1000;
+            sim.lastTime = timestamp;
+            const scaledDeltaTime = deltaTime * sim.timeScale;
+            sim.time += scaledDeltaTime;
+
+            let cmVel = calculateOrbitalVelocity(sim.cmAltitude, EARTH_MASS + sim.totalMass);
+            const cmOrbitRadiusM = (EARTH_RADIUS_KM + sim.cmAltitude) * 1000;
+            const angularVelocity = (cmVel * 1000) / cmOrbitRadiusM;
+            sim.cmAngle += angularVelocity * scaledDeltaTime;
+            
+            const tetherAngularVel = sim.rotationRpm * 2 * Math.PI / 60;
+            sim.tetherAngle += tetherAngularVel * scaledDeltaTime;
+
+            const currentRotation = Math.floor(sim.tetherAngle / (2 * Math.PI));
+            if (currentRotation > sim.rotationCount) {
+                sim.rotationCount = currentRotation;
+            }
+
+            // --- Auto Launch Logic ---
+            if (sim.autoLaunch && !sim.attachedPayload && sim.rotationCount % sim.launchFrequency === 0 && sim.rotationCount !== sim.lastLaunchRotation) {
+                const tetherPhase = (sim.tetherAngle % (2 * Math.PI)) / (2 * Math.PI);
+                if (Math.abs(tetherPhase - sim.launchSync) < 0.01) {
+                    triggerLaunch();
+                    sim.lastLaunchRotation = sim.rotationCount;
+                }
+            }
+
+            // --- Aircraft/Payload Logic ---
+            sim.flyingPayloads.forEach((payload, index) => {
+                if (payload.state === 'ASCENDING') {
+                    const ascentThisFrame = AIRCRAFT_ASCENT_SPEED_KPS * scaledDeltaTime;
+                    const currentRadius = Math.sqrt(payload.x**2 + payload.y**2);
+                    const newRadius = currentRadius + ascentThisFrame;
+
+                    if (newRadius >= EARTH_RADIUS_KM + RENDEZVOUS_ALTITUDE_KM) {
+                        payload.state = 'COASTING';
+                        payload.loiterStartTime = timestamp;
+                        const finalRadius = EARTH_RADIUS_KM + RENDEZVOUS_ALTITUDE_KM;
+                        payload.x = finalRadius * Math.cos(payload.angle);
+                        payload.y = finalRadius * Math.sin(payload.angle);
+                        const coastAngularVel = (AIRCRAFT_COAST_SPEED_KPS * 1000) / (finalRadius * 1000);
+                        payload.angularVelocity = coastAngularVel;
+                    } else {
+                        payload.x = newRadius * Math.cos(payload.angle);
+                        payload.y = newRadius * Math.sin(payload.angle);
+                    }
+                } else if (payload.state === 'COASTING') {
+                    payload.angle += payload.angularVelocity * scaledDeltaTime;
+                    const radius = EARTH_RADIUS_KM + RENDEZVOUS_ALTITUDE_KM;
+                    payload.x = radius * Math.cos(payload.angle);
+                    payload.y = radius * Math.sin(payload.angle);
+                    
+                    if ((timestamp - payload.loiterStartTime) / 1000 > LOITER_TIME_S) {
+                        payload.state = 'MISSED';
+                        return;
+                    }
+
+                    if (sim.attachedPayload) return;
+
+                    const tetherRadiusKm = sim.skyhookLength / 2;
+                    const cmPos = { x: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.cos(sim.cmAngle), y: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.sin(sim.cmAngle) };
+                    const tipAngle = sim.cmAngle - Math.PI / 2 + sim.tetherAngle;
+                    const tipPos = { x: cmPos.x + tetherRadiusKm * Math.cos(tipAngle), y: cmPos.y + tetherRadiusKm * Math.sin(tipAngle) };
+                    const dist = Math.sqrt((tipPos.x - payload.x)**2 + (tipPos.y - payload.y)**2);
+
+                    if (dist < CATCH_PROXIMITY_KM && sim.tetherAngle % (2*Math.PI) > Math.PI * 0.9 && sim.tetherAngle % (2*Math.PI) < Math.PI * 1.1) {
+                        sim.attachedPayload = payload;
+                        payload.state = 'ATTACHED';
+                        sim.totalMass += PAYLOAD_MASS;
+                        const I_before = SKYHOOK_MASS * (sim.skyhookLength/2)**2;
+                        const I_after = I_before + PAYLOAD_MASS * (sim.skyhookLength/2)**2;
+                        sim.rotationRpm = ((tetherAngularVel * I_before) / I_after) * 60 / (2 * Math.PI);
+                        rotationSpeedSlider.value = sim.rotationRpm;
+                        rotationSpeedValue.textContent = `${sim.rotationRpm.toFixed(2)} rpm`;
+                        btnReleasePayload.disabled = false;
+                        btnLaunchPayload.disabled = true;
+                    }
+                }
+            });
+            sim.flyingPayloads = sim.flyingPayloads.filter(p => p.state !== 'ATTACHED' && p.state !== 'MISSED');
+
+            if (sim.attachedPayload) {
+                 const tetherRadiusKm = sim.skyhookLength / 2;
+                 const cmPos = { x: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.cos(sim.cmAngle), y: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.sin(sim.cmAngle) };
+                 const tipAngle = sim.cmAngle - Math.PI / 2 + sim.tetherAngle;
+                 sim.attachedPayload.x = cmPos.x + tetherRadiusKm * Math.cos(tipAngle);
+                 sim.attachedPayload.y = cmPos.y + tetherRadiusKm * Math.sin(tipAngle);
+            }
+
+            // --- Update Released Payloads ---
+            sim.releasedPayloads.forEach(p => {
+                const r_vec = { x: p.x, y: p.y };
+                const r_mag_km = Math.sqrt(r_vec.x**2 + r_vec.y**2);
+                if (r_mag_km === 0) return;
+                const r_m = r_mag_km * 1000;
+                const F_g_mag = (G * EARTH_MASS * PAYLOAD_MASS) / (r_m**2);
+                const a_g_vec = { x: -F_g_mag * (r_vec.x / r_mag_km) / PAYLOAD_MASS, y: -F_g_mag * (r_vec.y / r_mag_km) / PAYLOAD_MASS };
+                p.vx += (a_g_vec.x / 1000) * scaledDeltaTime;
+                p.vy += (a_g_vec.y / 1000) * scaledDeltaTime;
+                p.x += p.vx * scaledDeltaTime;
+                p.y += p.vy * scaledDeltaTime;
+                if (p.path.length < 2000) p.path.push({ x: p.x, y: p.y });
+                else { p.path.shift(); p.path.push({ x: p.x, y: p.y }); }
+                if (r_mag_km - EARTH_RADIUS_KM < 100) p.path = [];
+            });
+            sim.releasedPayloads = sim.releasedPayloads.filter(p => p.path.length > 0);
+            updateDataDisplay();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const cmRadiusPx = view.kmToPixels(EARTH_RADIUS_KM + sim.cmAltitude);
+            const cmX = cmRadiusPx * Math.cos(sim.cmAngle);
+            const cmY = cmRadiusPx * Math.sin(sim.cmAngle);
+            const tetherRadiusPx = view.kmToPixels(sim.skyhookLength / 2);
+            const tipAngle = sim.cmAngle - Math.PI / 2 + sim.tetherAngle;
+            const tipX = cmX + tetherRadiusPx * Math.cos(tipAngle);
+            const tipY = cmY + tetherRadiusPx * Math.sin(tipAngle);
+
+            ctx.save();
+            if (sim.cameraMode === 'FOLLOW') {
+                ctx.translate(canvas.width / 2 - tipX, canvas.height / 2 - tipY);
+            } else if (sim.cameraMode === 'AIRCRAFT' && (sim.attachedPayload || sim.flyingPayloads.length > 0)) {
+                const craftToFollow = sim.attachedPayload || sim.flyingPayloads[sim.flyingPayloads.length - 1];
+                const pX = view.kmToPixels(craftToFollow.x);
+                const pY = view.kmToPixels(craftToFollow.y);
+                ctx.translate(canvas.width / 2 - pX, canvas.height / 2 - pY);
+            } else {
+                ctx.translate(view.offsetX, view.offsetY);
+            }
+
+            const earthRadiusPx = view.kmToPixels(EARTH_RADIUS_KM);
+            ctx.beginPath(); ctx.arc(0, 0, earthRadiusPx, 0, 2 * Math.PI); ctx.fillStyle = '#1e3a8a'; ctx.fill();
+            const atmosRadiusPx = view.kmToPixels(EARTH_RADIUS_KM + 100);
+            ctx.beginPath(); ctx.arc(0, 0, atmosRadiusPx, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(173, 216, 230, 0.1)'; ctx.fill();
+            
+            const counterweightX = cmX - tetherRadiusPx * Math.cos(tipAngle);
+            const counterweightY = cmY - tetherRadiusPx * Math.sin(tipAngle);
+            
+            sim.releasedPayloads.forEach(p => {
+                ctx.beginPath();
+                ctx.moveTo(view.kmToPixels(p.path[0].x), view.kmToPixels(p.path[0].y));
+                p.path.forEach(pt => ctx.lineTo(view.kmToPixels(pt.x), view.kmToPixels(pt.y)));
+                ctx.strokeStyle = p.color; ctx.lineWidth = 1; ctx.stroke();
+            });
+            
+            ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.lineTo(counterweightX, counterweightY); ctx.strokeStyle = '#fde047'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cmX, cmY, 5, 0, 2*Math.PI); ctx.fillStyle = '#10b981'; ctx.fill();
+            ctx.beginPath(); ctx.arc(tipX, tipY, 4, 0, 2*Math.PI); ctx.fillStyle = '#a855f7'; ctx.fill();
+            ctx.beginPath(); ctx.arc(counterweightX, counterweightY, 4, 0, 2*Math.PI); ctx.fillStyle = '#f97316'; ctx.fill();
+            
+            const allPayloads = [...sim.flyingPayloads, sim.attachedPayload].filter(Boolean);
+            allPayloads.forEach(payload => {
+                const pX = view.kmToPixels(payload.x);
+                const pY = view.kmToPixels(payload.y);
+                ctx.save();
+                ctx.translate(pX, pY);
+                let rotationAngle;
+                if(payload.state === 'COASTING') {
+                    rotationAngle = payload.angle + Math.PI / 2;
+                } else {
+                    rotationAngle = Math.atan2(payload.y, payload.x) + Math.PI / 2;
+                }
+                ctx.rotate(rotationAngle);
+
+                if (payload.state === 'ASCENDING' || payload.state === 'COASTING') {
+                    ctx.beginPath();
+                    const flameLength = 10 + Math.random() * 5;
+                    ctx.moveTo(0, 8); ctx.lineTo(-4, 8 + flameLength/2); ctx.lineTo(0, 8 + flameLength); ctx.lineTo(4, 8 + flameLength/2); ctx.closePath();
+                    ctx.fillStyle = `rgba(255, ${100 + Math.random()*100}, 0, 0.8)`;
+                    ctx.fill();
+                }
+
+                ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(5, 5); ctx.lineTo(2, 5); ctx.lineTo(2, 8); ctx.lineTo(-2, 8); ctx.lineTo(-2, 5); ctx.lineTo(-5, 5); ctx.closePath();
+                ctx.fillStyle = payload.color; ctx.fill(); ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.restore();
+            });
+            ctx.restore();
+        }
+        
+        function updateDataDisplay() {
+            const tetherRadiusKm = sim.skyhookLength / 2;
+            const tipAngle = sim.cmAngle - Math.PI / 2 + sim.tetherAngle;
+            const tipPos = {
+                x: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.cos(sim.cmAngle) + tetherRadiusKm * Math.cos(tipAngle),
+                y: (EARTH_RADIUS_KM + sim.cmAltitude) * Math.sin(sim.cmAngle) + tetherRadiusKm * Math.sin(tipAngle)
+            };
+            const tipAlt = Math.sqrt(tipPos.x**2 + tipPos.y**2) - EARTH_RADIUS_KM;
+            const vRot = (sim.rotationRpm * 2 * Math.PI / 60) * tetherRadiusKm;
+            const vOrbitTip = calculateOrbitalVelocity(tipAlt);
+            const tipGroundVel = vOrbitTip - vRot;
+
+            let payloadAlt = 0, payloadSpeed = 0;
+            const currentPayload = sim.attachedPayload || sim.flyingPayloads[sim.flyingPayloads.length - 1];
+            let status = sim.attachedPayload ? 'ATTACHED' : (sim.flyingPayloads.length > 0 ? sim.flyingPayloads[sim.flyingPayloads.length - 1].state : 'GROUNDED');
+
+            if (currentPayload) {
+                payloadAlt = Math.sqrt(currentPayload.x**2 + currentPayload.y**2) - EARTH_RADIUS_KM;
+                if (currentPayload.state === 'ASCENDING') payloadSpeed = AIRCRAFT_ASCENT_SPEED_KPS;
+                else if (currentPayload.state === 'COASTING') payloadSpeed = AIRCRAFT_COAST_SPEED_KPS;
+                else if (currentPayload.state === 'ATTACHED') payloadSpeed = calculateOrbitalVelocity(payloadAlt, EARTH_MASS + sim.totalMass);
+            }
+
+            tipAltDisplay.textContent = `${tipAlt.toFixed(0)} km`;
+            tipGroundVelDisplay.textContent = `${tipGroundVel.toFixed(2)} km/s`;
+            payloadStatusDisplay.textContent = status;
+            payloadAltDisplay.textContent = `${payloadAlt.toFixed(0)} km`;
+            payloadSpeedDisplay.textContent = `${payloadSpeed.toFixed(2)} km/s`;
+            statusDisplay.textContent = `Status: ${status}`;
+        }
+
+        function triggerLaunch() {
+            if (sim.attachedPayload) return;
+            const launchAngle = sim.cmAngle + LAUNCH_LEAD_ANGLE;
+            sim.flyingPayloads.push({
+                state: 'ASCENDING',
+                x: EARTH_RADIUS_KM * Math.cos(launchAngle), y: EARTH_RADIUS_KM * Math.sin(launchAngle),
+                angle: launchAngle, color: `hsl(${Math.random() * 60 + 20}, 90%, 60%)`
+            });
+            btnLaunchPayload.disabled = true;
+            setTimeout(() => { if (!sim.autoLaunch) btnLaunchPayload.disabled = false; }, 2000);
+        }
+
+        function setupUI() {
+            skyhookLengthSlider.addEventListener('input', e => { sim.skyhookLength = parseInt(e.target.value); skyhookLengthValue.textContent = `${sim.skyhookLength} km`; });
+            cmAltitudeSlider.addEventListener('input', e => { sim.cmAltitude = parseInt(e.target.value); cmAltitudeValue.textContent = `${sim.cmAltitude} km`; });
+            rotationSpeedSlider.addEventListener('input', e => { sim.rotationRpm = parseFloat(e.target.value); rotationSpeedValue.textContent = `${sim.rotationRpm.toFixed(2)} rpm`; });
+            launchFrequencySlider.addEventListener('input', e => { sim.launchFrequency = parseInt(e.target.value); launchFrequencyValue.textContent = `${sim.launchFrequency} rots`; });
+            launchSyncSlider.addEventListener('input', e => { sim.launchSync = parseFloat(e.target.value); launchSyncValue.textContent = `${sim.launchSync.toFixed(2)}`; });
+
+            btnStartStop.addEventListener('click', () => {
+                sim.isRunning = !sim.isRunning;
+                btnStartStop.textContent = sim.isRunning ? 'Stop' : 'Start';
+                btnStartStop.classList.toggle('bg-green-600', !sim.isRunning);
+                btnStartStop.classList.toggle('bg-red-600', sim.isRunning);
+                if (sim.isRunning) sim.lastTime = performance.now();
+            });
+            
+            btnReset.addEventListener('click', () => {
+                sim.isRunning = false;
+                sim = getDefaultSimState();
+                initSimFromUI();
+                btnStartStop.textContent = 'Start';
+                btnStartStop.classList.remove('bg-red-600');
+                btnStartStop.classList.add('bg-green-600');
+                btnLaunchPayload.disabled = false;
+                btnReleasePayload.disabled = true;
+                draw();
+            });
+            
+            btnSyncSpeed.addEventListener('click', () => {
+                const syncRpm = getSyncRotationSpeed(sim.cmAltitude, sim.skyhookLength);
+                sim.rotationRpm = syncRpm;
+                rotationSpeedSlider.value = syncRpm;
+                rotationSpeedValue.textContent = `${syncRpm.toFixed(2)} rpm`;
+            });
+            
+            btnLaunchPayload.addEventListener('click', () => {
+                if (!sim.isRunning) { statusDisplay.textContent = 'Start simulation first!'; setTimeout(() => { statusDisplay.textContent = `Status: ${sim.payloadState}`; }, 2000); return; }
+                triggerLaunch();
+            });
+
+            btnReleasePayload.addEventListener('click', () => {
+                if (!sim.attachedPayload) return;
+                const cmVel = calculateOrbitalVelocity(sim.cmAltitude, EARTH_MASS + sim.totalMass);
+                const tetherRadiusKm = sim.skyhookLength / 2;
+                const vRot = (sim.rotationRpm * 2 * Math.PI / 60) * tetherRadiusKm;
+                const cmVelVec = { x: -cmVel * Math.sin(sim.cmAngle), y: cmVel * Math.cos(sim.cmAngle) };
+                const tipAngle = sim.cmAngle - Math.PI / 2 + sim.tetherAngle;
+                const vRotVec = { x: -vRot * Math.sin(tipAngle), y: vRot * Math.cos(tipAngle) };
+                const releaseVel = { x: cmVelVec.x + vRotVec.x, y: cmVelVec.y + vRotVec.y };
+                sim.releasedPayloads.push({ x: sim.attachedPayload.x, y: sim.attachedPayload.y, vx: releaseVel.x, vy: releaseVel.y, path: [{x: sim.attachedPayload.x, y: sim.attachedPayload.y}], color: sim.attachedPayload.color });
+                sim.attachedPayload = null;
+                sim.totalMass -= PAYLOAD_MASS;
+                btnReleasePayload.disabled = true;
+                if (!sim.autoLaunch) btnLaunchPayload.disabled = false;
+            });
+
+            btnClearPayloads.addEventListener('click', () => { sim.releasedPayloads = []; sim.flyingPayloads = []; });
+
+            const setCamMode = (mode) => {
+                sim.cameraMode = mode;
+                btnCamFree.classList.toggle('btn-toggle-active', mode === 'FREE');
+                btnCamFollow.classList.toggle('btn-toggle-active', mode === 'FOLLOW');
+                btnCamAircraft.classList.toggle('btn-toggle-active', mode === 'AIRCRAFT');
+                canvas.style.cursor = mode === 'FREE' ? 'grab' : 'default';
+            };
+            btnCamFree.addEventListener('click', () => setCamMode('FREE'));
+            btnCamFollow.addEventListener('click', () => setCamMode('FOLLOW'));
+            btnCamAircraft.addEventListener('click', () => setCamMode('AIRCRAFT'));
+            
+            autoLaunchToggle.addEventListener('click', () => {
+                sim.autoLaunch = !sim.autoLaunch;
+                autoLaunchToggle.classList.toggle('bg-cyan-600', sim.autoLaunch);
+                autoLaunchToggle.classList.toggle('bg-gray-700', !sim.autoLaunch);
+                autoLaunchToggle.firstElementChild.classList.toggle('translate-x-5', sim.autoLaunch);
+                autoLaunchToggle.firstElementChild.classList.toggle('translate-x-1', !sim.autoLaunch);
+                autoLaunchControls.classList.toggle('hidden', !sim.autoLaunch);
+                btnLaunchPayload.disabled = sim.autoLaunch;
+            });
+        }
+        
+        function setupViewport() {
+            view = {
+                zoom: 1, offsetX: 0, offsetY: 0, isDragging: false, lastMouseX: 0, lastMouseY: 0,
+                kmToPixels: (km) => km * PIXELS_PER_KM * view.zoom,
+                resizeCanvas: () => {
+                    const container = document.getElementById('canvas-container');
+                    canvas.width = container.clientWidth; canvas.height = container.clientHeight;
+                    view.offsetX = canvas.width / 2; view.offsetY = canvas.height / 2;
+                    draw();
+                }
+            };
+            view.resizeCanvas();
+            window.addEventListener('resize', view.resizeCanvas);
+            canvas.addEventListener('mousedown', e => { if (sim.cameraMode === 'FREE') { view.isDragging = true; view.lastMouseX = e.clientX; view.lastMouseY = e.clientY; canvas.classList.add('grabbing'); }});
+            canvas.addEventListener('mouseup', () => { view.isDragging = false; canvas.classList.remove('grabbing'); });
+            canvas.addEventListener('mouseleave', () => { view.isDragging = false; canvas.classList.remove('grabbing'); });
+            canvas.addEventListener('mousemove', e => {
+                if (!view.isDragging || sim.cameraMode !== 'FREE') return;
+                view.offsetX += e.clientX - view.lastMouseX; view.offsetY += e.clientY - view.lastMouseY;
+                view.lastMouseX = e.clientX; view.lastMouseY = e.clientY;
+            });
+            canvas.addEventListener('wheel', e => {
+                e.preventDefault();
+                const zoomIntensity = 0.1;
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                const zoomFactor = Math.exp(wheel * zoomIntensity);
+                const newZoom = view.zoom * zoomFactor;
+                if (newZoom < 0.01 || newZoom > 50) return;
+                const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+                const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+                let worldX, worldY;
+                if (sim.cameraMode === 'FREE') { worldX = (mouseX - view.offsetX) / view.zoom; worldY = (mouseY - view.offsetY) / view.zoom; }
+                else { worldX = (canvas.width/2 - view.offsetX) / view.zoom; worldY = (canvas.height/2 - view.offsetY) / view.zoom; }
+                view.zoom = newZoom;
+                if (sim.cameraMode === 'FREE') { view.offsetX = mouseX - worldX * view.zoom; view.offsetY = mouseY - worldY * view.zoom; }
+                zoomInfo.textContent = `Zoom: ${Math.round(view.zoom * 100)}%`;
+            });
+        }
+        
+        function initSimFromUI() {
+            sim.skyhookLength = parseInt(skyhookLengthSlider.value);
+            sim.cmAltitude = parseInt(cmAltitudeSlider.value);
+            sim.rotationRpm = parseFloat(rotationSpeedSlider.value);
+            sim.launchFrequency = parseInt(launchFrequencySlider.value);
+            sim.launchSync = parseFloat(launchSyncSlider.value);
+            skyhookLengthValue.textContent = `${sim.skyhookLength} km`;
+            cmAltitudeValue.textContent = `${sim.cmAltitude} km`;
+            rotationSpeedValue.textContent = `${sim.rotationRpm.toFixed(2)} rpm`;
+            launchFrequencyValue.textContent = `${sim.launchFrequency} rots`;
+            launchSyncValue.textContent = `${sim.launchSync.toFixed(2)}`;
+        }
+
+        function main() {
+            sim = getDefaultSimState();
+            setupViewport();
+            setupUI();
+            initSimFromUI();
+            function gameLoop(timestamp) { update(timestamp); draw(); requestAnimationFrame(gameLoop); }
+            requestAnimationFrame(gameLoop);
+        }
+
+        main();
+    </script>
+</body>
+</html>
+

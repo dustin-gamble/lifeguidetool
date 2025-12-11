@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Anchor Force Demonstrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3b82f6;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #d1d5db;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-12">
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+        
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Vehicle Anchor Force Demonstrator</h1>
+            <p class="text-gray-500 mt-2">An educational tool to understand the forces and risks.</p>
+        </div>
+
+        <!-- BIG BOLD DISCLAIMER -->
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-8" role="alert">
+            <p class="font-bold">CRITICAL WARNING</p>
+            <p>This tool is for educational purposes ONLY. Using a vehicle as an anchor is inherently unreliable and dangerous due to numerous un-calculable factors. <strong class="underline">NEVER</strong> use this method for human life support. Significant risk of property damage or injury still exists even with non-human payloads.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column: Inputs -->
+            <div class="space-y-6">
+                 <h2 class="text-2xl font-bold text-gray-800 text-center md:text-left">Inputs</h2>
+                <!-- Vehicle Weight -->
+                <div>
+                    <label for="vehicleWeight" class="flex justify-between font-medium text-gray-700">
+                        <span>Vehicle Weight (lbs)</span>
+                        <span id="vehicleWeightValue" class="font-bold text-blue-600">4000 lbs</span>
+                    </label>
+                    <input type="range" id="vehicleWeight" min="1000" max="10000" value="4000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-track">
+                    <p id="vehicleTypeText" class="text-sm text-center text-gray-600 mt-2 font-medium">e.g., SUV / Minivan (Ford Explorer, Honda Odyssey)</p>
+                </div>
+
+                <!-- Payload Weight -->
+                <div>
+                    <label for="payloadWeight" class="flex justify-between font-medium text-gray-700">
+                        <span>Payload Weight on Rope (lbs)</span>
+                        <div class="text-right">
+                            <span id="payloadWeightValue" class="font-bold text-blue-600">150 lbs</span>
+                            <span id="payloadWeightValueKN" class="text-sm text-gray-500 block">0.67 kN</span>
+                        </div>
+                    </label>
+                    <input type="range" id="payloadWeight" min="10" max="5000" value="150" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-track">
+                </div>
+
+                <!-- Ground Surface Friction -->
+                <div>
+                    <label for="friction" class="flex justify-between font-medium text-gray-700">
+                        <span>Ground Surface Friction (μ)</span>
+                         <span id="frictionValueText" class="font-bold text-blue-600">μ = 0.80</span>
+                    </label>
+                    <input type="range" id="friction" min="0.05" max="0.9" value="0.8" step="0.01" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-track">
+                    <p id="surfaceTypeText" class="text-sm text-center text-gray-600 mt-2 font-medium">Dry Asphalt / Concrete</p>
+                </div>
+
+                <!-- Slope Angle -->
+                <div>
+                    <label for="slopeAngle" class="flex justify-between font-medium text-gray-700">
+                        <span>Slope Angle (Degrees)</span>
+                        <span id="slopeAngleValue" class="font-bold text-blue-600">0 °</span>
+                    </label>
+                    <input type="range" id="slopeAngle" min="0" max="30" value="0" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-track">
+                </div>
+            </div>
+
+            <!-- Right Column: Analysis -->
+            <div>
+                 <h2 class="text-2xl font-bold text-gray-800 text-center md:text-left mb-6 md:mb-0">Analysis</h2>
+                <!-- Results Section -->
+                <div id="results" class="p-6 rounded-lg transition-all duration-300">
+                    <h2 class="text-xl font-bold mb-4 text-center">Theoretical Force Analysis</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 justify-around text-center gap-4">
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <p class="text-sm text-gray-500 uppercase">Total Pulling Force</p>
+                            <p id="forceTotalPull" class="text-3xl font-bold">150 lbs</p>
+                            <p class="text-xs text-gray-500">(Payload + Gravity on Slope)</p>
+                        </div>
+                        <div class="p-2 rounded-lg bg-gray-50">
+                            <p class="text-sm text-gray-500 uppercase">Max Holding Friction</p>
+                            <p id="forceFriction" class="text-3xl font-bold">3200 lbs</p>
+                             <p class="text-xs text-gray-500">(Reduced by slope)</p>
+                        </div>
+                        <div class="p-2 rounded-lg bg-gray-50 col-span-1 sm:col-span-1">
+                            <p class="text-sm text-gray-500 uppercase">Safety Margin</p>
+                            <p id="forceMargin" class="text-3xl font-bold">3050 lbs</p>
+                            <p class="text-xs text-gray-500">(Friction - Pull)</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                         <p class="text-lg font-semibold" id="safetyMarginText"></p>
+                    </div>
+                </div>
+                
+                <!-- Force Comparison Section -->
+                <div class="mt-8 border-t pt-6">
+                    <h3 class="text-xl font-bold text-center text-gray-700 mb-4">Force Comparison: Tire Grip Usage</h3>
+                    <div id="comparison-details" class="bg-gray-50 p-4 rounded-lg text-center">
+                        <p class="text-gray-600 mb-2">The current pulling force is consuming this much of the tires' maximum theoretical grip:</p>
+                        <div class="w-full bg-gray-200 rounded-full h-6 my-2 shadow-inner">
+                            <div id="gripUsageBar" class="bg-blue-600 h-6 rounded-full text-white text-sm flex items-center justify-center font-bold transition-all duration-300" style="width: 0%;">0%</div>
+                        </div>
+                        <p id="gripUsageText" class="text-sm text-gray-500 mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- Un-calculable Risks -->
+                <div class="mt-8 border-t pt-6">
+                    <h3 class="text-xl font-bold text-center text-yellow-600 mb-4">Critical Risks NOT in this Calculation</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><strong>Parking Brake/Pawl Failure:</strong> The holding power of the brake or transmission pawl is unknown and not rated for this type of load. It can fail without warning.</li>
+                        <li><strong>Dynamic Loading:</strong> A bouncing or snagging payload will generate forces far greater than its static weight.</li>
+                        <li><strong>Suspension Shift:</strong> As the load is applied, the vehicle's suspension will compress, potentially causing the car to shift or settle, which can break static friction.</li>
+                        <li><strong>Sling Integrity:</strong> The sling around the wheel can be cut by sharp edges or could slip off the rounded surface.</li>
+                        <li><strong>Actual Friction:</strong> The true coefficient of friction depends on tire pressure, tread, and microscopic surface contaminants (dust, oil). The value used is a guess.</li>
+                    </ul>
+                </div>
+                
+                <!-- Math Section -->
+                <div class="mt-8 border-t pt-6">
+                    <h3 class="text-xl font-bold text-center text-gray-700 mb-4">Calculation Breakdown</h3>
+                    <div id="math-details" class="bg-gray-50 p-4 rounded-lg text-sm font-mono text-gray-800 space-y-2">
+                        <!-- Content will be generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const vehicleWeightSlider = document.getElementById('vehicleWeight');
+        const payloadWeightSlider = document.getElementById('payloadWeight');
+        const frictionSlider = document.getElementById('friction');
+        const slopeAngleSlider = document.getElementById('slopeAngle');
+
+        const vehicleWeightValue = document.getElementById('vehicleWeightValue');
+        const payloadWeightValue = document.getElementById('payloadWeightValue');
+        const payloadWeightValueKN = document.getElementById('payloadWeightValueKN');
+        const frictionValueText = document.getElementById('frictionValueText');
+        const surfaceTypeText = document.getElementById('surfaceTypeText');
+        const slopeAngleValue = document.getElementById('slopeAngleValue');
+        const vehicleTypeText = document.getElementById('vehicleTypeText');
+        
+        const forceTotalPullEl = document.getElementById('forceTotalPull');
+        const forceFrictionEl = document.getElementById('forceFriction');
+        const forceMarginEl = document.getElementById('forceMargin');
+        const safetyMarginTextEl = document.getElementById('safetyMarginText');
+        const resultsEl = document.getElementById('results');
+        const mathDetailsEl = document.getElementById('math-details');
+        const comparisonSpeedEl = document.getElementById('comparisonSpeed');
+        const gripUsageBar = document.getElementById('gripUsageBar');
+        const gripUsageText = document.getElementById('gripUsageText');
+
+        function getSurfaceType(mu) {
+            if (mu >= 0.8) return "Dry Asphalt / Concrete";
+            if (mu >= 0.6) return "Broom Finish Concrete";
+            if (mu >= 0.5) return "Wet Asphalt";
+            if (mu >= 0.4) return "Dry Gravel / Dirt";
+            if (mu >= 0.3) return "Wet Dirt / Mud";
+            if (mu >= 0.2) return "Snow";
+            if (mu >= 0.1) return "Wet Ice";
+            return "Ice";
+        }
+
+        function getVehicleType(weight) {
+            if (weight <= 2500) return "e.g., Small Car (Honda Fit, Mini Cooper)";
+            if (weight <= 3500) return "e.g., Mid-Size Sedan (Toyota Camry, Honda Accord)";
+            if (weight <= 5000) return "e.g., SUV / Minivan (Ford Explorer, Honda Odyssey)";
+            if (weight <= 7000) return "e.g., Full-Size Truck / Large SUV (Ford F-150, Chevy Suburban)";
+            return "e.g., Heavy Duty Truck (Ford F-350, Ram 3500)";
+        }
+
+        function calculateForces() {
+            const vehicleWeight = parseInt(vehicleWeightSlider.value);
+            const payloadWeight = parseInt(payloadWeightSlider.value);
+            const mu = parseFloat(frictionSlider.value);
+            const slopeAngle = parseFloat(slopeAngleSlider.value);
+
+            // Display current slider values
+            vehicleWeightValue.textContent = `${vehicleWeight} lbs`;
+            vehicleTypeText.textContent = getVehicleType(vehicleWeight);
+            payloadWeightValue.textContent = `${payloadWeight} lbs`;
+            payloadWeightValueKN.textContent = `${(payloadWeight * 0.00444822).toFixed(2)} kN`;
+            frictionValueText.textContent = `μ = ${mu.toFixed(2)}`;
+            surfaceTypeText.textContent = getSurfaceType(mu);
+            slopeAngleValue.textContent = `${slopeAngle.toFixed(1)} °`;
+            
+            // --- Physics Calculation with Slope ---
+            const slopeAngleRad = slopeAngle * (Math.PI / 180);
+            const normalForce = vehicleWeight * Math.cos(slopeAngleRad);
+            const maxFrictionForce = mu * normalForce;
+            const gravityForceDownslope = vehicleWeight * Math.sin(slopeAngleRad);
+            const totalPullingForce = payloadWeight + gravityForceDownslope;
+            const margin = maxFrictionForce - totalPullingForce;
+
+            // Display forces
+            forceTotalPullEl.textContent = `${Math.round(totalPullingForce)} lbs`;
+            forceFrictionEl.textContent = `${Math.round(maxFrictionForce)} lbs`;
+            forceMarginEl.textContent = `${Math.round(margin)} lbs`;
+            
+            // Clear previous background classes
+            resultsEl.classList.remove('bg-green-100', 'bg-red-100', 'bg-yellow-100');
+            forceFrictionEl.classList.remove('text-green-600', 'text-red-600', 'text-yellow-600');
+            forceTotalPullEl.classList.remove('text-green-600', 'text-red-600', 'text-yellow-600');
+            forceMarginEl.classList.remove('text-green-600', 'text-red-600', 'text-yellow-600');
+
+            if (margin <= 0) {
+                resultsEl.classList.add('bg-red-100');
+                forceFrictionEl.classList.add('text-red-600');
+                forceTotalPullEl.classList.add('text-red-600');
+                forceMarginEl.classList.add('text-red-600');
+                safetyMarginTextEl.textContent = `CRITICAL: Total pull exceeds theoretical friction. Vehicle will slide.`;
+            } else if (margin < totalPullingForce) { // Less than a 2:1 "safety" factor
+                 resultsEl.classList.add('bg-yellow-100');
+                 forceFrictionEl.classList.add('text-yellow-600');
+                 forceTotalPullEl.classList.add('text-yellow-600');
+                 forceMarginEl.classList.add('text-yellow-600');
+                 safetyMarginTextEl.textContent = `WARNING: Low theoretical margin. Highly susceptible to un-calculable risks.`;
+            } else {
+                resultsEl.classList.add('bg-green-100');
+                forceFrictionEl.classList.add('text-green-600');
+                forceTotalPullEl.classList.add('text-green-600');
+                forceMarginEl.classList.add('text-green-600');
+                safetyMarginTextEl.textContent = `Theoretical friction exceeds total pull. This does NOT guarantee safety. See risks above.`;
+            }
+            
+            // --- Update Comparison Section ---
+            // Max cornering force on a flat surface is F_c_max = μ * N, where N = vehicleWeight
+            const maxCorneringForce = mu * vehicleWeight;
+            let gripUsagePercentage = 0;
+            if (maxCorneringForce > 0) {
+                gripUsagePercentage = (totalPullingForce / maxCorneringForce) * 100;
+            }
+
+            // Cap the percentage at 100 for visual display
+            const displayPercentage = Math.min(gripUsagePercentage, 100);
+
+            gripUsageBar.style.width = `${displayPercentage}%`;
+            gripUsageBar.textContent = `${Math.round(displayPercentage)}%`;
+            
+            gripUsageBar.classList.remove('bg-blue-600', 'bg-yellow-500', 'bg-red-600');
+            if (gripUsagePercentage >= 100) {
+                gripUsageText.textContent = `The pulling force (${Math.round(totalPullingForce)} lbs) exceeds the maximum possible tire grip (${Math.round(maxCorneringForce)} lbs).`;
+                gripUsageBar.classList.add('bg-red-600');
+            } else if (gripUsagePercentage > 50) {
+                gripUsageText.textContent = `Using a significant portion of available tire grip.`;
+                gripUsageBar.classList.add('bg-yellow-500');
+            } else {
+                gripUsageText.textContent = `The tires are theoretically well within their grip limit for this surface.`;
+                gripUsageBar.classList.add('bg-blue-600');
+            }
+
+
+            // Update Math Details Section
+            mathDetailsEl.innerHTML = `
+                <p>1. Normal Force (N): Force perpendicular to the surface.</p>
+                <p class="pl-4">N = Weight * cos(θ) = ${vehicleWeight} * cos(${slopeAngle.toFixed(1)}°) = ${Math.round(normalForce)} lbs</p>
+                <p>2. Gravitational Pull Downslope (Fg):</p>
+                <p class="pl-4">Fg = Weight * sin(θ) = ${vehicleWeight} * sin(${slopeAngle.toFixed(1)}°) = ${Math.round(gravityForceDownslope)} lbs</p>
+                <p>3. Total Pulling Force (F_pull):</p>
+                <p class="pl-4">F_pull = Payload + Fg = ${payloadWeight} + ${Math.round(gravityForceDownslope)} = ${Math.round(totalPullingForce)} lbs</p>
+                <p>4. Max Holding Friction (Ff):</p>
+                <p class="pl-4">Ff = μ * N = ${mu.toFixed(2)} * ${Math.round(normalForce)} = ${Math.round(maxFrictionForce)} lbs</p>
+                <p>5. Result: Vehicle slides if F_pull > Ff</p>
+                <p class="pl-4">${Math.round(totalPullingForce)} lbs vs ${Math.round(maxFrictionForce)} lbs</p>
+                <p>6. Tire Grip Comparison:</p>
+                <p class="pl-4">Max Grip (F_grip_max) = μ * Weight = ${mu.toFixed(2)} * ${vehicleWeight} = ${Math.round(maxCorneringForce)} lbs</p>
+                <p class="pl-4">Grip Usage % = (F_pull / F_grip_max) * 100 = ${gripUsagePercentage.toFixed(1)}%</p>
+            `;
+        }
+        
+        vehicleWeightSlider.addEventListener('input', calculateForces);
+        payloadWeightSlider.addEventListener('input', calculateForces);
+        frictionSlider.addEventListener('input', calculateForces);
+        slopeAngleSlider.addEventListener('input', calculateForces);
+
+        // Initial calculation on page load
+        window.onload = calculateForces;
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Japan Family Trip Planner</title>
+    
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <!-- Custom Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles to complement Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Leaflet map container needs a defined height */
+        .map {
+            height: 250px;
+            border-radius: 0.5rem; /* 8px */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header Section -->
+    <header class="bg-red-700 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-center">🌏 Japan Spring Break Adventure – March 2026 🌏</h1>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Summary Table Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-red-700 mb-4">✨ Trip Overview</h2>
+            <div class="overflow-x-auto bg-white rounded-xl shadow-md">
+                <table class="min-w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Day</th>
+                            <th scope="col" class="px-6 py-3">Location</th>
+                            <th scope="col" class="px-6 py-3">Main Activities</th>
+                            <th scope="col" class="px-6 py-3">Potential Events</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">1-4</td>
+                            <td class="px-6 py-4">Tokyo</td>
+                            <td class="px-6 py-4">Temples, Museums, City Exploration</td>
+                            <td class="px-6 py-4">Early Cherry Blossoms, Ueno Sakura Matsuri</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">5</td>
+                            <td class="px-6 py-4">Tokyo</td>
+                            <td class="px-6 py-4">Tokyo DisneySea</td>
+                            <td class="px-6 py-4">-</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">6</td>
+                            <td class="px-6 py-4">Hakone</td>
+                            <td class="px-6 py-4">Ropeway, Museums, Lake Ashi</td>
+                            <td class="px-6 py-4">Hakone Estate Hanami (Night Viewing)</td>
+                        </tr>
+                         <tr class="bg-gray-50 border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">7-8</td>
+                            <td class="px-6 py-4">Kyoto</td>
+                            <td class="px-6 py-4">Shrines, Temples, Bamboo Grove</td>
+                            <td class="px-6 py-4">Higashiyama Hanatouro Illumination</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium text-gray-900">9</td>
+                            <td class="px-6 py-4">Osaka</td>
+                            <td class="px-6 py-4">Universal Studios Japan (USJ)</td>
+                            <td class="px-6 py-4">Sumo Spring Grand Tournament (Osaka)</td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-6 py-4 font-medium text-gray-900">10</td>
+                            <td class="px-6 py-4">Tokyo</td>
+                            <td class="px-6 py-4">Return travel, Farewell Dinner</td>
+                            <td class="px-6 py-4">AnimeJapan 2026 (late March)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Itinerary Section -->
+        <section>
+            <h2 class="text-3xl font-bold text-red-700 mb-4">📅 Detailed Itinerary</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Day 1 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day1.jpg" alt="Narita Airport Terminal" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 1 – Travel & Arrival</h3>
+                    <p class="space-y-2">
+                        <span>✈️ 9:00 AM – Depart SBP</span><br>
+                        <span>✈️ 6:00 PM (next day) – Arrive <a href="https://www.narita-airport.jp/en/" target="_blank" class="text-blue-600 hover:underline">Narita (NRT)</a></span><br>
+                        <span>🏨 Transfer to hotel, check-in & rest</span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Dinner (Tokyo Station):</strong> <a href="https://www.tokyoinfo.com/news/event/tokyo-ramen-street.html" target="_blank" class="text-blue-600 hover:underline">Tokyo Ramen Street</a> for variety or <a href="https://www.rokurinsha.com/" target="_blank" class="text-blue-600 hover:underline">Rokurinsha</a> for famous tsukemen.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day1"></div>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day2.jpg" alt="Senso-ji Temple" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 2 – Asakusa & Skytree</h3>
+                    <p class="space-y-2">
+                        <span>9:00 AM – <a href="https://www.senso-ji.jp/english/" target="_blank" class="text-blue-600 hover:underline">Senso-ji Temple</a></span><br>
+                        <span>11:00 AM – Explore <a href="https://www.japan-guide.com/e/e3004.html" target="_blank" class="text-blue-600 hover:underline">Nakamise Shopping Street</a></span><br>
+                        <span>3:00 PM – Views from <a href="https://www.tokyo-skytree.jp/en/" target="_blank" class="text-blue-600 hover:underline">Tokyo Skytree</a></span>
+                    </p>
+                     <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🌸 Local Events:</h4>
+                        <p class="text-gray-600 mt-2">Depending on the bloom, you might catch the start of the <a href="https://www.japan.travel/en/spot/1675/" target="_blank" class="text-blue-600 hover:underline">Ueno Sakura Matsuri</a> (Cherry Blossom Festival) in nearby Ueno Park, a spectacular sight with over 1,000 cherry trees.</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Asakusa):</strong> <a href="https://www.tempura-daikokuya.jp/" target="_blank" class="text-blue-600 hover:underline">Daikokuya Tempura</a> (classic tempura), <a href="https://www.tripadvisor.com/Restaurant_Review-g1066461-d1676353-Reviews-Sometaro-Taito_Tokyo_Tokyo_Prefecture_Kanto.html" target="_blank" class="text-blue-600 hover:underline">Sometaro</a> (DIY okonomiyaki), or <a href="https://www.thetokyochapter.com/asakusa-with-kids-where-to-eat/" target="_blank" class="text-blue-600 hover:underline">Asakusa Katsukichi</a> (tonkatsu).</li>
+                            <li><strong>Dinner (Skytree Solamachi):</strong> <a href="https://shinjuku-saboten.com/" target="_blank" class="text-blue-600 hover:underline">Saboten</a> (tonkatsu) or various options in the mall.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day2"></div>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day3.jpg" alt="Ghibli Museum" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 3 – Ghibli & Harajuku</h3>
+                    <p class="space-y-2">
+                        <span>10:00 AM – <a href="https://www.ghibli-museum.jp/en/" target="_blank" class="text-blue-600 hover:underline">Ghibli Museum</a> (Tickets must be bought months in advance!)</span><br>
+                        <span>2:00 PM – Stroll through <a href="https://www.japan.travel/en/spot/1266/" target="_blank" class="text-blue-600 hover:underline">Inokashira Park</a></span><br>
+                        <span>4:00 PM – Explore the unique fashion of <a href="https://matcha-jp.com/en/3654" target="_blank" class="text-blue-600 hover:underline">Harajuku</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Kichijoji):</strong> <a href="https://www.satou-kichijouji.com/" target="_blank" class="text-blue-600 hover:underline">Satou Steak House</a> (famous menchi-katsu), <a href="https://www.hattifnatt.jp/" target="_blank" class="text-blue-600 hover:underline">Hattifnatt Cafe</a> (whimsical cafe), or <a href="https://savorjapan.com/0006029586/" target="_blank" class="text-blue-600 hover:underline">Yakitori Kappou Shouchan</a>.</li>
+                            <li><strong>Dinner (Harajuku):</strong> <a href="https://mai-sen.com/" target="_blank" class="text-blue-600 hover:underline">Maisen</a> (world-class tonkatsu), <a href="https://www.harajukugyozaro.com/" target="_blank" class="text-blue-600 hover:underline">Harajuku Gyozaro</a> (gyoza), or <a href="https://www.thetokyochapter.com/where-to-eat-in-harajuku/" target="_blank" class="text-blue-600 hover:underline">Sakura-tei</a> (okonomiyaki).</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day3"></div>
+                </div>
+
+                <!-- Day 4 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day4.jpg" alt="Shibuya Crossing" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 4 – Art & City Views</h3>
+                    <p class="space-y-2">
+                        <span>9:00 AM – Immerse yourself in art at <a href="https://www.teamlab.art/e/planets/" target="_blank" class="text-blue-600 hover:underline">teamLab Planets</a></span><br>
+                        <span>11:30 AM – Visit the peaceful <a href="https://www.meijijingu.or.jp/en/" target="_blank" class="text-blue-600 hover:underline">Meiji Shrine</a></span><br>
+                        <span>3:00 PM – Experience the famous <a href="https://www.japan.travel/en/spot/2038/" target="_blank" class="text-blue-600 hover:underline">Shibuya Scramble Crossing</a></span><br>
+                        <span>4:30 PM – Relax at <a href="https://catmocha.jp/shop/shibuya/" target="_blank" class="text-blue-600 hover:underline">Cat Cafe MoCHA</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Toyosu/Harajuku):</strong> Fresh sushi at <a href="https://savorjapan.com/0006140594/" target="_blank" class="text-blue-600 hover:underline">Sushi Dai</a> near teamLab, or crepes on Takeshita Street in Harajuku.</li>
+                            <li><strong>Dinner (Shibuya):</strong> <a href="https://en.ichiran.com/shop/tokyo/shibuya/" target="_blank" class="text-blue-600 hover:underline">Ichiran Ramen</a> (solo ramen booths), <a href="https://www.uobei.co.jp/" target="_blank" class="text-blue-600 hover:underline">Uobei</a> (conveyor belt sushi), or <a href="https://www.thetokyochapter.com/the-shibuya-area-with-kids/" target="_blank" class="text-blue-600 hover:underline">Royal Host</a> (family diner).</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day4"></div>
+                </div>
+
+                <!-- Day 5 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day5.jpg" alt="Tokyo DisneySea" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 5 – DisneySea</h3>
+                    <p class="space-y-2">
+                        <span>All Day – <a href="https://www.tokyodisneyresort.jp/en/tds/" target="_blank" class="text-blue-600 hover:underline">Tokyo DisneySea</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>All Meals:</strong> Explore unique park snacks and restaurants. See the <a href="https://www.tokyodisneyresort.jp/en/tds/restaurant.html" target="_blank" class="text-blue-600 hover:underline">dining guide</a>. Don't miss the Gyoza Dog or flavored popcorn!</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day5"></div>
+                </div>
+
+                <!-- Day 6 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day6.jpg" alt="Hakone Ropeway" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 6 – Hakone Retreat</h3>
+                    <p class="space-y-2">
+                        <span>9:00 AM – Depart Tokyo via Shinkansen</span><br>
+                        <span>11:00 AM – Arrive in <a href="https://www.hakonenavi.jp/international/en/" target="_blank" class="text-blue-600 hover:underline">Hakone</a></span><br>
+                        <span>2:00 PM – <a href="https://www.hakoneropeway.co.jp/foreign/en/" target="_blank" class="text-blue-600 hover:underline">Hakone Ropeway</a> & <a href="https://www.hakone-oam.or.jp/en/" target="_blank" class="text-blue-600 hover:underline">Open-Air Museum</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🌸 Local Events:</h4>
+                        <p class="text-gray-600 mt-2">Enjoy <a href="https://www.hakone.com/events" target="_blank" class="text-blue-600 hover:underline">Hanami at Hakone</a>, a special night viewing of cherry blossoms at the Hakone Estate & Gardens.</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Lake Ashi):</strong> <a href="https://www.hakone-hoteldeyama.jp/en/restaurant/hakone_bakery/" target="_blank" class="text-blue-600 hover:underline">Bakery & Table</a> (lake views), <a href="https://www.amasake-chaya.com/" target="_blank" class="text-blue-600 hover:underline">Amazake-chaya</a> (traditional tea house), or <a href="https://www.thetokyochapter.com/where-to-eat-in-hakone-with-kids/" target="_blank" class="text-blue-600 hover:underline">Tatsumi Garden</a> (ramen).</li>
+                            <li><strong>Dinner:</strong> Traditional multi-course kaiseki dinner at your ryokan (inn).</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day6"></div>
+                </div>
+
+                <!-- Day 7 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day7.jpg" alt="Fushimi Inari Shrine" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 7 – Kyoto Arrival & Gion</h3>
+                    <p class="space-y-2">
+                        <span>9:00 AM – Depart Hakone</span><br>
+                        <span>2:00 PM – <a href="https://www.japan.travel/en/spot/1128/" target="_blank" class="text-blue-600 hover:underline">Fushimi Inari Shrine</a></span><br>
+                        <span>4:00 PM – Stroll through <a href="https://www.kanpai-japan.com/kyoto/ninenzaka-sannenzaka" target="_blank" class="text-blue-600 hover:underline">Ninenzaka & Sannenzaka</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🌸 Local Events:</h4>
+                        <p class="text-gray-600 mt-2">Experience the magical <a href="https://www.japanistry.com/event/kyoto-higashiyama-hanatoro/" target="_blank" class="text-blue-600 hover:underline">Higashiyama Hanatouro</a>, where the streets and temples are illuminated by thousands of lanterns (early-mid March).</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Fushimi):</strong> <a href="https://www.insidekyoto.com/restaurants-near-fushimi-inari-taisha" target="_blank" class="text-blue-600 hover:underline">Kendonya</a> (udon), <a href="https://vermillion.jp/" target="_blank" class="text-blue-600 hover:underline">Vermillion Cafe</a>, or <a href="https://www.insidekyoto.com/restaurants-near-fushimi-inari-taisha" target="_blank" class="text-blue-600 hover:underline">Gyukatsu Kyoto Katsugyu</a>.</li>
+                            <li><strong>Dinner (Gion):</strong> <a href="https://gion-tanto.com/" target="_blank" class="text-blue-600 hover:underline">Gion Tanto</a> (okonomiyaki), <a href="https://www.gyozahohei.com/" target="_blank" class="text-blue-600 hover:underline">Gyoza Hohei</a>, or <a href="https://www.thetokyochapter.com/kyoto-restaurants-with-kids/" target="_blank" class="text-blue-600 hover:underline">Rigoletto Smoke Grill & Bar</a>.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day7"></div>
+                </div>
+
+                <!-- Day 8 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day8.jpg" alt="Arashiyama Bamboo Grove" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 8 – Arashiyama</h3>
+                    <p class="space-y-2">
+                        <span>9:00 AM – <a href="https://www.japan.travel/en/spot/1141/" target="_blank" class="text-blue-600 hover:underline">Arashiyama Bamboo Grove</a></span><br>
+                        <span>11:00 AM – <a href="https://www.tenryuji.com/en/" target="_blank" class="text-blue-600 hover:underline">Tenryu-ji Temple</a></span><br>
+                        <span>2:00 PM – <a href="http://www.monkeypark.jp/" target="_blank" class="text-blue-600 hover:underline">Monkey Park Iwatayama</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch (Arashiyama):</strong> <a href="https://www.tripadvisor.com/Restaurant_Review-g1023414-d1674789-Reviews-Yudofu_Sagano-Ukyo_Kyoto_Kyoto_Prefecture_Kinki.html" target="_blank" class="text-blue-600 hover:underline">Yudofu Sagano</a> (tofu), <a href="https://yoshimura-gr.com/arashiyama/" target="_blank" class="text-blue-600 hover:underline">Arashiyama Yoshimura</a> (soba), or <a href="https://www.thetokyochapter.com/other-japanese-cities-arashiyama-with-kids/" target="_blank" class="text-blue-600 hover:underline">Obu Cafe</a>.</li>
+                            <li><strong>Dinner (Central Kyoto):</strong> Explore the food floor at <a href="https://www.isetan.mistore.jp/kyoto/en.html" target="_blank" class="text-blue-600 hover:underline">Isetan Department Store</a> by Kyoto Station.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day8"></div>
+                </div>
+
+                <!-- Day 9 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day9.jpg" alt="Universal Studios Japan" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 9 – Universal Studios Japan</h3>
+                    <p class="space-y-2">
+                        <span>All Day – <a href="https://www.usj.co.jp/web/en/us" target="_blank" class="text-blue-600 hover:underline">Universal Studios Japan (USJ)</a></span>
+                    </p>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🌸 Local Events:</h4>
+                        <p class="text-gray-600 mt-2">The <a href="https://essential-japan.com/news/march-grand-sumo-tournament-2026-in-osaka/" target="_blank" class="text-blue-600 hover:underline">Sumo Spring Grand Tournament</a> is held in nearby Osaka during March. A unique cultural experience if you have time before or after USJ.</p>
+                    </div>
+                     <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>All Meals:</strong> Eat inside the park or at the many restaurants in <a href="https://ucw.jp/global/en/floormap/" target="_blank" class="text-blue-600 hover:underline">Universal CityWalk Osaka</a>, including <a href="https://ucw.jp/global/en/restaurant/bubba-gump-shrimp/" target="_blank" class="text-blue-600 hover:underline">Bubba Gump Shrimp</a> and a takoyaki park.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day9"></div>
+                </div>
+
+                <!-- Day 10 -->
+                <div class="day bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+                    <img src="day10.jpg" alt="Shinkansen Bullet Train" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.style.display='none'">
+                    <h3 class="text-2xl font-bold text-red-600 mb-3">Day 10 – Return to Tokyo</h3>
+                    <p class="space-y-2">
+                        <span>Morning – Depart Kyoto via Shinkansen</span><br>
+                        <span>Afternoon – Check into Tokyo hotel</span><br>
+                        <span>Evening – Farewell dinner</span>
+                    </p>
+                     <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🌸 Local Events:</h4>
+                        <p class="text-gray-600 mt-2">If your trip extends to the end of March, you might catch <a href="https://www.japan-guide.com/e/e3045.html" target="_blank" class="text-blue-600 hover:underline">AnimeJapan 2026</a>, one of the world's largest anime conventions.</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t">
+                        <h4 class="font-semibold text-lg text-gray-700">🍴 Food Stops:</h4>
+                        <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1">
+                            <li><strong>Lunch:</strong> Grab an "ekiben" (station bento box) for the train ride.</li>
+                            <li><strong>Dinner:</strong> <a href="https://www.onyasai.com/" target="_blank" class="text-blue-600 hover:underline">On-Yasai</a> (shabu-shabu) or a memorable meal at the <a href="https://www.parkhyatttokyo.com/en/restaurants/new-york-grill.html" target="_blank" class="text-blue-600 hover:underline">New York Grill</a>.</li>
+                        </ul>
+                    </div>
+                    <div class="map mt-4" id="map-day10"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Checklist Section -->
+        <section class="mt-12">
+            <h2 class="text-3xl font-bold text-red-700 mb-4">✅ Pre-Trip Checklist & Timeline</h2>
+            <ul class="list-none space-y-4 bg-white p-6 rounded-xl shadow-md">
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Now - Sep 2025:</span> <span>Renew or apply for passports (kids too!)</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Sep - Nov 2025:</span> <span>Book flights and hotels (Tokyo, Kyoto, Hakone)</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Dec 2025 - Jan 2026:</span> <span>Reserve DisneySea, Ghibli, USJ tickets</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Dec 2025 - Feb 2026:</span> <span>Buy JR Pass (14-day)</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Jan - Feb 2026:</span> <span>Order IC transit cards (Suica/PASMO)</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">February 2026:</span> <span>Download essential travel apps</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Week before departure:</span> <span>Print itinerary, tickets, and travel docs</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Week of departure:</span> <span>Pack adapters, walking shoes, meds, snacks</span></li>
+                <li class="flex items-start text-lg"><span class="mr-4 font-semibold text-red-600 w-48 flex-shrink-0">Week before departure:</span> <span>Notify banks of international travel</span></li>
+            </ul>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="text-center py-8 mt-8 border-t border-gray-200">
+        <p class="text-gray-600">🌟 Made for your unforgettable Japan trip – Spring Break 2026 🌟</p>
+    </footer>
+
+    <!-- Load Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mapData = {
+                day1: [
+                    { lat: 35.7719, lng: 140.3929, label: 'Narita Airport (NRT)' },
+                    { lat: 35.6812, lng: 139.7671, label: 'Tokyo Ramen Street' }
+                ],
+                day2: [
+                    { lat: 35.7148, lng: 139.7967, label: 'Senso-ji Temple' },
+                    { lat: 35.7101, lng: 139.8107, label: 'Tokyo Skytree' },
+                    { lat: 35.7145, lng: 139.795, label: 'Daikokuya Tempura' },
+                    { lat: 35.7172, lng: 139.794, label: 'Sometaro Okonomiyaki' }
+                ],
+                day3: [
+                    { lat: 35.7056, lng: 139.5701, label: 'Ghibli Museum' },
+                    { lat: 35.6701, lng: 139.7022, label: 'Harajuku' },
+                    { lat: 35.7022, lng: 139.5742, label: 'Satou Steak House' },
+                    { lat: 35.6685, lng: 139.7081, label: 'Maisen Tonkatsu' }
+                ],
+                day4: [
+                    { lat: 35.6498, lng: 139.7796, label: 'teamLab Planets' },
+                    { lat: 35.6580, lng: 139.7016, label: 'Shibuya Crossing' },
+                    { lat: 35.6591, lng: 139.6982, label: 'Ichiran Ramen' },
+                    { lat: 35.6605, lng: 139.699, label: 'Uobei Sushi' }
+                ],
+                day5: [
+                    { lat: 35.6264, lng: 139.8856, label: 'Tokyo DisneySea' }
+                ],
+                day6: [
+                    { lat: 35.2381, lng: 139.0238, label: 'Hakone' },
+                    { lat: 35.1954, lng: 139.0203, label: 'Bakery & Table' }
+                ],
+                day7: [
+                    { lat: 34.9671, lng: 135.7727, label: 'Fushimi Inari Shrine' },
+                    { lat: 35.0036, lng: 135.7781, label: 'Gion District' },
+                    { lat: 34.9678, lng: 135.774, label: 'Kendonya Udon' },
+                    { lat: 35.002, lng: 135.776, label: 'Gion Tanto' }
+                ],
+                day8: [
+                    { lat: 35.0173, lng: 135.676, label: 'Arashiyama Bamboo Grove' },
+                    { lat: 35.0141, lng: 135.669, label: 'Monkey Park Iwatayama' },
+                    { lat: 35.0145, lng: 135.674, label: 'Arashiyama Yoshimura' }
+                ],
+                day9: [
+                    { lat: 34.6654, lng: 135.4323, label: 'Universal Studios Japan' },
+                    { lat: 34.6678, lng: 135.439, label: 'Universal CityWalk' }
+                ],
+                day10: [
+                    { lat: 35.6812, lng: 139.7671, label: 'Tokyo Station' },
+                    { lat: 35.6896, lng: 139.6917, label: 'On-Yasai Shabu-Shabu' }
+                ]
+            };
+
+            for (const dayKey in mapData) {
+                const dayNum = dayKey.replace('day', '');
+                const mapElement = document.getElementById('map-day' + dayNum);
+                if (mapElement && mapData[dayKey].length > 0) {
+                    const map = L.map(mapElement).setView([mapData[dayKey][0].lat, mapData[dayKey][0].lng], 13);
+                    
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    }).addTo(map);
+                    
+                    mapData[dayKey].forEach(point => {
+                        L.marker([point.lat, point.lng]).addTo(map).bindPopup(point.label);
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Aircraft Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMVIhbGKLCePo23CkZp4OFxmA4ZcHnEB7NE47veGTMpROGxh2" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+            });
+        });
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; }
+        .control-panel { max-height: 95vh; overflow-y: auto; }
+        .control-panel::-webkit-scrollbar { width: 6px; }
+        .control-panel::-webkit-scrollbar-track { background: #2d3748; }
+        .control-panel::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 3px; }
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: #4a5568; border-radius: 2px; outline: none; opacity: 0.7; transition: opacity .2s; }
+        input[type=range]:hover { opacity: 1; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: #a0aec0; cursor: pointer; border-radius: 50%; }
+        input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: #a0aec0; cursor: pointer; border-radius: 50%; }
+        .tab-button.active { background-color: #4a5568; color: #e2e8f0; }
+        .analysis-tab-button.active { border-color: #4299e1; color: #e2e8f0; }
+        .switch-field { display: flex; overflow: hidden; }
+        .switch-field input { position: absolute !important; clip: rect(0, 0, 0, 0); height: 1px; width: 1px; border: 0; overflow: hidden; }
+        .switch-field label { background-color: #1a202c; color: #a0aec0; font-size: 12px; line-height: 1; text-align: center; padding: 6px 12px; margin-right: -1px; border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.1s ease-in-out; }
+        .switch-field label:hover { cursor: pointer; }
+        .switch-field input:checked + label { background-color: #4299e1; color: white; box-shadow: none; }
+        .switch-field label:first-of-type { border-radius: 4px 0 0 4px; }
+        .switch-field label:last-of-type { border-radius: 0 4px 4px 0; }
+        #infoModal { backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-200">
+
+    <div id="app" class="flex flex-col md:flex-row h-screen w-screen">
+        <!-- CONTROLS PANEL -->
+        <div class="w-full md:w-96 bg-gray-900 p-4 shadow-2xl control-panel flex-shrink-0">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-2xl font-bold text-white">Aircraft Designer</h1>
+                <button id="info-btn" class="text-gray-400 hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></button>
+            </div>
+            <div class="flex justify-between items-center mb-4 text-sm">
+                <div class="switch-field"><input type="radio" id="unit-metric" name="unit-switch" value="metric" /><label for="unit-metric">Metric</label><input type="radio" id="unit-imperial" name="unit-switch" value="imperial" checked/><label for="unit-imperial">Imperial</label></div>
+                <div class="switch-field"><input type="radio" id="class-drone" name="class-switch" value="drone" checked/><label for="class-drone">Small Drone</label><input type="radio" id="class-large" name="class-switch" value="large" /><label for="class-large">Large Aircraft</label></div>
+            </div>
+            
+            <div class="flex mb-4 border-b border-gray-700 text-xs sm:text-sm">
+                <button id="tab-wing" class="tab-button flex-1 py-2 px-2 sm:px-4 hover:bg-gray-700 active">Wing</button>
+                <button id="tab-multiwing" class="tab-button flex-1 py-2 px-2 sm:px-4 hover:bg-gray-700">Multi-wing</button>
+                <button id="tab-fuselage" class="tab-button flex-1 py-2 px-2 sm:px-4 hover:bg-gray-700">Fuselage</button>
+                <button id="tab-empennage" class="tab-button flex-1 py-2 px-2 sm:px-4 hover:bg-gray-700">Empennage</button>
+                <button id="tab-config" class="tab-button flex-1 py-2 px-2 sm:px-4 hover:bg-gray-700">Config</button>
+            </div>
+
+            <div id="controls-wing" class="space-y-4">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Main Wing</h2>
+                <div><label for="nacaCamber" class="block text-sm font-medium">Camber: <span id="nacaCamber-val">2</span>%</label><input type="range" id="nacaCamber" min="0" max="9" value="2" step="0.1" class="w-full"></div>
+                <div><label for="nacaThickness" class="block text-sm font-medium">Thickness: <span id="nacaThickness-val">12</span>%</label><input type="range" id="nacaThickness" min="1" max="25" value="12" step="0.1" class="w-full"></div>
+                <div><label for="wingPosX" class="block text-sm font-medium">Longitudinal Pos: <span id="wingPosX-val">0.4</span></label><input type="range" id="wingPosX" min="0.1" max="0.8" value="0.4" step="0.01" class="w-full"></div>
+                <div><label for="wingPosY" class="block text-sm font-medium">Vertical Pos: <span id="wingPosY-val">0.0</span> <span class="unit-dist">m</span></label><input type="range" id="wingPosY" min="-0.5" max="0.5" value="0.0" step="0.01" class="w-full"></div>
+                <div><label for="span" class="block text-sm font-medium">Span: <span id="span-val">3</span> <span class="unit-dist">m</span></label><input type="range" id="span" min="0.5" max="10" value="3" step="0.1" class="w-full"></div>
+                <div><label for="rootChord" class="block text-sm font-medium">Root Chord: <span id="rootChord-val">0.5</span> <span class="unit-dist">m</span></label><input type="range" id="rootChord" min="0.1" max="1" value="0.5" step="0.05" class="w-full"></div>
+                <div><label for="taperRatio" class="block text-sm font-medium">Taper Ratio: <span id="taperRatio-val">0.7</span></label><input type="range" id="taperRatio" min="0.1" max="1" value="0.7" step="0.01" class="w-full"></div>
+                <div><label for="sweep" class="block text-sm font-medium">Sweep: <span id="sweep-val">0</span> deg</label><input type="range" id="sweep" min="-20" max="45" value="0" step="1" class="w-full"></div>
+                <div><label for="dihedral" class="block text-sm font-medium">Dihedral: <span id="dihedral-val">5</span> deg</label><input type="range" id="dihedral" min="-10" max="45" value="5" step="0.5" class="w-full"></div>
+            </div>
+
+            <div id="controls-multiwing" class="space-y-4 hidden">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Second Wing</h2>
+                <div class="flex items-center"><input id="wing2_enabled" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"><label for="wing2_enabled" class="ml-2 block text-sm text-gray-300">Enable Second Wing</label></div>
+                <div id="wing2-controls" class="space-y-4 hidden">
+                    <div><label for="wing2_posX" class="block text-sm font-medium">Longitudinal Pos: <span id="wing2_posX-val">0.7</span></label><input type="range" id="wing2_posX" min="0.1" max="0.9" value="0.7" step="0.01" class="w-full"></div>
+                    <div><label for="wing2_posY" class="block text-sm font-medium">Vertical Pos: <span id="wing2_posY-val">0.3</span> <span class="unit-dist">m</span></label><input type="range" id="wing2_posY" min="-0.5" max="0.5" value="0.3" step="0.01" class="w-full"></div>
+                    <div><label for="wing2_span" class="block text-sm font-medium">Span: <span id="wing2_span-val">2.5</span> <span class="unit-dist">m</span></label><input type="range" id="wing2_span" min="0.5" max="10" value="2.5" step="0.1" class="w-full"></div>
+                    <div><label for="wing2_rootChord" class="block text-sm font-medium">Root Chord: <span id="wing2_rootChord-val">0.4</span> <span class="unit-dist">m</span></label><input type="range" id="wing2_rootChord" min="0.1" max="1" value="0.4" step="0.05" class="w-full"></div>
+                    <div><label for="wing2_dihedral" class="block text-sm font-medium">Dihedral: <span id="wing2_dihedral-val">5</span> deg</label><input type="range" id="wing2_dihedral" min="-10" max="45" value="5" step="0.5" class="w-full"></div>
+                </div>
+            </div>
+
+            <div id="controls-fuselage" class="space-y-4 hidden">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Fuselage Geometry</h2>
+                <div><label for="fuselageLength" class="block text-sm font-medium">Length: <span id="fuselageLength-val">2</span> <span class="unit-dist">m</span></label><input type="range" id="fuselageLength" min="0.5" max="3" value="2" step="0.1" class="w-full"></div>
+                <div><label for="fuselageDiameter" class="block text-sm font-medium">Max Diameter: <span id="fuselageDiameter-val">0.3</span> <span class="unit-dist">m</span></label><input type="range" id="fuselageDiameter" min="0.1" max="0.8" value="0.3" step="0.05" class="w-full"></div>
+                <div><label for="noseTaper" class="block text-sm font-medium">Nose Length Ratio: <span id="noseTaper-val">0.2</span></label><input type="range" id="noseTaper" min="0.05" max="0.5" value="0.2" step="0.01" class="w-full"></div>
+                <div><label for="tailTaper" class="block text-sm font-medium">Tail Length Ratio: <span id="tailTaper-val">0.4</span></label><input type="range" id="tailTaper" min="0.2" max="0.8" value="0.4" step="0.01" class="w-full"></div>
+            </div>
+
+            <div id="controls-empennage" class="space-y-4 hidden">
+                 <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Empennage Config</h2>
+                <div><label for="hStabPos" class="block text-sm font-medium">Longitudinal Pos: <span id="hStabPos-val">0.9</span></label><input type="range" id="hStabPos" min="0.5" max="1.0" value="0.9" step="0.01" class="w-full"></div>
+                <div><label for="hStabPosY" class="block text-sm font-medium">Vertical Pos: <span id="hStabPosY-val">0</span> <span class="unit-dist">m</span></label><input type="range" id="hStabPosY" min="-0.5" max="0.5" value="0" step="0.01" class="w-full"></div>
+                <div><label for="hStabIncidence" class="block text-sm font-medium">Incidence: <span id="hStabIncidence-val">0</span> deg</label><input type="range" id="hStabIncidence" min="-5" max="5" value="0" step="0.1" class="w-full"></div>
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mt-2">Horizontal Stabilizer</h2>
+                <div><label for="hStabSpan" class="block text-sm font-medium">Span: <span id="hStabSpan-val">1</span> <span class="unit-dist">m</span></label><input type="range" id="hStabSpan" min="0.3" max="2" value="1" step="0.1" class="w-full"></div>
+                <div><label for="hStabChord" class="block text-sm font-medium">Chord: <span id="hStabChord-val">0.25</span> <span class="unit-dist">m</span></label><input type="range" id="hStabChord" min="0.1" max="0.8" value="0.25" step="0.05" class="w-full"></div>
+                <div><label for="hStabSweep" class="block text-sm font-medium">Sweep: <span id="hStabSweep-val">15</span> deg</label><input type="range" id="hStabSweep" min="0" max="45" value="15" step="1" class="w-full"></div>
+                <div><label for="hStabDihedral" class="block text-sm font-medium">Dihedral: <span id="hStabDihedral-val">0</span> deg</label><input type="range" id="hStabDihedral" min="-10" max="45" value="0" step="0.5" class="w-full"></div>
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mt-4">Vertical Stabilizer</h2>
+                <div><label for="vStabHeight" class="block text-sm font-medium">Height: <span id="vStabHeight-val">0.4</span> <span class="unit-dist">m</span></label><input type="range" id="vStabHeight" min="0.1" max="1" value="0.4" step="0.1" class="w-full"></div>
+                <div><label for="vStabChord" class="block text-sm font-medium">Root Chord: <span id="vStabChord-val">0.3</span> <span class="unit-dist">m</span></label><input type="range" id="vStabChord" min="0.1" max="0.8" value="0.3" step="0.05" class="w-full"></div>
+                <div><label for="vStabSweep" class="block text-sm font-medium">Sweep: <span id="vStabSweep-val">30</span> deg</label><input type="range" id="vStabSweep" min="0" max="60" value="30" step="1" class="w-full"></div>
+            </div>
+
+            <div id="controls-config" class="space-y-4 hidden">
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Weight & Balance</h2>
+                <div><label for="weight" class="block text-sm font-medium">Total Weight: <span id="weight-val">50</span> <span class="unit-mass">kg</span></label><input type="range" id="weight" min="5" max="55" value="50" step="1" class="w-full"></div>
+                <div><label for="cgPosition" class="block text-sm font-medium">CG Position: <span id="cgPosition-val">0.45</span></label><input type="range" id="cgPosition" min="0.1" max="0.7" value="0.45" step="0.01" class="w-full"></div>
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mt-4">Energy & Propulsion</h2>
+                <div><label for="batteryEnergy" class="block text-sm font-medium">Battery Energy: <span id="batteryEnergy-val">1000</span> Wh</label><input type="range" id="batteryEnergy" min="0" max="4000" value="1000" step="50" class="w-full"></div>
+                <div><label for="propulsionEfficiency" class="block text-sm font-medium">Propulsion Efficiency: <span id="propulsionEfficiency-val">60</span> %</label><input type="range" id="propulsionEfficiency" min="10" max="95" value="60" step="1" class="w-full"></div>
+                <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 mt-4">Propulsor Geometry</h2>
+                <div><label for="engineCount" class="block text-sm font-medium">Engines: <span id="engineCount-val">2</span></label><input type="range" id="engineCount" min="0" max="4" value="2" step="1" class="w-full"></div>
+                <div><label for="engineDist" class="block text-sm font-medium">Engine Spanwise Position: <span id="engineDist-val">0.3</span></label><input type="range" id="engineDist" min="0.1" max="0.9" value="0.3" step="0.01" class="w-full"></div>
+            </div>
+
+            <div class="mt-6"><button id="export-stl" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Export as STL</button></div>
+        </div>
+
+        <div class="flex-1 flex flex-col relative">
+            <div id="viewer" class="flex-1 bg-gray-700"></div>
+            <div id="analysis-section" class="w-full bg-gray-900 p-4 h-64 flex-shrink-0 border-t-4 border-gray-800">
+                <div class="flex space-x-1 sm:space-x-4 border-b border-gray-700 mb-2">
+                    <button id="analysis-tab-perf" class="analysis-tab-button py-2 px-4 text-xs sm:text-sm font-medium text-gray-400 border-b-2 border-transparent hover:border-gray-500 active">Performance</button>
+                    <button id="analysis-tab-stab" class="analysis-tab-button py-2 px-4 text-xs sm:text-sm font-medium text-gray-400 border-b-2 border-transparent hover:border-gray-500">Stability</button>
+                    <button id="analysis-tab-endurance" class="analysis-tab-button py-2 px-4 text-xs sm:text-sm font-medium text-gray-400 border-b-2 border-transparent hover:border-gray-500">Endurance</button>
+                    <button id="analysis-tab-sim" class="analysis-tab-button py-2 px-4 text-xs sm:text-sm font-medium text-gray-400 border-b-2 border-transparent hover:border-gray-500">Flight Sim</button>
+                </div>
+                <div id="chart-perf-container" class="w-full h-full"><canvas id="perfChart"></canvas></div>
+                <div id="chart-stab-container" class="w-full h-full hidden flex">
+                    <div class="w-2/3 h-full"><canvas id="stabChart"></canvas></div>
+                    <div id="stability-report" class="w-1/3 h-full p-4 text-sm space-y-3"><h4 class="font-bold text-base text-white">Stability Report</h4><div><span class="font-semibold text-gray-400">Tail Volume ($V_h$):</span><span id="vh-report" class="font-mono ml-2 text-white">0.00</span></div><div><span class="font-semibold text-gray-400">Static Margin:</span><span id="sm-report" class="font-mono ml-2 text-white">0.00 %</span></div><div><span class="font-semibold text-gray-400">Status:</span><span id="status-report" class="font-bold ml-2 px-2 py-1 rounded text-xs"></span></div></div>
+                </div>
+                <div id="chart-endurance-container" class="w-full h-full hidden"><canvas id="enduranceChart"></canvas></div>
+                <div id="chart-sim-container" class="w-full h-full hidden"><canvas id="simChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="infoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden"><div class="bg-gray-800 text-gray-200 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative"><button id="close-modal-btn" class="absolute top-4 right-4 text-gray-500 hover:text-white">&times;</button><h2 class="text-2xl font-bold mb-4 text-white">Aerodynamic Analysis Principles</h2><div class="prose prose-invert text-gray-300 space-y-4"><p>This tool uses simplified aerodynamic models to provide real-time feedback on aircraft performance and stability. The key calculations are outlined below.</p><div><h3 class="font-semibold text-lg text-white">Performance Analysis</h3><p>The performance chart estimates the power required to maintain straight, level, unaccelerated flight at different airspeeds.</p><p>1. <strong>Lift ($L$)</strong> must equal Weight ($W$): $L = W$. The required Lift Coefficient ($C_L$) is calculated as: $$C_L = \frac{2W}{\rho V^2 S}$$ where $\rho$ is air density, $V$ is velocity, and $S$ is the wing reference area.</p><p>2. <strong>Total Drag ($C_D$)</strong> is the sum of parasitic drag ($C_{D,0}$) and induced drag ($C_{D,i}$): $$C_D = C_{D,0} + C_{D,i}$$ Parasitic drag is estimated from the fuselage wetted area and a form factor.</p><p>3. <strong>Induced Drag</strong> is a byproduct of lift generation. It is calculated using: $$C_{D,i} = \frac{C_L^2}{\pi e AR}$$ where $AR$ is the wing aspect ratio and $e$ is the Oswald efficiency factor (span efficiency).</p><p>4. <strong>Power Required ($P_{req}$)</strong> is the drag force ($D = C_D \cdot \frac{1}{2}\rho V^2 S$) multiplied by velocity: $$P_{req} = D \cdot V$$</p></div><div><h3 class="font-semibold text-lg text-white">Static Pitch Stability</h3><p>An aircraft is statically stable in pitch if it naturally returns to its trim angle of attack after a disturbance. This requires the slope of the pitching moment coefficient versus angle of attack curve ($C_{m,\alpha}$) to be negative.</p><p>The pitching moment about the center of gravity ($C_{m,cg}$) is estimated as: $$C_{m,cg} \approx C_{m,ac_w} + C_{L_w}(\alpha) \frac{x_{cg} - x_{ac_w}}{\bar{c}} - V_h \eta_h C_{L_t}(\alpha)$$</p><ul class="list-disc list-inside text-sm"><li>$C_{m,ac_w}$ is the wing's pitching moment about its own aerodynamic center (AC).</li><li>$(x_{cg} - x_{ac_w})$ is related to the **static margin**, the distance between the CG and the aircraft's neutral point. A positive static margin (CG ahead of neutral point) is required for stability.</li><li>$V_h = \frac{S_h l_h}{S_w \bar{c}}$ is the tail volume ratio, a measure of tail effectiveness.</li></ul><p>A negative slope on the Stability chart indicates a stable design.</p></div></div></div></div>
+
+    <script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { STLExporter } from 'three/addons/exporters/STLExporter.js';
+
+        let scene, camera, renderer, controls, perfChart, stabChart, simChart, enduranceChart;
+        let arrowHelper;
+        const aircraft = new THREE.Group();
+        
+        const state = { units: 'imperial', aircraftClass: 'drone' };
+
+        const params = {
+            nacaCamber: 2, nacaThickness: 12, wingPosX: 0.4, wingPosY: 0, span: 3, rootChord: 0.5, taperRatio: 0.7, sweep: 0, dihedral: 5,
+            wing2_enabled: false, wing2_posX: 0.7, wing2_posY: 0.3, wing2_span: 2.5, wing2_rootChord: 0.4, wing2_dihedral: 5,
+            fuselageLength: 2, fuselageDiameter: 0.3, noseTaper: 0.2, tailTaper: 0.4,
+            hStabPos: 0.9, hStabPosY: 0, hStabIncidence: 0, hStabSpan: 1, hStabChord: 0.25, hStabSweep: 15, hStabDihedral: 0,
+            vStabHeight: 0.4, vStabChord: 0.3, vStabSweep: 30,
+            weight: 50, cgPosition: 0.45, batteryEnergy: 1000, propulsionEfficiency: 60,
+            engineCount: 2, engineDist: 0.3,
+        };
+        
+        const CONVERSION = { M_TO_FT: 3.28084, KG_TO_LBS: 2.20462 };
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x334155);
+            scene.add(aircraft);
+            const viewer = document.getElementById('viewer');
+            camera = new THREE.PerspectiveCamera(50, viewer.clientWidth / viewer.clientHeight, 0.1, 1000);
+            camera.position.set(5, 3, 8);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            viewer.appendChild(renderer.domElement);
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0,0,0), 1, 0xff0000, 0.5, 0.25);
+            scene.add(arrowHelper);
+            
+            setupCharts();
+            setupEventListeners();
+            window.addEventListener('resize', onWindowResize, false);
+            
+            updateUIForClassAndUnits();
+            buildAircraft();
+            animate();
+        }
+
+        function buildAircraft() {
+            aircraft.clear();
+            const empennage = new THREE.Group();
+            const hStab = createWing('hStab');
+            hStab.rotation.x = THREE.MathUtils.degToRad(params.hStabIncidence);
+            empennage.add(hStab);
+            empennage.add(createVerticalStab());
+            empennage.position.x = (params.hStabPos - 0.5) * params.fuselageLength;
+            empennage.position.y = params.hStabPosY;
+
+            aircraft.add(createWing('main'));
+            if (params.wing2_enabled) {
+                aircraft.add(createWing('wing2'));
+            }
+            aircraft.add(createFuselage());
+            aircraft.add(empennage);
+            createEngines().forEach(e => aircraft.add(e));
+            aircraft.add(createCG());
+            arrowHelper.position.set(-getParam('fuselageLength') * 1.5 - 2, 0, 0);
+            updateAnalysis();
+        }
+
+        function generateNACA4(camber, thickness, numPoints) {
+            const m = camber / 100, p = 0.4, t = thickness / 100;
+            const points = [];
+            for (let i = 0; i <= numPoints; i++) {
+                const x = 0.5 * (1 - Math.cos(i / numPoints * Math.PI));
+                const yt = 5 * t * (0.2969 * Math.sqrt(x) - 0.1260 * x - 0.3516 * x*x + 0.2843 * x*x*x - 0.1015 * x*x*x*x);
+                let yc = 0;
+                if (m > 0) { yc = (x < p) ? (m / (p*p)) * (2*p*x - x*x) : (m / ((1-p)*(1-p))) * (1 - 2*p + 2*p*x - x*x); }
+                points.push({ x: x, y: yt + yc });
+            }
+            for (let i = numPoints - 1; i > 0; i--) {
+                const x = 0.5 * (1 - Math.cos(i / numPoints * Math.PI));
+                const yt = 5 * t * (0.2969 * Math.sqrt(x) - 0.1260 * x - 0.3516 * x*x + 0.2843 * x*x*x - 0.1015 * x*x*x*x);
+                let yc = 0;
+                if (m > 0) { yc = (x < p) ? (m / (p*p)) * (2*p*x - x*x) : (m / ((1-p)*(1-p))) * (1 - 2*p + 2*p*x - x*x); }
+                points.push({ x: x, y: -yt + yc });
+            }
+            points.push(points[0]);
+            return points;
+        }
+
+        function createWing(type) {
+            const p = {
+                main: {c:params.rootChord, t:params.taperRatio, s:params.span, sw:params.sweep, d:params.dihedral, nacaC: params.nacaCamber, nacaT: params.nacaThickness, posX: params.wingPosX, posY: params.wingPosY},
+                hStab: {c:params.hStabChord, t:0.9, s:params.hStabSpan, sw:params.hStabSweep, d:params.hStabDihedral, nacaC: 0, nacaT: 12},
+                wing2: {c:params.wing2_rootChord, t:0.9, s:params.wing2_span, sw:0, d:params.wing2_dihedral, nacaC: 0, nacaT: 12, posX: params.wing2_posX, posY: params.wing2_posY}
+            }[type];
+            
+            const airfoilPoints = generateNACA4(p.nacaC, p.nacaT, 32);
+            const tipChord = p.c * p.t;
+            const halfSpan = p.s / 2;
+            const sweepRad = THREE.MathUtils.degToRad(p.sw);
+            const dihedralRad = THREE.MathUtils.degToRad(p.d);
+            const vertices = [], indices = [];
+            for (let j = 0; j < 2; j++) {
+                const zSign = (j === 0) ? 1 : -1;
+                const sweepOffset = halfSpan * Math.tan(sweepRad);
+                const dihedralOffset = halfSpan * Math.sin(dihedralRad);
+                const effectiveHalfSpan = halfSpan * Math.cos(dihedralRad);
+                const rootOffset = vertices.length / 3;
+                for (let i = 0; i < airfoilPoints.length; i++) {
+                    const pt = airfoilPoints[i];
+                    const x_offset = -0.25;
+                    vertices.push((pt.x + x_offset) * p.c, pt.y * p.c, 0);
+                    vertices.push((pt.x + x_offset) * tipChord + sweepOffset, pt.y * tipChord + dihedralOffset, effectiveHalfSpan * zSign);
+                }
+                for (let i = 0; i < airfoilPoints.length - 1; i++) {
+                    const i0 = rootOffset + i * 2, i1 = rootOffset + i * 2 + 1, i2 = rootOffset + (i + 1) * 2, i3 = rootOffset + (i + 1) * 2 + 1;
+                    if (zSign === 1) { indices.push(i0, i2, i1, i1, i2, i3); } else { indices.push(i0, i1, i2, i1, i3, i2); }
+                }
+            }
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(vertices), 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            const material = new THREE.MeshStandardMaterial({ color: 0xb0c4de, side: THREE.DoubleSide, metalness: 0.3, roughness: 0.6 });
+            const wingMesh = new THREE.Mesh(geometry, material);
+            
+            if (type === 'main' || type === 'wing2') {
+                wingMesh.position.x = (p.posX - 0.5) * params.fuselageLength;
+                wingMesh.position.y = p.posY;
+            }
+            return wingMesh;
+        }
+        
+        function createVerticalStab() {
+            const { vStabHeight, vStabChord, vStabSweep, hStabChord } = params;
+            const tipChord = vStabChord * 0.7;
+            const sweepRad = THREE.MathUtils.degToRad(vStabSweep);
+            const sweepOffset = vStabHeight * Math.tan(sweepRad);
+            const airfoilPoints = generateNACA4(0, 9, 32);
+            const vertices = [], indices = [];
+            for (let i = 0; i < airfoilPoints.length; i++) {
+                const p = airfoilPoints[i];
+                const x_offset = -0.25;
+                vertices.push((p.x + x_offset) * vStabChord, 0, p.y * vStabChord); // Root
+                vertices.push((p.x + x_offset) * tipChord + sweepOffset, vStabHeight, p.y * tipChord); // Tip
+            }
+            for (let i = 0; i < airfoilPoints.length - 1; i++) {
+                const i0 = i * 2, i1 = i * 2 + 1, i2 = (i + 1) * 2, i3 = (i + 1) * 2 + 1;
+                indices.push(i0, i1, i2, i1, i3, i2);
+            }
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(vertices), 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            const material = new THREE.MeshStandardMaterial({ color: 0xb0c4de, side: THREE.DoubleSide, metalness: 0.3, roughness: 0.6 });
+            const vStabMesh = new THREE.Mesh(geometry, material);
+            vStabMesh.position.set(hStabChord * 0.75 - vStabChord, 0, 0);
+            return vStabMesh;
+        }
+
+        function createFuselage() {
+            const { fuselageLength, fuselageDiameter, noseTaper, tailTaper } = params;
+            const radius = fuselageDiameter / 2;
+            const profilePoints = [ new THREE.Vector2(0, -fuselageLength / 2), new THREE.Vector2(radius * 0.9, -fuselageLength / 2 + fuselageLength * noseTaper * 0.7), new THREE.Vector2(radius, -fuselageLength / 2 + fuselageLength * noseTaper), new THREE.Vector2(radius, fuselageLength / 2 - fuselageLength * tailTaper), new THREE.Vector2(radius * 0.7, fuselageLength / 2 - fuselageLength * tailTaper * 0.5), new THREE.Vector2(0, fuselageLength / 2) ];
+            const curve = new THREE.SplineCurve(profilePoints);
+            const lathePoints = curve.getPoints(50);
+            const geometry = new THREE.LatheGeometry(lathePoints, 32);
+            const material = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.4, roughness: 0.5 });
+            const fuselageMesh = new THREE.Mesh(geometry, material);
+            fuselageMesh.rotation.z = -Math.PI / 2;
+            return fuselageMesh;
+        }
+        
+        function createEngines() {
+            const meshes = []; if (params.engineCount === 0) return meshes;
+            const r = params.fuselageDiameter / 8, l = params.fuselageDiameter;
+            const geom = new THREE.CylinderGeometry(r, r * 0.8, l, 16);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x4b5563, metalness: 0.8, roughness: 0.3 });
+            const pos = [];
+            if (params.engineCount === 1) pos.push(0);
+            else if (params.engineCount === 2) pos.push(-params.span * params.engineDist, params.span * params.engineDist);
+            else if (params.engineCount === 3) pos.push(0, -params.span * params.engineDist, params.span * params.engineDist);
+            else if (params.engineCount === 4) pos.push(-params.span*params.engineDist*0.7, params.span*params.engineDist*0.7, -params.span*params.engineDist*1.5, params.span*params.engineDist*1.5);
+            pos.forEach(p => {
+                const engine = new THREE.Mesh(geom, mat);
+                engine.rotation.z = Math.PI / 2;
+                engine.position.set(params.rootChord * 0.1, -r * 1.5, p);
+                meshes.push(engine);
+            });
+            const group = new THREE.Group();
+            meshes.forEach(m => group.add(m));
+            group.position.x = (params.wingPosX - 0.5) * params.fuselageLength;
+            group.position.y = params.wingPosY;
+            return [group];
+        }
+
+        function createCG() {
+            const geom = new THREE.SphereGeometry(0.1, 16, 16);
+            const mat = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true, depthTest: false });
+            const cg = new THREE.Mesh(geom, mat);
+            cg.renderOrder = 1;
+            cg.position.x = (params.cgPosition - 0.5) * params.fuselageLength;
+            return cg;
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('info-btn').addEventListener('click', () => document.getElementById('infoModal').classList.remove('hidden'));
+            document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('infoModal').classList.add('hidden'));
+            document.getElementById('unit-metric').addEventListener('change', () => switchUnits('metric'));
+            document.getElementById('unit-imperial').addEventListener('change', () => switchUnits('imperial'));
+            document.getElementById('class-drone').addEventListener('change', () => switchClass('drone'));
+            document.getElementById('class-large').addEventListener('change', () => switchClass('large'));
+            ['perf', 'stab', 'endurance', 'sim'].forEach(id => document.getElementById(`analysis-tab-${id}`).addEventListener('click', () => switchAnalysisTab(id)));
+            ['wing', 'multiwing', 'fuselage', 'empennage', 'config'].forEach(id => document.getElementById(`tab-${id}`).addEventListener('click', () => switchTab(id)));
+            document.getElementById('wing2_enabled').addEventListener('change', e => {
+                params.wing2_enabled = e.target.checked;
+                document.getElementById('wing2-controls').classList.toggle('hidden', !params.wing2_enabled);
+                buildAircraft();
+            });
+            Object.keys(params).forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.type !== 'checkbox') {
+                    const event = (el.type === 'number' || el.type === 'text') ? 'change' : 'input';
+                    el.addEventListener(event, e => updateParamFromUI(id, e.target.value));
+                }
+            });
+            document.getElementById('export-stl').addEventListener('click', exportSTL);
+        }
+        
+        function getParam(key, inMetric = true) {
+            const val = params[key];
+            if (inMetric || state.units === 'metric') return val;
+            const distParams = ['span', 'rootChord', 'fuselageLength', 'fuselageDiameter', 'hStabSpan', 'hStabChord', 'vStabHeight', 'vStabChord', 'wingPosY', 'wing2_span', 'wing2_rootChord', 'wing2_posY', 'hStabPosY'];
+            if (distParams.includes(key)) return val * CONVERSION.M_TO_FT;
+            if (key === 'weight') return val * CONVERSION.KG_TO_LBS;
+            return val;
+        }
+        
+        function setParam(key, value, fromMetric = true) {
+            if (fromMetric || state.units === 'metric') { params[key] = value; return; }
+            const distParams = ['span', 'rootChord', 'fuselageLength', 'fuselageDiameter', 'hStabSpan', 'hStabChord', 'vStabHeight', 'vStabChord', 'wingPosY', 'wing2_span', 'wing2_rootChord', 'wing2_posY', 'hStabPosY'];
+            if (distParams.includes(key)) params[key] = value / CONVERSION.M_TO_FT;
+            else if (key === 'weight') params[key] = value / CONVERSION.KG_TO_LBS;
+            else params[key] = value;
+        }
+
+        function updateParamFromUI(key, value) {
+            const parsedValue = (key === 'nacaProfile') ? value : parseFloat(value);
+            setParam(key, parsedValue, false);
+            const valEl = document.getElementById(`${key}-val`);
+            if (valEl) valEl.textContent = parseFloat(value).toFixed(2);
+            buildAircraft();
+        }
+
+        function switchUnits(newUnit) {
+            if (state.units === newUnit) return;
+            state.units = newUnit;
+            updateUIForClassAndUnits();
+            updateAnalysis();
+        }
+        
+        function switchClass(newClass) {
+            if (state.aircraftClass === newClass) return;
+            state.aircraftClass = newClass;
+            if (newClass === 'drone') { Object.assign(params, { span: 3, rootChord: 0.5, fuselageLength: 2, fuselageDiameter: 0.3, weight: 50, hStabPos: 0.9, sweep: 0 }); }
+            else { Object.assign(params, { span: 12, rootChord: 2, fuselageLength: 9, fuselageDiameter: 1.5, weight: 1200, hStabPos: 0.9, sweep: 0 }); }
+            updateUIForClassAndUnits();
+            buildAircraft();
+        }
+        
+        function updateUIForClassAndUnits() {
+            const isMetric = state.units === 'metric';
+            const isDrone = state.aircraftClass === 'drone';
+            
+            document.querySelectorAll('.unit-dist').forEach(el => el.textContent = isMetric ? 'm' : 'ft');
+            document.querySelectorAll('.unit-mass').forEach(el => el.textContent = isMetric ? 'kg' : 'lb');
+
+            const ranges = {
+                drone: { span: [0.5, 9.2], rootChord: [0.1, 1], fuselageLength: [0.5, 3], fuselageDiameter: [0.1, 0.8], weight: [5, 55], hStabSpan: [0.3, 2], vStabHeight: [0.1, 1], wingPosY: [-0.5, 0.5], wing2_posY: [-0.5, 0.5], hStabPosY: [-0.5, 0.5] },
+                large: { span: [5, 30], rootChord: [1, 5], fuselageLength: [5, 25], fuselageDiameter: [0.8, 4], weight: [500, 5000], hStabSpan: [2, 10], vStabHeight: [1, 5], wingPosY: [-2, 2], wing2_posY: [-2, 2], hStabPosY: [-2, 2] }
+            };
+            const currentRanges = ranges[state.aircraftClass];
+
+            for (const key in params) {
+                const el = document.getElementById(key);
+                if (el && el.type === 'range') {
+                    if (currentRanges[key]) {
+                        let [min, max] = currentRanges[key];
+                        if (!isMetric) {
+                            const conv = key === 'weight' ? CONVERSION.KG_TO_LBS : CONVERSION.M_TO_FT;
+                            min *= conv;
+                            max *= conv;
+                        }
+                        el.min = min;
+                        el.max = max;
+                        el.step = (max - min) / 100;
+                    }
+                    const currentValue = getParam(key, false);
+                    el.value = currentValue;
+                    const valEl = document.getElementById(`${key}-val`);
+                    if(valEl) valEl.textContent = parseFloat(currentValue).toFixed(2);
+                }
+            }
+        }
+
+        function getAeroData() {
+            const S_w = params.span * ((params.rootChord + (params.rootChord * params.taperRatio)) / 2);
+            const AR_w = (params.span * params.span) / S_w;
+            const W = params.weight * 9.81;
+            const rho = 1.225;
+            const e = 0.8;
+            
+            const Swet_fus = Math.PI * params.fuselageLength * params.fuselageDiameter;
+            const Swet_wing = 2 * S_w * (1 + 0.25 * (params.nacaThickness/100));
+            const S_h = params.hStabSpan * params.hStabChord;
+            const Swet_h = 2 * S_h;
+            const S_v = params.vStabHeight * params.vStabChord;
+            const Swet_v = 2 * S_v;
+            const Swet_total = Swet_fus + Swet_wing + Swet_h + Swet_v;
+            const Cf = 0.004;
+            const C_D0 = Cf * Swet_total / S_w;
+
+            const MAC = (2/3) * params.rootChord * (1 + params.taperRatio + params.taperRatio**2) / (1 + params.taperRatio);
+            const x_ac_w = (params.wingPosX - 0.5) * params.fuselageLength + 0.25 * MAC;
+            const x_cg = (params.cgPosition - 0.5) * params.fuselageLength;
+            const x_ac_h = (params.hStabPos - 0.5) * params.fuselageLength + 0.25 * params.hStabChord;
+            const l_h = x_ac_h - x_ac_w;
+            const V_h = (l_h * S_h) / (S_w * MAC);
+            const a_w = 2 * Math.PI * (AR_w / (AR_w + 2));
+            const AR_h = (params.hStabSpan**2) / S_h;
+            const a_h = 2 * Math.PI * (AR_h / (AR_h + 2));
+            const C_mac_w = -Math.PI / 180 * (params.nacaCamber);
+            const alpha0_w = -THREE.MathUtils.degToRad(params.nacaCamber * 2);
+
+            return { S_w, AR_w, W, rho, e, C_D0, MAC, x_ac_w, x_cg, S_h, l_h, V_h, a_w, a_h, C_mac_w, alpha0_w };
+        }
+
+        function updateAnalysis() {
+            const aero = getAeroData();
+            const eta_prop = params.propulsionEfficiency / 100;
+            
+            // Performance Chart
+            const speeds = [], powers = [];
+            const v_start = state.aircraftClass === 'drone' ? 10 : 30;
+            const v_end = state.aircraftClass === 'drone' ? 40 : 150;
+            const resolution = 40;
+            for (let i = 0; i <= resolution; i++) {
+                const v = v_start + (i/resolution) * (v_end - v_start);
+                const C_L = (2 * aero.W) / (aero.rho * v * v * aero.S_w);
+                const C_Di = (C_L * C_L) / (Math.PI * aero.e * aero.AR_w);
+                const C_D = aero.C_D0 + C_Di;
+                const D = 0.5 * aero.rho * v * v * aero.S_w * C_D;
+                const P_aero = (D * v) / 1000; // Aero power in kW
+                const P_elec = P_aero / eta_prop; // Electrical power in kW
+                speeds.push(state.units === 'metric' ? v.toFixed(0) : (v * 2.23694).toFixed(0));
+                powers.push(P_elec.toFixed(2));
+            }
+            perfChart.data.labels = speeds;
+            perfChart.data.datasets[0].data = powers;
+            perfChart.options.scales.x.title.text = `Airspeed (${state.units === 'metric' ? 'm/s' : 'mph'})`;
+            perfChart.update();
+
+            // Stability Chart
+            const alphas = [], Cms = [];
+            const de_dalpha = (2 * aero.a_w) / (Math.PI * aero.AR_w);
+            const i_t_rad = THREE.MathUtils.degToRad(params.hStabIncidence);
+            for (let alpha_deg = -5; alpha_deg <= 15; alpha_deg += 0.5) {
+                const alpha_rad = THREE.MathUtils.degToRad(alpha_deg);
+                const C_L_w = aero.a_w * (alpha_rad - aero.alpha0_w);
+                const C_L_h = aero.a_h * (alpha_rad * (1 - de_dalpha) + i_t_rad);
+                const Cm_cg = aero.C_mac_w + C_L_w * (aero.x_cg - aero.x_ac_w) / aero.MAC - aero.V_h * 0.9 * C_L_h;
+                alphas.push(alpha_deg.toFixed(1));
+                Cms.push(Cm_cg);
+            }
+            stabChart.data.labels = alphas;
+            stabChart.data.datasets[0].data = Cms.map(c => c.toFixed(3));
+            stabChart.update();
+            
+            // Stability Report
+            const x_np = aero.x_ac_w - (aero.C_mac_w / aero.a_w) * aero.MAC + aero.V_h * (aero.a_h/aero.a_w) * aero.l_h * 0.9 * (1 - de_dalpha);
+            const static_margin = (x_np - aero.x_cg) / aero.MAC;
+            document.getElementById('vh-report').textContent = aero.V_h.toFixed(3);
+            document.getElementById('sm-report').textContent = (static_margin * 100).toFixed(1) + ' %';
+            const statusEl = document.getElementById('status-report');
+            if (static_margin > 0.10) { statusEl.textContent = 'Stable'; statusEl.className = 'font-bold ml-2 px-2 py-1 rounded text-xs bg-green-600 text-white'; }
+            else if (static_margin > 0.02) { statusEl.textContent = 'Marginal'; statusEl.className = 'font-bold ml-2 px-2 py-1 rounded text-xs bg-yellow-500 text-black'; }
+            else { statusEl.textContent = 'Unstable'; statusEl.className = 'font-bold ml-2 px-2 py-1 rounded text-xs bg-red-600 text-white'; }
+
+            // Endurance Chart
+            const endurances = [];
+            const E_batt_joules = params.batteryEnergy * 3600;
+            powers.forEach(p_kw => {
+                const p_w = p_kw * 1000;
+                const endurance_s = E_batt_joules / p_w;
+                endurances.push((endurance_s / 3600).toFixed(2)); // in hours
+            });
+            enduranceChart.data.labels = speeds;
+            enduranceChart.data.datasets[0].data = endurances;
+            enduranceChart.options.scales.x.title.text = `Airspeed (${state.units === 'metric' ? 'm/s' : 'mph'})`;
+            enduranceChart.update();
+        }
+
+        function simulateFlight() {
+            const aero = getAeroData();
+            const Iyy = 0.1 * params.weight * params.fuselageLength**2;
+            const V = state.aircraftClass === 'drone' ? 20 : 60;
+            const Cms = stabChart.data.datasets[0].data;
+            const Cma = (Cms[21] - Cms[19]) / THREE.MathUtils.degToRad(1); // Slope around 0 deg AoA
+            const Cmq = -7.0;
+            const Ma = 0.5 * aero.rho * V*V * aero.S_w * aero.MAC * Cma;
+            const Mq = 0.5 * aero.rho * V * aero.S_w * aero.MAC*aero.MAC * Cmq;
+            
+            let q = 0.1, theta = 0;
+            const dt = 0.02, simTime = 15;
+            const times = [], thetas = [];
+            for (let t = 0; t <= simTime; t += dt) {
+                times.push(t.toFixed(2));
+                thetas.push(THREE.MathUtils.radToDeg(theta).toFixed(2));
+                const q_dot = (Ma * theta + Mq * q) / Iyy;
+                q += q_dot * dt;
+                theta += q * dt;
+            }
+            simChart.data.labels = times;
+            simChart.data.datasets[0].data = thetas;
+            simChart.update();
+        }
+        
+        function setupCharts() {
+            const commonOptions = { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#9ca3af' } }, y: { ticks: { color: '#9ca3af' }, beginAtZero: false } }, plugins: { legend: { labels: { color: '#9ca3af' } } } };
+            perfChart = new Chart(document.getElementById('perfChart').getContext('2d'), { type: 'line', data: { datasets: [{ label: 'Electrical Power Required (kW)', data: [], borderColor: '#38b2ac', backgroundColor: 'rgba(56, 178, 172, 0.2)', tension: 0.4, pointRadius: 0 }] }, options: {...commonOptions, scales: {...commonOptions.scales, x: {...commonOptions.scales.x, title: {display:true, text:'Airspeed', color:'#9ca3af'}}, y: {...commonOptions.scales.y, title: {display:true, text:'Power (kW)', color:'#9ca3af'}, beginAtZero: true}}} });
+            stabChart = new Chart(document.getElementById('stabChart').getContext('2d'), { type: 'line', data: { datasets: [{ label: 'Pitching Moment Coeff. (Cm)', data: [], borderColor: '#f56565', backgroundColor: 'rgba(245, 101, 101, 0.2)', tension: 0.1, pointRadius: 0 }] }, options: {...commonOptions, scales: {...commonOptions.scales, x: {...commonOptions.scales.x, title: {display:true, text:'Angle of Attack (deg)', color:'#9ca3af'}}, y: {...commonOptions.scales.y, title: {display:true, text:'Cm about CG', color:'#9ca3af'}}}} });
+            enduranceChart = new Chart(document.getElementById('enduranceChart').getContext('2d'), { type: 'line', data: { datasets: [{ label: 'Endurance (hours)', data: [], borderColor: '#ed8936', backgroundColor: 'rgba(237, 137, 54, 0.2)', tension: 0.4, pointRadius: 0 }] }, options: {...commonOptions, scales: {...commonOptions.scales, x: {...commonOptions.scales.x, title: {display:true, text:'Airspeed', color:'#9ca3af'}}, y: {...commonOptions.scales.y, title: {display:true, text:'Endurance (h)', color:'#9ca3af'}, beginAtZero: true}}} });
+            simChart = new Chart(document.getElementById('simChart').getContext('2d'), { type: 'line', data: { datasets: [{ label: 'Pitch Angle (deg)', data: [], borderColor: '#63b3ed', backgroundColor: 'rgba(99, 179, 237, 0.2)', tension: 0.2, pointRadius: 0 }] }, options: {...commonOptions, scales: {...commonOptions.scales, x: {...commonOptions.scales.x, title: {display:true, text:'Time (s)', color:'#9ca3af'}}, y: {...commonOptions.scales.y, title: {display:true, text:'Pitch Angle (deg)', color:'#9ca3af'}}}} });
+        }
+
+        function switchTab(tabName) {
+            ['wing', 'multiwing', 'fuselage', 'empennage', 'config'].forEach(t => {
+                document.getElementById(`controls-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('active');
+            });
+            document.getElementById(`controls-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function switchAnalysisTab(tabName) {
+            ['perf', 'stab', 'endurance', 'sim'].forEach(t => {
+                document.getElementById(`chart-${t}-container`).classList.add('hidden');
+                document.getElementById(`analysis-tab-${t}`).classList.remove('active');
+            });
+            document.getElementById(`chart-${tabName}-container`).classList.remove('hidden');
+            document.getElementById(`analysis-tab-${tabName}`).classList.add('active');
+            if (tabName === 'sim') { simulateFlight(); }
+        }
+
+        function onWindowResize() {
+            const viewer = document.getElementById('viewer');
+            camera.aspect = viewer.clientWidth / viewer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+        }
+        
+        function exportSTL() {
+            const exporter = new STLExporter();
+            const result = exporter.parse(aircraft, { binary: true });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([result], {type: 'application/octet-stream'}));
+            link.download = 'aircraft.stl';
+            link.click();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>

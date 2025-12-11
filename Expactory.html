@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Expactory</title>
+    <script src="https://cdn-tailwindcss.vercel.app/"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .font-fredoka {
+            font-family: 'Fredoka One', cursive;
+        }
+        canvas {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .map-control-btn {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            user-select: none; /* Prevent text selection on hold */
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hud-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        .upgrade-button {
+            transition: all 0.2s ease;
+        }
+        .upgrade-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .upgrade-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+        #debug-panel {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* Skill Tree Styles */
+        .skill-node {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .skill-node.locked {
+            background-color: #6b7280;
+            color: #d1d5db;
+            cursor: not-allowed;
+        }
+         .skill-node.available {
+            background-color: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+        .skill-node.unlocked {
+             background-color: #3b82f6;
+             color: white;
+        }
+        .skill-node.available:hover {
+            transform: scale(1.05);
+        }
+        .build-btn.selected {
+            outline: 4px solid #3b82f6;
+            transform: scale(1.1);
+        }
+        #screen-flash.active {
+            animation: flash 0.5s ease-in-out;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.7; }
+        }
+        #time-of-day-overlay {
+            transition: background-color 1s linear;
+        }
+        #advanced-build-menu {
+            transition: all 0.3s ease-in-out;
+            transform-origin: bottom;
+        }
+    </style>
+</head>
+<body class="bg-blue-300 text-gray-800 flex items-center justify-center h-screen">
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+    <div id="time-of-day-overlay" class="absolute inset-0 pointer-events-none"></div>
+    <div id="screen-flash" class="hidden absolute inset-0 bg-black pointer-events-none"></div>
+
+
+    <!-- UI Elements -->
+    <div class="absolute top-0 left-0 p-2 sm:p-4 w-full">
+        <div class="flex justify-between items-start">
+            <!-- Resources HUD -->
+            <div class="hud-item p-2 sm:p-3 rounded-xl shadow-lg flex flex-col gap-1 text-base sm:text-lg w-48 sm:w-64">
+                <h1 class="font-fredoka text-xl sm:text-2xl text-cyan-800">Expactory</h1>
+                <div id="resource-list" class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🌲</span>
+                        <span id="wood-resource" class="font-bold">0 / 50</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">⛰️</span>
+                        <span id="stone-resource" class="font-bold">0 / 50</span>
+                    </div>
+                    <div id="iron-resource-display" class="hidden flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🔩</span>
+                        <span id="iron-resource" class="font-bold">0 / 50</span>
+                    </div>
+                    <div id="iron-ingot-resource-display" class="hidden flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🔗</span>
+                        <span id="iron-ingot-resource" class="font-bold">0 / 50</span>
+                    </div>
+                     <div id="lithium-resource-display" class="hidden flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🔋</span>
+                        <span id="lithium-resource" class="font-bold">0 / 50</span>
+                    </div>
+                    <div id="motor-resource-display" class="hidden flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">⚙️</span>
+                        <span id="motor-resource" class="font-bold">0 / 50</span>
+                    </div>
+                    <div id="fish-resource-display" class="hidden flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🐟</span>
+                        <span id="fish-resource" class="font-bold">0 / 50</span>
+                    </div>
+                     <div class="flex items-center gap-2">
+                        <span class="text-xl sm:text-2xl">🔬</span>
+                        <span id="research-resource" class="font-bold">0</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <div class="flex justify-between text-xs font-bold text-gray-600">
+                        <label id="day-cycle-label">Day: 0%</label>
+                        <span id="day-count-label">Day 1</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="day-cycle-progress" class="bg-yellow-400 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <button id="skip-day-button" class="hidden text-xs bg-blue-400 text-white rounded-md px-2 py-0.5 mt-1 disabled:bg-gray-400 disabled:cursor-not-allowed">Skip Day</button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 items-end">
+                 <button id="fish-boost-button" class="hidden bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                    🐟<span class="hidden sm:inline"> Boost (20)</span>
+                </button>
+                 <button id="mute-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                   🔊
+                </button>
+                 <button id="info-button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                    ℹ️<span class="hidden sm:inline"> Info</span>
+                </button>
+                 <button id="research-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 sm:py-3 sm:px-6 rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                    🔬<span class="hidden sm:inline"> Research</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="hidden absolute inset-0 modal-backdrop flex items-center justify-center p-4">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg transform scale-95">
+             <h2 class="text-2xl font-fredoka text-cyan-800 mb-4">Welcome to Expactory!</h2>
+             <div class="text-gray-700 space-y-3">
+                <p><strong>Your Goal:</strong> Expand your island and unlock new technologies.</p>
+                <p><strong>Step 1:</strong> Build <strong>Miners ⛏️</strong> on Forest (🌲) or Rocky (⛰️) tiles to gather resources.</p>
+                <p><strong>Step 2:</strong> When your storage is full, build <strong>Storage 📦</strong> to increase your capacity.</p>
+                <p><strong>Step 3:</strong> At the end of each day (progress bar at the top), your island will automatically expand with a new land tile.</p>
+                <p><strong>Step 4:</strong> Build <strong>Research Stations 🔬</strong> to earn points, then open the <strong>Research</strong> panel to unlock powerful upgrades!</p>
+             </div>
+             <button id="instructions-close-button" class="mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg w-full">Let's Go!</button>
+        </div>
+    </div>
+    
+    <!-- Info Modal -->
+    <div id="info-modal" class="hidden absolute inset-0 modal-backdrop flex items-center justify-center p-4">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md transform scale-95">
+             <h2 class="text-2xl font-fredoka text-cyan-800 mb-4">About Expactory</h2>
+             <div class="text-gray-700 space-y-3 text-center">
+                <p>Start with a tiny island and grow it into a sprawling, automated industrial complex. Gather resources, expand your land, and research new technologies to unlock more powerful buildings and abilities.</p>
+                <p>This is an incremental game about automation and discovery. There is no end, only endless expansion!</p>
+                <p class="font-bold">Version: 0.5</p>
+                <p>Created by: <strong>Jasper</strong></p>
+             </div>
+             <button id="info-close-button" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg w-full">Close</button>
+        </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div id="debug-panel" class="absolute top-0 right-0 h-full bg-gray-800 bg-opacity-80 text-white p-4 shadow-lg transform translate-x-full w-72 backdrop-filter backdrop-blur-md">
+        <button id="debug-toggle" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full bg-gray-700 text-white p-2 rounded-l-lg font-mono">&lt;</button>
+        <h2 class="text-xl font-bold mb-4 font-fredoka">Debug Menu</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="font-bold">Mining Rate:</label>
+                <div id="mining-rate-display" class="bg-gray-700 p-2 rounded">
+                    <p>🌲 Wood/sec: 0.00</p>
+                    <p>⛰️ Stone/sec: 0.00</p>
+                </div>
+            </div>
+            
+            <div>
+                <label for="time-slider" class="font-bold">Time Speed: <span id="time-scale-label">1x</span></label>
+                <input type="range" id="time-slider" min="1" max="20" value="1" step="1" class="w-full">
+            </div>
+
+            <div class="flex items-center justify-between bg-gray-700 p-2 rounded">
+                <label for="auto-mode-toggle" class="font-bold">Auto Mode</label>
+                <input type="checkbox" id="auto-mode-toggle" class="form-checkbox h-5 w-5 text-blue-600">
+            </div>
+
+            <div>
+                <button id="populate-islands-btn" class="w-full bg-cyan-500 hover:bg-cyan-600 p-2 rounded mb-2">Populate Islands Only</button>
+                <button id="populate-full-btn" class="w-full bg-indigo-500 hover:bg-indigo-600 p-2 rounded">Populate Full World</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map Controls -->
+    <div id="map-controls" class="absolute bottom-4 left-4 flex flex-col gap-2">
+        <div class="grid grid-cols-3 gap-1 w-40">
+            <div></div> <!-- R1 C1 -->
+            <button id="pan-up" class="map-control-btn hud-item rounded-full shadow-md">▲</button> <!-- R1 C2 -->
+            <div></div> <!-- R1 C3 -->
+            <button id="pan-left" class="map-control-btn hud-item rounded-full shadow-md">◀</button> <!-- R2 C1 -->
+            <div></div> <!-- R2 C2 -->
+            <button id="pan-right" class="map-control-btn hud-item rounded-full shadow-md">▶</button> <!-- R2 C3 -->
+            <div></div> <!-- R3 C1 -->
+            <button id="pan-down" class="map-control-btn hud-item rounded-full shadow-md">▼</button> <!-- R3 C2 -->
+            <div></div> <!-- R3 C3 -->
+        </div>
+        <div class="flex gap-2 justify-center w-40">
+            <button id="zoom-in" class="map-control-btn hud-item rounded-full shadow-md flex-1">+</button>
+            <button id="zoom-out" class="map-control-btn hud-item rounded-full shadow-md flex-1">-</button>
+        </div>
+    </div>
+
+
+    <!-- Build Menus -->
+    <div class="absolute bottom-4 inset-x-0 mx-auto w-auto max-w-lg flex flex-col items-center gap-2">
+         <div id="advanced-build-menu" class="hidden scale-y-0">
+            <div class="flex justify-center p-2 gap-2 hud-item rounded-xl">
+                 <button data-structure="smelter" class="build-btn bg-gray-700 hover:bg-gray-800 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">🔥</span>
+                    <span class="text-xs sm:text-base">Smelter</span>
+                    <small>(50⛰️)</small>
+                </button>
+                 <button data-structure="fishing_boat" class="build-btn bg-sky-500 hover:bg-sky-600 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">⛵</span>
+                    <span class="text-xs sm:text-base">Fisher</span>
+                    <small>(15🔗)</small>
+                </button>
+                 <button data-structure="assembler" class="build-btn bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">🏭</span>
+                    <span class="text-xs sm:text-base">Assembler</span>
+                    <small>(20🔗 10🔋)</small>
+                </button>
+                <button data-structure="vehicle_bay" class="build-btn bg-red-700 hover:bg-red-800 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">🚗</span>
+                    <span class="text-xs sm:text-base">Vehicle Bay</span>
+                    <small>(50🔗 5⚙️)</small>
+                </button>
+            </div>
+        </div>
+        <div id="build-menu">
+             <button id="advanced-toggle-btn" class="hidden w-full hud-item rounded-t-lg text-center font-bold py-1">Advanced 🔼</button>
+            <div class="flex justify-center p-2 gap-2 hud-item rounded-xl overflow-x-auto" id="basic-build-items">
+                <button data-structure="miner" class="build-btn bg-orange-400 hover:bg-orange-500 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">⛏️</span>
+                    <span class="text-xs sm:text-base">Miner</span>
+                    <small>(10🌲)</small>
+                </button>
+                <button data-structure="storage" class="build-btn bg-yellow-600 hover:bg-yellow-700 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">📦</span>
+                    <span class="text-xs sm:text-base">Storage</span>
+                    <small>(30🌲 10⛰️)</small>
+                </button>
+                <button data-structure="research" class="build-btn bg-blue-500 hover:bg-blue-600 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">🔬</span>
+                    <span class="text-xs sm:text-base">Research</span>
+                    <small>(50🌲 25⛰️)</small>
+                </button>
+                <button id="miner-upgrade-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">✨</span>
+                    <span class="text-xs sm:text-base">Upgrade</span>
+                    <small>All Miners</small>
+                </button>
+                <button id="remove-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold p-2 rounded-lg flex flex-col items-center justify-center w-20 h-20 sm:w-24 sm:h-24 transition shrink-0">
+                    <span class="text-2xl sm:text-3xl">💣</span>
+                    <span class="text-xs sm:text-base">Remove</span>
+                    <small>Refunds 50%</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal for Global Miner Upgrades -->
+    <div id="global-upgrade-modal" class="hidden absolute inset-0 modal-backdrop flex items-center justify-center">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-2xl w-96 text-center transform scale-95">
+            <h2 class="text-2xl font-fredoka text-cyan-800 mb-2">Global Miner Upgrade</h2>
+            <p id="global-upgrade-level" class="mb-4 text-gray-600">Current Level: 0</p>
+            <div id="global-upgrade-info" class="mb-6 text-gray-700 bg-gray-100 p-4 rounded-lg">
+                <!-- Info will be populated by JS -->
+            </div>
+            <div class="mb-4">
+                <h3 class="font-bold mb-2">Next Upgrade Cost:</h3>
+                <p id="global-upgrade-cost" class="text-lg">50 🌲 & 50 ⛰️</p>
+            </div>
+            <button id="global-upgrade-confirm-button" class="upgrade-button bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-lg w-full mb-2">Upgrade All Miners</button>
+            <button id="global-modal-close-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg w-full">Close</button>
+        </div>
+    </div>
+
+    <!-- Modal for Skill Tree -->
+    <div id="skill-tree-modal" class="hidden absolute inset-0 modal-backdrop flex items-center justify-center">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl transform scale-95">
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-fredoka text-cyan-800">Research & Development</h2>
+                 <button id="skill-tree-close-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">Close</button>
+            </div>
+            <div id="skill-tree-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <!-- Skills will be populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Text -->
+    <div id="floating-text-container" class="absolute inset-0 pointer-events-none"></div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="hidden absolute hud-item p-2 rounded-lg shadow-md text-sm pointer-events-none"></div>
+
+    <!-- Audio Elements -->
+    <audio id="bgm1" src="music1.wav"></audio>
+    <audio id="bgm2" src="music2.wav"></audio>
+    <audio id="bgm3" src="music3.wav"></audio>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- DOM Elements ---
+    const resourceUIs = {
+        wood: document.getElementById('wood-resource'), stone: document.getElementById('stone-resource'),
+        research: document.getElementById('research-resource'), iron: document.getElementById('iron-resource'),
+        iron_ingot: document.getElementById('iron-ingot-resource'), fish: document.getElementById('fish-resource'),
+        lithium: document.getElementById('lithium-resource'), motor: document.getElementById('motor-resource'),
+    };
+    const resourceDisplays = {
+        iron: document.getElementById('iron-resource-display'), iron_ingot: document.getElementById('iron-ingot-resource-display'),
+        fish: document.getElementById('fish-resource-display'), lithium: document.getElementById('lithium-resource-display'),
+        motor: document.getElementById('motor-resource-display'),
+    };
+    const dayCycleProgress = document.getElementById('day-cycle-progress');
+    const dayCycleLabel = document.getElementById('day-cycle-label');
+    const dayCountLabel = document.getElementById('day-count-label');
+    const skipDayButton = document.getElementById('skip-day-button');
+    const advancedBuildMenu = document.getElementById('advanced-build-menu');
+    const advancedToggleBtn = document.getElementById('advanced-toggle-btn');
+    const allBuildButtons = document.querySelectorAll('.build-btn');
+    const infoModal = document.getElementById('info-modal');
+    const infoCloseButton = document.getElementById('info-close-button');
+    const screenFlash = document.getElementById('screen-flash');
+    const timeOfDayOverlay = document.getElementById('time-of-day-overlay');
+    const fishBoostButton = document.getElementById('fish-boost-button');
+    const muteButton = document.getElementById('mute-button');
+    const skillTreeModal = document.getElementById('skill-tree-modal');
+    const skillTreeContainer = document.getElementById('skill-tree-container');
+    const skillTreeCloseButton = document.getElementById('skill-tree-close-button');
+
+
+    // --- Game Configuration ---
+    const TILE_WIDTH = 100;
+    const TILE_HEIGHT = TILE_WIDTH / 2;
+    const GRID_SIZE = 40;
+    const TILE_INITIAL_RESOURCES = 100;
+    const DAY_CYCLE_DURATION = 30; // seconds
+    
+    const tileColors = {
+        water: '#60a5fa', grass: '#4ade80', rock: '#94a3b8', highlight: 'rgba(255, 255, 0, 0.5)',
+        placement: 'rgba(0, 255, 0, 0.4)', invalidPlacement: 'rgba(255, 0, 0, 0.4)',
+        removePlacement: 'rgba(255, 100, 100, 0.5)', aoe: 'rgba(22, 163, 74, 0.3)'
+    };
+    
+    const structureCosts = {
+        miner: { wood: 10, stone: 0, iron: 0, iron_ingot: 0, lithium: 0, motor: 0 },
+        storage: { wood: 30, stone: 10, iron: 0, iron_ingot: 0, lithium: 0, motor: 0 },
+        research: { wood: 50, stone: 25, iron: 0, iron_ingot: 0, lithium: 0, motor: 0 },
+        smelter: { wood: 0, stone: 50, iron: 0, iron_ingot: 0, lithium: 0, motor: 0 },
+        fishing_boat: { wood: 0, stone: 0, iron: 0, iron_ingot: 15, lithium: 0, motor: 0 },
+        assembler: { wood: 0, stone: 0, iron: 0, iron_ingot: 20, lithium: 10, motor: 0 },
+        vehicle_bay: { wood: 0, stone: 0, iron: 0, iron_ingot: 50, lithium: 0, motor: 5 },
+    };
+
+    const globalMinerUpgrades = [
+        { level: 1, cost: { wood: 50, stone: 50 }, speedMultiplier: 1.5, description: "All miners work <b>1.5x</b> faster." },
+        { level: 2, cost: { wood: 150, stone: 150 }, speedMultiplier: 2, aoe: 1, description: "All miners now work <b>2x</b> faster and can mine adjacent tiles." },
+        { level: 3, cost: { wood: 400, stone: 400 }, speedMultiplier: 3, aoe: 1, description: "Mining speed increased to <b>3x</b>. Area of effect remains." }
+    ];
+
+    // --- Skill Tree Data ---
+    const skillTree = {
+        unlock_iron: { name: 'Geology', description: 'Allows miners on rocky tiles to also find Iron Ore. (20% chance)', cost: 25, dependencies: [] },
+        iron_smelting: { name: 'Iron Smelting', description: 'Unlocks the Smelter to process raw Iron ore into Iron Ingots.', cost: 100, dependencies: ['unlock_iron'] },
+        unlock_fishing: { name: 'Aquaculture', description: 'Unlocks the Fishing Boat to catch fish in the ocean.', cost: 75, dependencies: ['iron_smelting'] },
+        advanced_geology: { name: 'Advanced Geology', description: 'Miners on rocky tiles can now find Lithium.', cost: 150, dependencies: ['iron_smelting'] },
+        electrical_engineering: { name: 'Electrical Engineering', description: 'Unlocks the Assembler to create Electric Motors.', cost: 200, dependencies: ['advanced_geology'] },
+        automation: { name: 'Automation', description: 'Unlocks the Vehicle Bay to produce Cars.', cost: 300, dependencies: ['electrical_engineering'] },
+        faster_research: { name: 'Efficient Methods', description: 'Research Stations produce points 50% faster.', cost: 50, dependencies: ['unlock_iron'] },
+    };
+    // Add IDs and unlocked status to skill tree
+    Object.keys(skillTree).forEach(key => {
+        skillTree[key].id = key;
+        skillTree[key].unlocked = false;
+    });
+
+    // --- Game State ---
+    let gameState = {
+        grid: [],
+        resources: { wood: 20, stone: 5, research: 0, iron: 0, iron_ingot: 0, fish: 0, lithium: 0, motor: 0 },
+        storage: { wood: 50, stone: 50, iron: 50, iron_ingot: 50, fish: 50, lithium: 50, motor: 50 },
+        camera: { x: 0, y: 0, zoom: 1 },
+        selectedTile: null,
+        mode: 'select',
+        buildChoice: null,
+        lastUpdate: Date.now(),
+        productionTimers: {},
+        globalMinerLevel: 0,
+        timeScale: 1,
+        autoMode: false,
+        autoModeTimer: 0,
+        dayCycleTimer: 0,
+        dayCount: 1,
+        boats: [],
+        vehicles: [],
+        boost: { active: false, timer: 0 },
+        audio: {
+            isMuted: false,
+            musicStarted: false,
+            tracks: [],
+            currentTrack: 0,
+        }
+    };
+    
+    // --- Control State ---
+    let isPanning = false;
+    let lastMousePos = { x: 0, y: 0 };
+    let panDirection = { up: false, down: false, left: false, right: false };
+
+    // --- Initialization ---
+    function init() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            gameState.grid[y] = [];
+            for (let x = 0; x < GRID_SIZE; x++) {
+                gameState.grid[y][x] = { type: 'water', structure: null, x, y, initialResources: 0, currentResources: 0 };
+            }
+        }
+        
+        const islandTiles = [
+            {x: 0, y: 0, type: 'grass'}, {x: 0, y: -1, type: 'grass'}, {x: 0, y: 1, type: 'rock'},
+            {x: -1, y: 0, type: 'grass'}, {x: 1, y: 0, type: 'rock'},
+            {x: 0, y: -2, type: 'grass'}, {x: 0, y: 2, type: 'rock'},
+            {x: -2, y: 0, type: 'grass'}, {x: 2, y: 0, type: 'rock'},
+            {x: 1, y: 1, type: 'rock'}, {x: -1, y: -1, type: 'grass'}
+        ];
+        const centerX = Math.floor(GRID_SIZE / 2);
+        const centerY = Math.floor(GRID_SIZE / 2);
+
+        islandTiles.forEach(t => {
+            const tile = gameState.grid[centerY + t.y][centerX + t.x];
+            tile.type = t.type;
+            tile.initialResources = TILE_INITIAL_RESOURCES;
+            tile.currentResources = TILE_INITIAL_RESOURCES;
+        });
+        
+        const centerScreenPos = isoToScreen(centerX, centerY);
+        gameState.camera.x = centerScreenPos.x;
+        gameState.camera.y = centerScreenPos.y + TILE_HEIGHT / 2;
+
+        setupEventListeners();
+        setupAudio();
+
+        if (!localStorage.getItem('expactory_instructions_seen')) {
+            toggleModal(document.getElementById('instructions-modal'), true);
+        }
+
+        gameLoop();
+    }
+
+    // --- Game Loop ---
+    function gameLoop() {
+        const now = Date.now();
+        let delta = ((now - gameState.lastUpdate) / 1000) * gameState.timeScale;
+        
+        if (gameState.boost.active) {
+            delta *= 2; // 2x speed boost
+            gameState.boost.timer -= (now - gameState.lastUpdate) / 1000; // Use normal delta to count down
+            if (gameState.boost.timer <= 0) {
+                gameState.boost.active = false;
+                fishBoostButton.classList.remove('animate-pulse');
+            }
+        }
+
+        update(delta);
+        draw();
+        gameState.lastUpdate = now;
+        requestAnimationFrame(gameLoop);
+    }
+    
+    // --- Update Logic ---
+    function update(delta) {
+        const realDelta = (delta / gameState.timeScale);
+        if (panDirection.up) gameState.camera.y -= 300 * realDelta;
+        if (panDirection.down) gameState.camera.y += 300 * realDelta;
+        if (panDirection.left) gameState.camera.x -= 300 * realDelta;
+        if (panDirection.right) gameState.camera.x += 300 * realDelta;
+
+        if (gameState.autoMode) runAutoMode(delta);
+        
+        // Day Cycle
+        gameState.dayCycleTimer += delta;
+        if (gameState.dayCycleTimer >= DAY_CYCLE_DURATION) {
+            gameState.dayCycleTimer -= DAY_CYCLE_DURATION;
+            triggerScreenFlash();
+            handleDayEnd();
+        }
+
+        updateProduction(delta);
+        updateBoats(realDelta);
+        updateVehicles(realDelta);
+        updateUI();
+        updateDebugDisplay();
+    }
+
+    function updateProduction(delta) {
+        const globalSpeedMultiplier = (globalMinerUpgrades[gameState.globalMinerLevel - 1] || {}).speedMultiplier || 1;
+        const aoeRange = (globalMinerUpgrades[gameState.globalMinerLevel - 1] || {}).aoe || 0;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const tile = gameState.grid[y][x];
+                if (!tile.structure) continue;
+                
+                const timerId = `${tile.structure.type}-${x}-${y}`;
+                gameState.productionTimers[timerId] = (gameState.productionTimers[timerId] || 0) + delta;
+
+                switch(tile.structure.type) {
+                    case 'miner':
+                        if (tile.currentResources > 0) {
+                             const productionTime = 5 / globalSpeedMultiplier;
+                             if(gameState.productionTimers[timerId] >= productionTime) {
+                                gameState.productionTimers[timerId] -= productionTime;
+                                const tilesToMine = [{tile, x, y}];
+                                if (aoeRange > 0) getNeighbors(x, y, aoeRange).forEach(n => tilesToMine.push({tile: gameState.grid[n.y][n.x], x: n.x, y: n.y}));
+                                tilesToMine.forEach(target => mineTile(target.tile, target.x, target.y));
+                             }
+                        }
+                        break;
+                    case 'research':
+                        const researchMultiplier = skillTree.faster_research.unlocked ? 1.5 : 1;
+                        gameState.resources.research += (0.5 * researchMultiplier) * delta;
+                        break;
+                    case 'smelter':
+                        if (gameState.resources.iron >= 1) {
+                            const productionTime = 10;
+                            if (gameState.productionTimers[timerId] >= productionTime) {
+                                gameState.productionTimers[timerId] -= productionTime;
+                                if (gameState.resources.iron_ingot < gameState.storage.iron_ingot) {
+                                    gameState.resources.iron--;
+                                    gameState.resources.iron_ingot++;
+                                    createFloatingText('🔗+1', ...Object.values(isoToScreen(x,y)));
+                                }
+                            }
+                         }
+                        break;
+                    case 'assembler':
+                        if (gameState.resources.iron_ingot >= 1 && gameState.resources.lithium >= 1) {
+                            const productionTime = 15;
+                            if(gameState.productionTimers[timerId] >= productionTime) {
+                                gameState.productionTimers[timerId] -= productionTime;
+                                if (gameState.resources.motor < gameState.storage.motor) {
+                                    gameState.resources.iron_ingot--;
+                                    gameState.resources.lithium--;
+                                    gameState.resources.motor++;
+                                    createFloatingText('⚙️+1', ...Object.values(isoToScreen(x,y)));
+                                }
+                            }
+                        }
+                        break;
+                    case 'vehicle_bay':
+                        const cost = structureCosts.vehicle_bay;
+                        const canAfford = Object.keys(cost).every(res => gameState.resources[res] >= cost[res]);
+                         if (canAfford && gameState.vehicles.length < 10) { // Cap vehicles at 10
+                            const productionTime = 20;
+                             if(gameState.productionTimers[timerId] >= productionTime) {
+                                gameState.productionTimers[timerId] -= productionTime;
+                                Object.keys(cost).forEach(res => gameState.resources[res] -= cost[res]);
+                                const screenPos = isoToScreen(x,y);
+                                gameState.vehicles.push({ x: screenPos.x, y: screenPos.y + TILE_HEIGHT / 2, currentTile: {x,y}, targetTile: null });
+                             }
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
+    function updateBoats(delta) {
+        gameState.boats.forEach(boat => {
+            boat.timer = (boat.timer || 0) + delta;
+            if (boat.timer >= 15) {
+                boat.timer = 0;
+                if (gameState.resources.fish < gameState.storage.fish) gameState.resources.fish++;
+            }
+            if (!boat.target) {
+                const targetTile = findRandomWaterTileAdjacentToLand();
+                if (targetTile) boat.target = isoToScreen(targetTile.x, targetTile.y);
+            }
+            
+            if (boat.target) {
+                const dx = boat.target.x - boat.x, dy = boat.target.y - boat.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < 5) {
+                    boat.target = null; // Find new target on next frame
+                } else {
+                    boat.x += (dx / dist) * 20 * delta;
+                    boat.y += (dy / dist) * 20 * delta;
+                }
+            }
+        });
+    }
+
+    function updateVehicles(delta) {
+        gameState.vehicles.forEach(vehicle => {
+            if (!vehicle.targetTile) {
+                const neighbors = getNeighbors(vehicle.currentTile.x, vehicle.currentTile.y, 1).filter(n => gameState.grid[n.y][n.x].type !== 'water');
+                if (neighbors.length > 0) vehicle.targetTile = neighbors[Math.floor(Math.random() * neighbors.length)];
+                else return; // No path
+            }
+            
+            const targetPos = isoToScreen(vehicle.targetTile.x, vehicle.targetTile.y);
+            targetPos.y += TILE_HEIGHT / 2; // Center on tile
+            const dx = targetPos.x - vehicle.x, dy = targetPos.y - vehicle.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist < 5) {
+                vehicle.currentTile = vehicle.targetTile;
+                vehicle.targetTile = null;
+            } else {
+                 vehicle.x += (dx / dist) * 40 * delta;
+                 vehicle.y += (dy / dist) * 40 * delta;
+            }
+        });
+    }
+
+
+    function mineTile(tile, x, y) {
+        if (tile.type === 'water' || tile.currentResources <= 0) return;
+        const screenPos = isoToScreen(x, y);
+
+        let resourceType = tile.type === 'grass' ? 'wood' : 'stone';
+        if (gameState.resources[resourceType] < gameState.storage[resourceType]) {
+           gameState.resources[resourceType]++;
+           tile.currentResources--;
+           createFloatingText(resourceType === 'wood' ? '🌲+1' : '⛰️+1', screenPos.x, screenPos.y - TILE_HEIGHT / 2);
+        }
+        
+        if (tile.type === 'rock') {
+            if (skillTree.unlock_iron.unlocked && Math.random() < 0.2) {
+                if (gameState.resources.iron < gameState.storage.iron) {
+                    gameState.resources.iron++;
+                    createFloatingText('🔩+1', screenPos.x, screenPos.y - TILE_HEIGHT / 2 - 20);
+                }
+            }
+            if (skillTree.advanced_geology.unlocked && Math.random() < 0.1) {
+                if (gameState.resources.lithium < gameState.storage.lithium) {
+                    gameState.resources.lithium++;
+                     createFloatingText('🔋+1', screenPos.x, screenPos.y - TILE_HEIGHT / 2 - 40);
+                }
+            }
+        }
+    }
+    
+    function updateUI() {
+        Object.keys(resourceUIs).forEach(key => {
+            if(resourceUIs[key]) {
+                const storage = gameState.storage[key] !== undefined ? ` / ${gameState.storage[key]}` : '';
+                resourceUIs[key].textContent = `${Math.floor(gameState.resources[key])}${storage}`;
+            }
+        });
+
+        const dayPercent = (gameState.dayCycleTimer / DAY_CYCLE_DURATION);
+        let overlayOpacity = 0;
+        const transitionPeriod = 0.25;
+        if (dayPercent < transitionPeriod) {
+            overlayOpacity = (1 - dayPercent / transitionPeriod) * 0.5;
+        } else if (dayPercent > (1 - transitionPeriod)) {
+            overlayOpacity = ((dayPercent - (1 - transitionPeriod)) / transitionPeriod) * 0.5;
+        }
+        timeOfDayOverlay.style.backgroundColor = `rgba(0, 0, 30, ${overlayOpacity})`;
+
+        dayCycleProgress.style.width = `${dayPercent * 100}%`;
+        dayCycleLabel.textContent = `Day: ${Math.floor(dayPercent * 100)}%`;
+        dayCountLabel.textContent = `Day ${gameState.dayCount}`;
+
+        skipDayButton.disabled = (gameState.dayCount % 5 !== 0);
+        skipDayButton.classList.toggle('hidden', gameState.dayCount < 5);
+    }
+    
+    function updateDebugDisplay() {
+        let totalWoodPerSec = 0;
+        let totalStonePerSec = 0;
+        const currentGlobalUpgrade = globalMinerUpgrades[gameState.globalMinerLevel - 1];
+        const globalSpeedMultiplier = currentGlobalUpgrade?.speedMultiplier || 1;
+        const aoeRange = currentGlobalUpgrade?.aoe || 0;
+        const productionTime = 5 / globalSpeedMultiplier;
+        const ratePerTile = 1 / productionTime;
+
+        for (const tile of gameState.grid.flat()) {
+            if (tile.structure?.type === 'miner' && tile.currentResources > 0) {
+                const tilesToMine = [{tile}];
+                if (aoeRange > 0) {
+                    getNeighbors(tile.x, tile.y, aoeRange).forEach(n => {
+                        const neighborTile = gameState.grid[n.y][n.x];
+                        if(neighborTile) tilesToMine.push({tile: neighborTile});
+                    });
+                }
+                tilesToMine.forEach(target => {
+                    if (target.tile.type === 'grass' && target.tile.currentResources > 0) totalWoodPerSec += ratePerTile;
+                    if (target.tile.type === 'rock' && target.tile.currentResources > 0) totalStonePerSec += ratePerTile;
+                });
+            }
+        }
+        document.querySelector('#mining-rate-display p:nth-child(1)').innerHTML = `🌲 Wood/sec: ${totalWoodPerSec.toFixed(2)}`;
+        document.querySelector('#mining-rate-display p:nth-child(2)').innerHTML = `⛰️ Stone/sec: ${totalStonePerSec.toFixed(2)}`;
+    }
+
+    // --- Drawing ---
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = tileColors.water;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(gameState.camera.zoom, gameState.camera.zoom);
+        ctx.translate(-gameState.camera.x, -gameState.camera.y);
+
+        const aoeRange = (globalMinerUpgrades[gameState.globalMinerLevel - 1] || {}).aoe || 0;
+
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const tile = gameState.grid[y][x];
+                drawTile(x, y, tile.type);
+                if (tile.type !== 'water') drawResourceBar(x, y, tile);
+                if (tile.structure) {
+                    drawStructure(x, y, tile.structure);
+                    if (tile.structure.type === 'miner' && aoeRange > 0) drawAoeIndicator(x, y, aoeRange);
+                }
+            }
+        }
+        
+        drawBoats();
+        drawVehicles();
+
+        if (gameState.selectedTile) {
+            const { x, y } = gameState.selectedTile;
+            let color = tileColors.highlight;
+            if (gameState.mode === 'building') {
+                color = isValidPlacement(x, y, gameState.buildChoice) ? tileColors.placement : tileColors.invalidPlacement;
+            } else if (gameState.mode === 'remove') {
+                if (gameState.grid[y][x].structure) color = tileColors.removePlacement;
+            }
+            drawTileHighlight(x, y, color);
+        }
+        
+        ctx.restore();
+    }
+    
+    function drawTile(x, y, type) {
+        const screenPos = isoToScreen(x, y);
+        ctx.fillStyle = tileColors[type];
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.lineTo(screenPos.x + TILE_WIDTH / 2, screenPos.y + TILE_HEIGHT / 2);
+        ctx.lineTo(screenPos.x, screenPos.y + TILE_HEIGHT);
+        ctx.lineTo(screenPos.x - TILE_WIDTH / 2, screenPos.y + TILE_HEIGHT / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    function drawAoeIndicator(x, y, range) {
+        getNeighbors(x, y, range).forEach(n => {
+            if (gameState.grid[n.y][n.x].type !== 'water') drawTileHighlight(n.x, n.y, tileColors.aoe);
+        });
+    }
+    
+    function drawResourceBar(x, y, tile) {
+        if (tile.initialResources === 0) return;
+        const screenPos = isoToScreen(x, y);
+        const barWidth = TILE_WIDTH * 0.6;
+        const barHeight = 8;
+        const barX = screenPos.x - barWidth / 2;
+        const barY = screenPos.y + TILE_HEIGHT - barHeight - 5;
+        const percent = tile.currentResources / tile.initialResources;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        ctx.fillStyle = tile.type === 'grass' ? '#22c55e' : '#64748b';
+        ctx.fillRect(barX, barY, barWidth * percent, barHeight);
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+    }
+
+    function drawTileHighlight(x, y, color) {
+        const screenPos = isoToScreen(x, y);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.lineTo(screenPos.x + TILE_WIDTH / 2, screenPos.y + TILE_HEIGHT / 2);
+        ctx.lineTo(screenPos.x, screenPos.y + TILE_HEIGHT);
+        ctx.lineTo(screenPos.x - TILE_WIDTH / 2, screenPos.y + TILE_HEIGHT / 2);
+        ctx.closePath();
+        ctx.fill();
+    }
+    
+    function drawStructure(x, y, structure) {
+        const screenPos = isoToScreen(x, y);
+        const topY = screenPos.y + TILE_HEIGHT / 2;
+        switch(structure.type) {
+            case 'miner':
+                const colors = ['#f97316', '#fb923c', '#fdba74', '#fed7aa'];
+                ctx.fillStyle = colors[gameState.globalMinerLevel] || colors[0];
+                const height = 20 + gameState.globalMinerLevel * 10;
+                const width = 30 + gameState.globalMinerLevel * 5;
+                ctx.fillRect(screenPos.x - width / 2, topY - height, width, height);
+                ctx.fillStyle = '#78350f';
+                ctx.beginPath();
+                ctx.moveTo(screenPos.x, topY - height - 15);
+                ctx.lineTo(screenPos.x + width / 2, topY - height);
+                ctx.lineTo(screenPos.x - width / 2, topY - height);
+                ctx.closePath();
+                ctx.fill();
+                break;
+            case 'storage':
+                ctx.fillStyle = '#a16207';
+                ctx.fillRect(screenPos.x - 15, topY - 30, 30, 30);
+                ctx.fillStyle = '#ca8a04';
+                ctx.fillRect(screenPos.x - 12, topY - 27, 24, 24);
+                break;
+            case 'research':
+                ctx.fillStyle = '#1e3a8a';
+                ctx.fillRect(screenPos.x - 18, topY - 36, 36, 36);
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(screenPos.x, topY - 18, 12, 0, Math.PI * 2);
+                ctx.fill();
+                break;
+            case 'smelter':
+                 ctx.fillStyle = '#4b5563';
+                 ctx.fillRect(screenPos.x - 20, topY - 50, 40, 50);
+                 
+                 // Visual feedback for production status
+                 let fireColor = '#a1a1aa'; // A dull gray when idle
+                 // The smelter is "working" if it has input and there's space for output.
+                 if (gameState.resources.iron >= 1 && gameState.resources.iron_ingot < gameState.storage.iron_ingot) {
+                    // Create a pulsing effect for the fire
+                    const pulse = Math.abs(Math.sin(Date.now() / 200)) * 0.5 + 0.5; // Varies between 0.5 and 1
+                    const r = 245;
+                    const g = Math.floor(158 * pulse); // Dim the green channel to make it pulse
+                    const b = 11;
+                    fireColor = `rgb(${r},${g},${b})`;
+                 }
+                 ctx.fillStyle = fireColor;
+                 ctx.fillRect(screenPos.x - 5, topY - 10, 10, 10);
+                break;
+            case 'assembler':
+                ctx.fillStyle = '#581c87';
+                ctx.fillRect(screenPos.x - 25, topY - 40, 50, 40);
+                ctx.fillStyle = '#a855f7';
+                ctx.fillRect(screenPos.x - 10, topY - 45, 20, 10);
+                break;
+            case 'vehicle_bay':
+                ctx.fillStyle = '#450a0a';
+                ctx.fillRect(screenPos.x - 30, topY - 20, 60, 20);
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(screenPos.x - 30, topY - 25, 60, 5);
+                break;
+        }
+    }
+
+    function drawBoats() {
+        gameState.boats.forEach(boat => {
+            ctx.font = '24px sans-serif';
+            ctx.fillText('⛵', boat.x - 12, boat.y);
+        });
+    }
+
+    function drawVehicles() {
+        gameState.vehicles.forEach(vehicle => {
+            ctx.font = '24px sans-serif';
+            ctx.fillText('🚗', vehicle.x - 12, vehicle.y - 15); // Adjust Y to draw on top of tile
+        });
+    }
+    
+    function isoToScreen(x, y) { return { x: (x - y) * TILE_WIDTH / 2, y: (x + y) * TILE_HEIGHT / 2 }; }
+    
+    function screenToIso(mouseX, mouseY) {
+        const worldX = (mouseX - canvas.width / 2) / gameState.camera.zoom + gameState.camera.x;
+        const worldY = (mouseY - canvas.height / 2) / gameState.camera.zoom + gameState.camera.y;
+        const isoX = Math.round((worldX / (TILE_WIDTH / 2) + worldY / (TILE_HEIGHT / 2)) / 2);
+        const isoY = Math.round((worldY / (TILE_HEIGHT / 2) - (worldX / (TILE_WIDTH / 2))) / 2);
+        return { x: isoX, y: isoY };
+    }
+    
+    function setupEventListeners() {
+        const infoButton = document.getElementById('info-button');
+        const removeButton = document.getElementById('remove-btn');
+        const researchButton = document.getElementById('research-button');
+        const instructionsCloseButton = document.getElementById('instructions-close-button');
+        const minerUpgradeBtn = document.getElementById('miner-upgrade-btn');
+        const globalModalCloseButton = document.getElementById('global-modal-close-button');
+        const globalUpgradeConfirmButton = document.getElementById('global-upgrade-confirm-button');
+
+        canvas.addEventListener('mousedown', e => {
+            if (e.button !== 0) {
+                isPanning = true;
+                lastMousePos = { x: e.clientX, y: e.clientY };
+                canvas.style.cursor = 'grabbing';
+                e.preventDefault();
+            } else handleCanvasClick(e);
+        });
+        canvas.addEventListener('mouseup', () => {
+            isPanning = false;
+            canvas.style.cursor = 'pointer';
+        });
+        canvas.addEventListener('mousemove', e => {
+            if (isPanning) {
+                const dx = e.clientX - lastMousePos.x, dy = e.clientY - lastMousePos.y;
+                gameState.camera.x -= dx / gameState.camera.zoom;
+                gameState.camera.y -= dy / gameState.camera.zoom;
+                lastMousePos = { x: e.clientX, y: e.clientY };
+            } else {
+                 const rect = canvas.getBoundingClientRect();
+                 const gridPos = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
+                 if (gridPos.x >= 0 && gridPos.x < GRID_SIZE && gridPos.y >= 0 && gridPos.y < GRID_SIZE) {
+                     gameState.selectedTile = gridPos;
+                     const tile = gameState.grid[gridPos.y][gridPos.x];
+
+                     // Tooltip logic
+                     let tooltipText = '';
+                     if (tile.structure) {
+                         tooltipText = getStructureStatus(tile.structure, tile);
+                     } else if (tile.type !== 'water' && tile.initialResources > 0) {
+                         const remaining = tile.currentResources.toFixed(0);
+                         const initial = tile.initialResources;
+                         const resourceEmoji = tile.type === 'grass' ? '🌲' : '⛰️';
+                         tooltipText = `${resourceEmoji} ${remaining} / ${initial}`;
+                     }
+                     
+                     if (tooltipText) {
+                         tooltip.innerHTML = tooltipText;
+                         tooltip.style.left = `${e.clientX + 15}px`;
+                         tooltip.style.top = `${e.clientY}px`;
+                         tooltip.classList.remove('hidden');
+                     } else {
+                         tooltip.classList.add('hidden');
+                     }
+
+                 } else {
+                     gameState.selectedTile = null;
+                     tooltip.classList.add('hidden');
+                 }
+            }
+        });
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            e.deltaY < 0 ? zoomIn(0.1) : zoomOut(0.1);
+        });
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        infoButton.addEventListener('click', () => toggleModal(infoModal, true));
+        infoCloseButton.addEventListener('click', () => toggleModal(infoModal, false));
+        removeButton.addEventListener('click', () => setMode('remove'));
+        researchButton.addEventListener('click', () => {
+            setMode('select');
+            toggleSkillTreeModal(true);
+        });
+        skillTreeCloseButton.addEventListener('click', () => toggleSkillTreeModal(false));
+        instructionsCloseButton.addEventListener('click', () => {
+            localStorage.setItem('expactory_instructions_seen', 'true');
+            toggleModal(document.getElementById('instructions-modal'), false);
+            startMusic();
+        });
+        
+        allBuildButtons.forEach(btn => {
+            if(btn.dataset.structure) {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.structure;
+                    const cost = structureCosts[type];
+                    const canAfford = Object.keys(cost).every(res => gameState.resources[res] >= cost[res]);
+                    if(canAfford) {
+                        setMode('building', type);
+                    } else createFloatingText('Not enough resources!', window.innerWidth / 2, window.innerHeight - 100, 'red');
+                });
+            }
+        });
+        
+        advancedToggleBtn.addEventListener('click', () => {
+            const isHidden = advancedBuildMenu.classList.contains('hidden');
+            if(isHidden) {
+                advancedBuildMenu.classList.remove('hidden');
+                setTimeout(() => advancedBuildMenu.classList.remove('scale-y-0'), 10);
+                advancedToggleBtn.innerHTML = 'Advanced 🔽';
+                document.getElementById('basic-build-items').classList.remove('rounded-xl');
+                document.getElementById('basic-build-items').classList.add('rounded-b-xl');
+            } else {
+                advancedBuildMenu.classList.add('scale-y-0');
+                 setTimeout(() => advancedBuildMenu.classList.add('hidden'), 300);
+                advancedToggleBtn.innerHTML = 'Advanced 🔼';
+                 document.getElementById('basic-build-items').classList.add('rounded-xl');
+                document.getElementById('basic-build-items').classList.remove('rounded-b-xl');
+            }
+        });
+
+        fishBoostButton.addEventListener('click', () => {
+            if (gameState.resources.fish >= 20 && !gameState.boost.active) {
+                gameState.resources.fish -= 20;
+                gameState.boost.active = true;
+                gameState.boost.timer = 30; // 30 second boost
+                fishBoostButton.classList.add('animate-pulse');
+            }
+        });
+        
+        skipDayButton.addEventListener('click', handleSkipDay);
+        muteButton.addEventListener('click', toggleMute);
+        
+        const panControls = {'pan-up': 'up', 'pan-down': 'down', 'pan-left': 'left', 'pan-right': 'right'};
+        Object.keys(panControls).forEach(id => {
+            const btn = document.getElementById(id);
+            const dir = panControls[id];
+            const start = () => panDirection[dir] = true;
+            const end = () => panDirection[dir] = false;
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+            btn.addEventListener('mouseleave', end);
+            btn.addEventListener('touchstart', e => {e.preventDefault(); start()});
+            btn.addEventListener('touchend', end);
+        });
+        document.getElementById('zoom-in').addEventListener('click', () => zoomIn(0.2));
+        document.getElementById('zoom-out').addEventListener('click', () => zoomOut(0.2));
+
+        minerUpgradeBtn.addEventListener('click', () => {
+            setMode('select');
+            toggleGlobalUpgradeModal(true);
+        });
+        globalModalCloseButton.addEventListener('click', () => toggleGlobalUpgradeModal(false));
+        globalUpgradeConfirmButton.addEventListener('click', handleGlobalUpgrade);
+        
+        // Debug Listeners
+        const debugPanel = document.getElementById('debug-panel');
+        const debugToggle = document.getElementById('debug-toggle');
+        debugToggle.addEventListener('click', () => {
+            const isOpen = debugPanel.style.transform === 'translateX(0px)';
+            debugPanel.style.transform = isOpen ? 'translateX(100%)' : 'translateX(0)';
+            debugToggle.innerHTML = isOpen ? '&lt;' : '&gt;';
+        });
+        document.getElementById('time-slider').addEventListener('input', e => {
+            gameState.timeScale = parseFloat(e.target.value);
+            document.getElementById('time-scale-label').textContent = `${gameState.timeScale.toFixed(1)}x`;
+        });
+        document.getElementById('auto-mode-toggle').addEventListener('change', e => gameState.autoMode = e.target.checked);
+        document.getElementById('populate-islands-btn').addEventListener('click', populateIslandsForDebug);
+        document.getElementById('populate-full-btn').addEventListener('click', handlePopulateFullWorld);
+    }
+
+    function setMode(newMode, choice = null) {
+        gameState.mode = newMode;
+        gameState.buildChoice = newMode === 'building' ? choice : null;
+        
+        document.querySelectorAll('#build-menu button, #advanced-build-menu button').forEach(btn => {
+            const structureType = btn.dataset.structure;
+            const isRemove = btn.id === 'remove-btn';
+
+            if ((newMode === 'building' && structureType === choice) || (newMode === 'remove' && isRemove)) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+    }
+    
+    function handleCanvasClick(e) {
+        if (!gameState.audio.musicStarted) {
+            startMusic();
+        }
+        if (!gameState.selectedTile) {
+            setMode('select');
+            return;
+        };
+        const { x, y } = gameState.selectedTile;
+        const tile = gameState.grid[y][x];
+        
+        if (gameState.mode === 'building' && isValidPlacement(x, y, gameState.buildChoice)) {
+            const cost = structureCosts[gameState.buildChoice];
+            Object.keys(cost).forEach(res => gameState.resources[res] -= cost[res]);
+            
+            if (gameState.buildChoice === 'fishing_boat') {
+                const screenPos = isoToScreen(x,y);
+                const newBoat = { x: screenPos.x, y: screenPos.y, timer: 0, target: null };
+                gameState.boats.push(newBoat);
+            } else {
+                tile.structure = { type: gameState.buildChoice };
+            }
+
+            if (gameState.buildChoice === 'storage') {
+                Object.keys(gameState.storage).forEach(res => gameState.storage[res] += 50);
+            }
+        } else if (gameState.mode === 'remove' && tile.structure) {
+            const cost = structureCosts[tile.structure.type];
+            if(cost) Object.keys(cost).forEach(res => gameState.resources[res] += cost[res] * 0.5);
+            if (tile.structure.type === 'storage') {
+                Object.keys(gameState.storage).forEach(res => gameState.storage[res] -= 50);
+            }
+            tile.structure = null;
+        } else {
+            setMode('select');
+        }
+    }
+    
+    function handleGlobalUpgrade() {
+        const nextUpgrade = globalMinerUpgrades[gameState.globalMinerLevel];
+        if (!nextUpgrade) return;
+        if(gameState.resources.wood >= nextUpgrade.cost.wood && gameState.resources.stone >= nextUpgrade.cost.stone) {
+            gameState.resources.wood -= nextUpgrade.cost.wood;
+            gameState.resources.stone -= nextUpgrade.cost.stone;
+            gameState.globalMinerLevel++;
+            toggleGlobalUpgradeModal(true);
+        }
+    }
+    
+    function isValidPlacement(x, y, type) {
+        if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) return false;
+        const tile = gameState.grid[y][x];
+
+        if (type === 'tile') {
+            if (tile.type !== 'water') return false;
+            // Must be adjacent to land
+            for (const n of getNeighbors(x, y, 1)) {
+                if (gameState.grid[n.y][n.x].type !== 'water') return true;
+            }
+            return false;
+        }
+
+        if (type === 'fishing_boat') {
+            if (tile.type !== 'water') return false;
+            // Must be adjacent to land
+            for (const n of getNeighbors(x, y, 1)) {
+                if (gameState.grid[n.y][n.x].type !== 'water') return true;
+            }
+            return false;
+        }
+
+        if (Object.keys(structureCosts).includes(type)) return tile.type !== 'water' && !tile.structure;
+        
+        return false;
+    }
+
+    function zoomIn(amount) { gameState.camera.zoom = Math.min(2, gameState.camera.zoom + amount); }
+    function zoomOut(amount) { gameState.camera.zoom = Math.max(0.3, gameState.camera.zoom - amount); }
+
+    function getNeighbors(x, y, range) {
+        const results = [];
+        for (let dy = -range; dy <= range; dy++) {
+            for (let dx = -range; dx <= range; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) results.push({x: nx, y: ny});
+            }
+        }
+        return results;
+    }
+    
+    function toggleGlobalUpgradeModal(show) {
+        const globalUpgradeModal = document.getElementById('global-upgrade-modal');
+        const globalUpgradeConfirmButton = document.getElementById('global-upgrade-confirm-button');
+        if (show) {
+            const level = gameState.globalMinerLevel;
+            const nextUpgrade = globalMinerUpgrades[level];
+            document.getElementById('global-upgrade-level').textContent = `Current Level: ${level}`;
+            if (nextUpgrade) {
+                document.getElementById('global-upgrade-info').innerHTML = `<b>Next Level:</b> ${nextUpgrade.description}`;
+                document.getElementById('global-upgrade-cost').textContent = `${nextUpgrade.cost.wood} 🌲 & ${nextUpgrade.cost.stone} ⛰️`;
+                globalUpgradeConfirmButton.disabled = gameState.resources.wood < nextUpgrade.cost.wood || gameState.resources.stone < nextUpgrade.cost.stone;
+                globalUpgradeConfirmButton.classList.remove('hidden');
+            } else {
+                document.getElementById('global-upgrade-info').innerHTML = "You've reached the maximum miner level!";
+                document.getElementById('global-upgrade-cost').textContent = '---';
+                globalUpgradeConfirmButton.classList.add('hidden');
+            }
+        }
+        toggleModal(globalUpgradeModal, show);
+    }
+    
+    function getStructureStatus(structure, tile) {
+        switch(structure.type) {
+            case 'miner':
+                return tile.currentResources > 0 ? 'Status: Mining' : 'Status: Depleted';
+            case 'smelter':
+                if (gameState.resources.iron < 1) return 'Status: Idle (No Iron Ore)';
+                if (gameState.resources.iron_ingot >= gameState.storage.iron_ingot) return 'Status: Idle (Storage Full)';
+                return 'Status: Smelting';
+            case 'assembler':
+                if (gameState.resources.iron_ingot < 1 || gameState.resources.lithium < 1) return 'Status: Idle (Missing Materials)';
+                if (gameState.resources.motor >= gameState.storage.motor) return 'Status: Idle (Storage Full)';
+                return 'Status: Assembling';
+            case 'research':
+                return 'Status: Generating Points';
+            case 'vehicle_bay':
+                    const cost = structureCosts.vehicle_bay;
+                    if (gameState.vehicles.length >= 10) return 'Status: Bay Full';
+                    if (Object.keys(cost).some(res => gameState.resources[res] < cost[res])) return 'Status: Idle (Missing Materials)';
+                    return 'Status: Building Vehicle';
+            case 'storage':
+                return 'Type: Storage';
+            default:
+                return '';
+        }
+    }
+
+    function toggleSkillTreeModal(show) {
+        if (show) renderSkillTree();
+        toggleModal(skillTreeModal, show);
+    }
+    
+    function toggleModal(modal, show) {
+        const content = modal.querySelector('.modal-content');
+        if (show) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                modal.classList.remove('opacity-0');
+            }, 10);
+        } else {
+            content.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+    }
+
+    function renderSkillTree() {
+        skillTreeContainer.innerHTML = '';
+        Object.values(skillTree).forEach(skill => {
+            const node = document.createElement('div');
+            node.className = 'skill-node p-4 rounded-lg shadow-md flex flex-col items-center text-center';
+            const dependenciesMet = skill.dependencies.every(depId => skillTree[depId].unlocked);
+            let status = skill.unlocked ? 'unlocked' : (dependenciesMet ? 'available' : 'locked');
+            node.classList.add(status);
+            node.innerHTML = `<h3 class="font-bold text-lg">${skill.name}</h3><p class="text-sm my-2">${skill.description}</p>${!skill.unlocked ? `<p class="font-bold mt-auto">Cost: ${skill.cost}🔬</p>` : ''}`;
+            if (status === 'available' && gameState.resources.research < skill.cost) node.style.opacity = '0.7';
+            if (status === 'available') node.addEventListener('click', () => handleSkillUnlock(skill.id));
+            skillTreeContainer.appendChild(node);
+        });
+    }
+
+    function handleSkillUnlock(skillId) {
+        const skill = skillTree[skillId];
+        if (skill && !skill.unlocked && gameState.resources.research >= skill.cost) {
+            gameState.resources.research -= skill.cost;
+            skill.unlocked = true;
+            if (resourceDisplays[skill.id.replace('unlock_', '')]) {
+                 resourceDisplays[skill.id.replace('unlock_', '')].classList.remove('hidden');
+            }
+             if (skill.id.includes('geology')) resourceDisplays.lithium.classList.remove('hidden');
+             if (skill.id.includes('engineering')) resourceDisplays.motor.classList.remove('hidden');
+            if (skill.id === 'iron_smelting' || skill.id === 'unlock_fishing' || skill.id === 'automation') advancedToggleBtn.classList.remove('hidden');
+            
+            renderSkillTree();
+        }
+    }
+    
+    function triggerScreenFlash() {
+        screenFlash.classList.remove('hidden');
+        screenFlash.classList.add('active');
+        setTimeout(() => {
+             screenFlash.classList.remove('active');
+             screenFlash.classList.add('hidden');
+        }, 500);
+    }
+
+    function handleDayEnd() {
+        handleAutoExpand();
+        gameState.dayCount++;
+        updateUI(); // To update day count and skip button status
+    }
+
+    function handleSkipDay() {
+        const timeToSimulate = DAY_CYCLE_DURATION - gameState.dayCycleTimer;
+        updateProduction(timeToSimulate);
+        triggerScreenFlash();
+        handleDayEnd();
+        gameState.dayCycleTimer = 0;
+    }
+    
+    function handleAutoExpand() {
+        const validSpots = [];
+         for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                if (isValidPlacement(x, y, 'tile')) {
+                   validSpots.push({x,y});
+                }
+            }
+        }
+        if (validSpots.length > 0) {
+            const {x, y} = validSpots[Math.floor(Math.random() * validSpots.length)];
+            const tile = gameState.grid[y][x];
+            tile.type = Math.random() > 0.5 ? 'grass' : 'rock';
+            tile.initialResources = TILE_INITIAL_RESOURCES;
+            tile.currentResources = TILE_INITIAL_RESOURCES;
+        }
+    }
+    
+    function findRandomWaterTileAdjacentToLand() {
+        const waterTiles = [];
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                 if (gameState.grid[y][x].type === 'water') {
+                    const neighbors = getNeighbors(x,y,1);
+                    if(neighbors.some(n => gameState.grid[n.y][n.x].type !== 'water')) {
+                        waterTiles.push({x,y});
+                    }
+                 }
+            }
+        }
+        return waterTiles.length > 0 ? waterTiles[Math.floor(Math.random() * waterTiles.length)] : {x:0, y:0};
+    }
+
+    function setupAudio() {
+        gameState.audio.tracks = [
+            document.getElementById('bgm1'),
+            document.getElementById('bgm2'),
+            document.getElementById('bgm3')
+        ];
+        gameState.audio.tracks.forEach(track => {
+            track.volume = 0.5;
+            track.addEventListener('ended', playNextTrack);
+        });
+    }
+
+    function playNextTrack() {
+        gameState.audio.currentTrack = (gameState.audio.currentTrack + 1) % gameState.audio.tracks.length;
+        const nextTrack = gameState.audio.tracks[gameState.audio.currentTrack];
+        if (nextTrack) {
+            // The catch block prevents the game from stopping if an audio file is missing.
+            nextTrack.play().catch(e => {});
+        }
+    }
+
+    function startMusic() {
+        if (gameState.audio.musicStarted) return;
+        gameState.audio.musicStarted = true;
+        const firstTrack = gameState.audio.tracks[0];
+        if (firstTrack) {
+            // If the first track fails (e.g., missing file), this will catch the error
+            // and attempt to play the next one in the sequence.
+            firstTrack.play().catch(e => {
+                playNextTrack();
+            });
+        }
+    }
+
+    function toggleMute() {
+        gameState.audio.isMuted = !gameState.audio.isMuted;
+        gameState.audio.tracks.forEach(track => {
+            track.muted = gameState.audio.isMuted;
+        });
+        muteButton.innerHTML = gameState.audio.isMuted ? '🔇' : '🔊';
+    }
+
+
+    function createFloatingText(text, x, y, color = 'white') {
+        const container = document.getElementById('floating-text-container');
+        const el = document.createElement('div');
+        el.textContent = text;
+        el.className = 'absolute font-bold text-xl';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.color = color;
+        el.style.transform = 'translateX(-50%)';
+        el.style.textShadow = '1px 1px 2px black';
+        el.style.transition = 'opacity 1s ease-out, transform 1s ease-out';
+        el.style.pointerEvents = 'none';
+        container.appendChild(el);
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translate(-50%, -50px)';
+        }, 10);
+        setTimeout(() => container.removeChild(el), 1000);
+    }
+
+    // --- Debug & Auto-Mode ---
+    function runAutoMode(delta) {
+        gameState.autoModeTimer += delta;
+        if (gameState.autoModeTimer < 1) return;
+        gameState.autoModeTimer = 0;
+        for (const skill of Object.values(skillTree)) {
+            const depsMet = skill.dependencies.every(depId => skillTree[depId].unlocked);
+            if (!skill.unlocked && depsMet && gameState.resources.research >= skill.cost) {
+                handleSkillUnlock(skill.id);
+                return;
+            }
+        }
+        const nextUpgrade = globalMinerUpgrades[gameState.globalMinerLevel];
+        if (nextUpgrade && gameState.resources.wood >= nextUpgrade.cost.wood && gameState.resources.stone >= nextUpgrade.cost.stone) {
+            handleGlobalUpgrade();
+            return;
+        }
+        if (gameState.resources.wood > gameState.storage.wood * 0.8 || gameState.resources.stone > gameState.storage.stone * 0.8) {
+            if (tryAutoBuild('storage')) return;
+        }
+        if (!gameState.grid.flat().some(t => t.structure?.type === 'research')) {
+            if (tryAutoBuild('research')) return;
+        }
+        if (tryAutoBuild('miner')) return;
+        handleAutoExpand();
+    }
+
+    function tryAutoBuild(structureType) {
+        const cost = structureCosts[structureType];
+        if (Object.keys(cost).some(res => gameState.resources[res] < cost[res])) return false;
+        
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                if (isValidPlacement(x, y, structureType)) {
+                     Object.keys(cost).forEach(res => gameState.resources[res] -= cost[res]);
+                     if (structureType === 'storage') {
+                        Object.keys(gameState.storage).forEach(res => gameState.storage[res] += 50);
+                    } else {
+                        gameState.grid[y][x].structure = { type: structureType };
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function populateIslandsForDebug() {
+        for(let i = 0; i < 10; i++) {
+            const centerX = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+            const centerY = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+            if (gameState.grid[centerY][centerX].type !== 'water') continue;
+            [{x:0,y:0},{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}].forEach(t => {
+                const tile = gameState.grid[centerY + t.y][centerX + t.x];
+                if (tile.type === 'water') {
+                    tile.type = Math.random() > 0.5 ? 'grass' : 'rock';
+                    tile.initialResources = TILE_INITIAL_RESOURCES;
+                    tile.currentResources = TILE_INITIAL_RESOURCES;
+                }
+            });
+        }
+    }
+
+    function populateBuildingsForDebug() {
+        for (let y = 0; y < GRID_SIZE; y++) {
+            for (let x = 0; x < GRID_SIZE; x++) {
+                const tile = gameState.grid[y][x];
+                if (tile.type !== 'water' && !tile.structure) {
+                    if (Math.random() > 0.8) tile.structure = { type: 'miner' };
+                    else if (Math.random() > 0.95) {
+                        tile.structure = { type: 'storage' };
+                        gameState.storage.wood += 50;
+                        gameState.storage.stone += 50;
+                    }
+                }
+            }
+        }
+    }
+
+    function handlePopulateFullWorld() {
+        gameState.resources.wood = 5000;
+        gameState.resources.stone = 5000;
+        gameState.resources.research = 500;
+        populateIslandsForDebug();
+        populateBuildingsForDebug();
+    }
+
+    init();
+</script>
+</body>
+</html>
+

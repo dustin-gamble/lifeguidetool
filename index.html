@@ -1,473 +1,390 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-        <title>Life Guide Tool</title>
-        <style>
-            body {
-                background: #f7f7fa;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                margin: 0; padding: 0;
-                color: #212529;
-            }
-            .header {
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                align-items: center;
-                gap: 32px;
-                padding: 2rem 1rem 1.5rem 1rem;
-                background: #f8f6f2;
-            }
-            .header-text {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .logo-img {
-                width: 120px;
-                height: auto;
-                border-radius: 16px;
-                box-shadow: 0 3px 18px #2443321a;
-                background: #e7f3ea;
-                padding: 8px;
-            }
-            .brand-title {
-                font-size: 2.6rem;
-                font-weight: bold;
-                margin: 0;
-                letter-spacing: 1px;
-                color: #244332;
-                font-family: 'Georgia', serif;
-                text-shadow: 0 2px 12px #c3edd750;
-                text-align: left;
-            }
-            .tagline {
-                font-size: 1.13rem;
-                margin: 0.7rem 0 0 0;
-                font-weight: 500;
-                color: #35644a;
-                letter-spacing: 0.5px;
-                text-shadow: 0 1px 4px #c3edd740;
-                text-align: left;
-            }
-            main {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                gap: 16px;
-                max-width: 1200px;
-                margin: 24px auto 0 auto;
-                flex-wrap: wrap;
-            }
-            .tool-card {
-                background: #fff;
-                border-radius: 12px;
-                box-shadow: 0 1px 6px #d9e6ef40;
-                width: 180px;
-                min-height: 130px;
-                padding: 14px 10px 12px 10px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                margin-bottom: 16px;
-                transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
-                position: relative;
-                overflow: hidden;
-                cursor: pointer;
-                border: none;
-                text-align: center;
-            }
-            .tool-card:hover {
-                box-shadow: 0 8px 20px #a1c2f540, 0 0 12px #a1c2f580;
-                background: linear-gradient(135deg, #f0f6ff 0%, #e3efff 100%);
-                transform: scale(1.05);
-                z-index: 2;
-            }
-            .tool-card-link {
-                text-decoration: none;
-                color: inherit;
-                display: block;
-                height: 100%;
-                outline: none;
-            }
-            .tool-card-link:focus-visible {
-                outline: 2px solid #a1c2f5;
-                outline-offset: 2px;
-            }
-            .tool-icon {
-                font-size: 2.5em;
-                margin-bottom: 12px;
-                filter: none;
-                color: #5d82b6;
-                display: block;
-                text-align: center;
-            }
-            .tool-title {
-                font-size: 0.95em;
-                font-weight: 900;
-                color: #2c2c2c;
-                margin-bottom: 8px;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-                text-shadow: none;
-            }
-            .tool-desc {
-                font-size: 0.78em;
-                color: #41484f;
-                margin-bottom: 0;
-                line-height: 1.3;
-                flex: none;
-            }
-            @media (max-width: 1080px) {
-                main { flex-wrap: wrap; gap: 14px;}
-                .tool-card { width: 48vw; max-width: 260px;}
-            }
-            @media (max-width: 650px) {
-                .header { flex-direction: column; align-items: center; gap: 0; }
-                main { flex-direction: column; align-items: center; gap: 12px; }
-                .tool-card { width: 98vw; max-width: none; margin-bottom: 12px;}
-                .tool-card { padding: 12px 8px 10px 8px; min-height: 120px; }
-                .tool-title { font-size: 0.85em;}
-                .tool-icon { font-size: 2em; margin-bottom: 10px;}
-                .tool-desc { font-size: 0.75em; }
-            }
-            @media (min-width: 1081px) {
-                main {
-                    justify-content: flex-start;
-                }
-            }
-            @media (min-width: 650px) and (max-width: 1080px) {
-                main {
-                    justify-content: center;
-                }
-            }
-            .section-title {
-                width: 100%;
-                font-size: 1.6rem;
-                font-weight: 700;
-                color: #244332;
-                font-family: 'Georgia', serif;
-                margin: 24px 0 12px 0;
-                border-bottom: 2px solid #a1c2f5;
-                padding-bottom: 4px;
-                letter-spacing: 0.5px;
-            }
-            footer {
-                width:100%;text-align:center;margin:32px 0 22px 0;
-                font-size:0.98em;
-                color:#8a98a7;
-                opacity:0.93;
-            }
-        </style>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1745857011630006"
-             crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Guide Tool - Dark Mode</title>
+    
+    <!-- Tailwind CSS for modern, utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for a clean, modern typeface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        // Set dark mode in Tailwind CSS
+        tailwind.config = {
+          darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* Applying the Inter font as the default */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Simple focus ring for accessibility on all interactive elements */
+        .tool-card-link:focus-visible {
+            outline: 3px solid #818cf8; /* indigo-400 */
+            outline-offset: 2px;
+            border-radius: 0.75rem; /* 12px */
+        }
+    </style>
 </head>
-<body>
-  <div class="header">
-    <img src="logo_lifeguidetool.png" alt="Life Guide Tool Logo" class="logo-img">
-    <div class="header-text">
-      <div class="brand-title">Life Guide Tool</div>
-      <div class="tagline">Tools to Navigate Life’s Journey</div>
-    </div>
-  </div>
-  <main>
-    <h2 class="section-title">Life Tools</h2>
+<body class="bg-slate-900 text-slate-300">
 
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Weight & Wellness Tracker">
-      <a href="weight.html" class="tool-card-link" aria-label="Open Weight & Wellness Tracker">
-        <div class="tool-icon">⚖️</div>
-        <div class="tool-title">Weight & Wellness Tracker</div>
-        <div class="tool-desc">
-          Log your daily calories, meals, and exercise.
-          Project your weight and waistline over time and get real food examples as you plan.
+    <!-- Header Section -->
+    <header class="bg-slate-950/70 backdrop-blur-lg sticky top-0 z-10 border-b border-slate-800">
+        <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-6">
+            <img src="logo_lifeguidetool.png" alt="Life Guide Tool Logo" class="w-20 h-20 rounded-2xl shadow-lg">
+            <div>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight">Life Guide Tool</h1>
+                <p class="mt-2 text-lg text-slate-400">Tools to Navigate Life’s Journey</p>
+            </div>
         </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Muscle Building Planner">
-      <a href="muscle.html" class="tool-card-link" aria-label="Open Muscle Building Planner">
-        <div class="tool-icon">💪</div>
-        <div class="tool-title">Muscle Building Planner</div>
-        <div class="tool-desc">
-          Plan and visualize your strength journey!
-          Set your training, protein, and goals to see your projected muscle gain and strength progress.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Life Expectancy Estimator">
-      <a href="life.html" class="tool-card-link" aria-label="Open Life Expectancy Estimator">
-        <div class="tool-icon">👵👴</div>
-        <div class="tool-title">Life Expectancy Estimator</div>
-        <div class="tool-desc">
-          Estimate your personal lifespan based on habits, stress, nutrition, and activity.
-          See how healthy changes add years to your life!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Pregnancy Size & Weight Tool">
-      <a href="Pregnancy_Size_Timeline.html" class="tool-card-link" aria-label="Open Pregnancy Size & Weight Tool">
-        <div class="tool-icon">🤰</div>
-        <div class="tool-title">Pregnancy Size & Weight Tool</div>
-        <div class="tool-desc">
-          Interactive tool for tracking pregnancy, baby size, and mom’s weight gain on a timeline.
-          Milestones and fruit sizes visualized!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Saving & Investment Tool">
-      <a href="saving.html" class="tool-card-link" aria-label="Open Saving & Investment Tool">
-        <div class="tool-icon">📈</div>
-        <div class="tool-title">Saving & Investment Tool</div>
-        <div class="tool-desc">
-          Visualize your investment growth, see when you’ll reach your goals, and plan for retirement. Set savings, contributions, goals, and see your future in real-world milestones.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open New Car Cost Tool">
-      <a href="new_car.html" class="tool-card-link" aria-label="Open New Car Cost Tool">
-        <div class="tool-icon">🚗</div>
-        <div class="tool-title">New Car Cost Tool</div>
-        <div class="tool-desc">
-          Explore total cost of car ownership. Set car price, loan, efficiency, and more—see example cars and get a time vs cost breakdown before you buy.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open College Planning Tool">
-      <a href="college.html" class="tool-card-link" aria-label="Open College Planning Tool">
-        <div class="tool-icon">🎓</div>
-        <div class="tool-title">College Planning Tool</div>
-        <div class="tool-desc">
-          Plan for college savings and expenses. Estimate tuition, set savings goals, project investment growth, and explore different scenarios to help you or your kids achieve their education dreams.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Sleep Quick Planner">
-      <a href="sleep.html" class="tool-card-link" aria-label="Open Sleep Quick Planner">
-        <div class="tool-icon">😴</div>
-        <div class="tool-title">Sleep Quick Planner</div>
-        <div class="tool-desc">
-          Instantly see how your nightly routine affects your sleep debt and overall sleep health. Adjust your typical sleep, wakeups, stress, and quality for the week and spot where you can improve!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Fuel Cost Simulator">
-      <a href="fuel_cost.html" class="tool-card-link" aria-label="Open Fuel Cost Simulator">
-        <div class="tool-icon">⛽</div>
-        <div class="tool-title">Fuel Cost Simulator</div>
-        <div class="tool-desc">
-          Estimate your car’s fuel cost over time. Pick your vehicle type, fuel price, and daily driving to see your long-term fuel spending.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Investment Property Analyzer">
-      <a href="investment_property.html" class="tool-card-link" aria-label="Open Investment Property Analyzer">
-        <div class="tool-icon">🏠💵</div>
-        <div class="tool-title">Investment Property Analyzer</div>
-        <div class="tool-desc">
-          Explore real estate investments. Set value, loan, rent, maintenance, and local growth to see your net gains over time—plus size/type examples and dynamic appreciation.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Stock Investment Simulator">
-      <a href="stock_sim.html" class="tool-card-link" aria-label="Open Stock Investment Simulator">
-        <div class="tool-icon">💹</div>
-        <div class="tool-title">Stock Investment Simulator</div>
-        <div class="tool-desc">
-          Pick your favorite stocks and simulate portfolio growth from the past year. Adjust investments and visualize historical value trends over time.
-        </div>
-      </a>
-    </div>
-    
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Feelings Helper">
-      <a href="feelings.html" class="tool-card-link" aria-label="Open Feelings Helper">
-        <div class="tool-icon">🧸</div>
-        <div class="tool-title">Feelings Helper</div>
-        <div class="tool-desc">
-          A gentle, interactive space for kids to name their feelings, try calming activities, draw, and read kind reminders. Created to support emotional well-being and self-expression.
-        </div>
-      </a>
-    </div>
+    </header>
 
-    <h2 class="section-title">Games</h2>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Tic Tac Toe">
-      <a href="tictactoe.html" class="tool-card-link" aria-label="Open Tic Tac Toe">
-        <div class="tool-icon">❌⭕</div>
-        <div class="tool-title">Tic Tac Toe</div>
-        <div class="tool-desc">
-          Classic Tic Tac Toe game! Play solo or challenge a friend for quick brain-boosting fun.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Flappy Flight">
-      <a href="flappyflight.html" class="tool-card-link" aria-label="Open Flappy Flight">
-        <div class="tool-icon">🛩️</div>
-        <div class="tool-title">Flappy Flight</div>
-        <div class="tool-desc">
-          Tap to fly and dodge obstacles in this addictive aviation-themed arcade game!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Craft & Mine">
-      <a href="craftmine.html" class="tool-card-link" aria-label="Open Craft & Mine">
-        <div class="tool-icon">⛏️</div>
-        <div class="tool-title">Craft & Mine</div>
-        <div class="tool-desc">
-          A 3D sandbox world. Build, explore, and place blocks to create your own adventure!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Hyperspace Shooter">
-      <a href="space.html" class="tool-card-link" aria-label="Open Hyperspace Shooter">
-        <div class="tool-icon">🌌</div>
-        <div class="tool-title">Hyperspace Shooter</div>
-        <div class="tool-desc">
-          Steer through hyperspace and blast incoming enemies with your powerful beam. How high can you score?
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Heads Up Game">
-      <a href="headup.html" class="tool-card-link" aria-label="Open Heads Up Game">
-        <div class="tool-icon">🎭</div>
-        <div class="tool-title">Heads Up Game</div>
-        <div class="tool-desc">
-          Pick a category, act it out, and see how many your friends can guess! Includes Funny Mode, mobile swipes, and scoring.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Tetris">
-      <a href="tetris.html" class="tool-card-link" aria-label="Open Tetris">
-        <div class="tool-icon">🟪</div>
-        <div class="tool-title">Tetris</div>
-        <div class="tool-desc">
-          Classic Tetris! Rotate and drop blocks to clear lines and rack up your high score.
-        </div>
-      </a>
-    </div>
-    
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Simon Says Game">
-      <a href="simonsays.html" class="tool-card-link" aria-label="Open Simon Says Game">
-        <div class="tool-icon">🟢🔴🟡🔵</div>
-        <div class="tool-title">Simon Says Game</div>
-        <div class="tool-desc">
-          Test your memory! Repeat the color pattern as it grows, and see how high you can score.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Dice Game">
-      <a href="dice.html" class="tool-card-link" aria-label="Open Dice Game">
-        <div class="tool-icon">🎲</div>
-        <div class="tool-title">Dice Game</div>
-        <div class="tool-desc">
-          Roll the dice and play for luck, probability, or just to settle a quick challenge.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Stopwatch Tool">
-      <a href="stopwatch.html" class="tool-card-link" aria-label="Open Stopwatch Tool">
-        <div class="tool-icon">⏱️</div>
-        <div class="tool-title">Stopwatch Tool</div>
-        <div class="tool-desc">
-          A simple, reliable stopwatch for tracking time, laps, and split timing for any activity.
-        </div>
-      </a>
-    </div>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
 
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Mars Trajectory Simulator">
-      <a href="mars_launch.html" class="tool-card-link" aria-label="Open Mars Trajectory Simulator">
-        <div class="tool-icon">🚀</div>
-        <div class="tool-title">Mars Trajectory Simulator</div>
-        <div class="tool-desc">
-          Set launch angle and velocity to guide your spacecraft to Mars! Includes orbital mechanics, real-time feedback, and mission outcomes.
-        </div>
-      </a>
-    </div>
+        <!-- Section: Life Tools -->
+        <section id="life-tools">
+            <h2 class="text-3xl font-bold text-white border-b-2 border-indigo-500/50 pb-3 mb-8">Life Tools</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div class="group">
+                    <a href="weight.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m6.5 12.5 3 3 6-6"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Weight & Wellness</h3>
+                            <p class="text-sm text-slate-400">Log calories, meals, and exercise to project your weight and waistline.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="muscle.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0"/><path d="M9 20V10"/><path d="M15 20V10"/><path d="M12 20v-2"/><path d="M6 12v2a6 6 0 0 0 12 0v-2"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Muscle Building</h3>
+                            <p class="text-sm text-slate-400">Plan and visualize your strength journey and projected muscle gain.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="life.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10c0-4.42-2.86-8.17-6.84-9.5c-.52-.17-1.16-.17-1.68 0A10 10 0 0 0 12 2z"/><path d="M12 12v5"/><path d="M12 7h.01"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Life Expectancy</h3>
+                            <p class="text-sm text-slate-400">Estimate your personal lifespan based on habits, stress, and activity.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="Pregnancy_Size_Timeline.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2.5a2.5 2.5 0 0 1 2.5 2.5V11a2.5 2.5 0 0 1-2.5 2.5h-1a2.5 2.5 0 0 1-2.5-2.5V5a2.5 2.5 0 0 1 2.5-2.5h1z"/><path d="M12.5 13.5c-2 0-5 2-5 5v2h10v-2c0-3-3-5-5-5z"/><circle cx="8" cy="8" r="2"/><path d="M12 13a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v5"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Pregnancy Tracker</h3>
+                            <p class="text-sm text-slate-400">Track pregnancy, baby size, and mom’s weight gain on a timeline.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="saving.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Saving & Investment</h3>
+                            <p class="text-sm text-slate-400">Visualize investment growth and plan for retirement goals.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="new_car.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16.5V18a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1.3"/><path d="m18 12 2-2-2-2"/><path d="M10 12h10"/><path d="M7 2v4"/><path d="M5 4h4"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">New Car Cost</h3>
+                            <p class="text-sm text-slate-400">Explore total cost of car ownership before you buy.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="college.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2Z"/><path d="M12 12v-2"/><path d="M12 7h.01"/><path d="m14 14-2 2-2-2"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">College Planning</h3>
+                            <p class="text-sm text-slate-400">Plan for college savings, expenses, and project investment growth.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="sleep.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M16 16A5 5 0 0 0 12 8v4l-4 2"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Sleep Planner</h3>
+                            <p class="text-sm text-slate-400">See how your nightly routine affects your sleep debt and health.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="fuel_cost.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2"/><path d="M18 12h-5"/><path d="m15 9 3 3-3 3"/><path d="M8 12h.01"/><path d="M8 16h.01"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Fuel Cost Simulator</h3>
+                            <p class="text-sm text-slate-400">Estimate your car’s fuel cost and long-term spending.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="investment_property.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="m15 14-3-3-3 3"/><path d="M12 14V2"/><path d="M12 2H7a5 5 0 0 0-5 5v5a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5h-5"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Investment Property</h3>
+                            <p class="text-sm text-slate-400">Explore real estate investments and see your net gains over time.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="stock_sim.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/><path d="M14 9h5v5"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Stock Simulator</h3>
+                            <p class="text-sm text-slate-400">Simulate portfolio growth from the past year with your favorite stocks.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="feelings.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-indigo-500 hover:-translate-y-1">
+                            <div class="bg-indigo-900/50 text-indigo-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 20a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2z"/><path d="M9.5 20a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2z"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/><path d="M7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"/><path d="M17 10a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Feelings Helper</h3>
+                            <p class="text-sm text-slate-400">A gentle space for kids to name feelings and try calming activities.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Two Player Dodger">
-      <a href="two_dodger.html" class="tool-card-link" aria-label="Open Two Player Dodger">
-        <div class="tool-icon">👯</div>
-        <div class="tool-title">Two Player Dodger</div>
-        <div class="tool-desc">
-          Team up to dodge falling obstacles in this fast-paced two-player arcade challenge! Survive as long as you can together!
-        </div>
-      </a>
-    </div>
+        <!-- Section: Games -->
+        <section id="games" class="mt-16">
+            <h2 class="text-3xl font-bold text-white border-b-2 border-cyan-500/50 pb-3 mb-8">Games</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                 <div class="group">
+                    <a href="tictactoe.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M18.36 18.36A9 9 0 0 0 5.64 5.64"/><path d="M18.36 5.64A9 9 0 0 1 5.64 18.36"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Tic Tac Toe</h3>
+                            <p class="text-sm text-slate-400">Classic game for solo play or challenging a friend.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="flappyflight.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Flappy Flight</h3>
+                            <p class="text-sm text-slate-400">Tap to fly and dodge obstacles in this addictive arcade game.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="craftmine.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h1z"/><path d="M18 22a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1z"/><path d="M6 22a2 2 0 0 0 2-2V14a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1z"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Craft & Mine</h3>
+                            <p class="text-sm text-slate-400">A 3D sandbox world. Build, explore, and create your own adventure!</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="space.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4.24 4.24 0 0 1 16.5 4.2l-4.24 4.24a1.41 1.41 0 0 0 2 2l4.24-4.24a4.24 4.24 0 0 1 5.66 5.66z"/><path d="m18 8.5-4 4"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Hyperspace Shooter</h3>
+                            <p class="text-sm text-slate-400">Steer through hyperspace and blast incoming enemies.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="headup.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M12 12v1"/><path d="M12 8V7"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Heads Up Game</h3>
+                            <p class="text-sm text-slate-400">Pick a category, act it out, and see how many your friends can guess!</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="tetris.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="4" width="6" height="6" rx="1"/><rect x="9" y="14" width="6" height="6" rx="1"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Tetris</h3>
+                            <p class="text-sm text-slate-400">Classic Tetris! Rotate and drop blocks to clear lines and rack up points.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="simonsays.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z"/><path d="M12 6v6l4 2"/><path d="M18 12h-2a4 4 0 0 0-4-4V6a6 6 0 0 1 6 6z"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Simon Says</h3>
+                            <p class="text-sm text-slate-400">Test your memory! Repeat the color pattern as it grows.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="dice.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M7 7h.01"/><path d="M11 7h.01"/><path d="M15 7h.01"/><path d="M7 11h.01"/><path d="M11 11h.01"/><path d="M15 11h.01"/><path d="M7 15h.01"/><path d="M11 15h.01"/><path d="M15 15h.01"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Dice Game</h3>
+                            <p class="text-sm text-slate-400">Roll the dice and play for luck, probability, or to settle a challenge.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="stopwatch.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 6-4 6h8l-4 6"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Stopwatch</h3>
+                            <p class="text-sm text-slate-400">A simple, reliable stopwatch for tracking time, laps, and split timing.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="mars_launch.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14.5c-2 0-4-1-4-3.5C6 8.5 10 5 12 5s6 3.5 6 6c0 2.5-2 3.5-4 3.5"/><path d="M12 5V2"/><path d="M12 18v3"/><path d="M10 18h4"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Mars Trajectory</h3>
+                            <p class="text-sm text-slate-400">Set launch angle and velocity to guide your spacecraft to Mars!</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="two_dodger.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-cyan-500 hover:-translate-y-1">
+                            <div class="bg-cyan-900/50 text-cyan-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 9.5c.2.8.1 1.7-.2 2.5l-2.9 8c-.4 1.1.3 2.4 1.5 2.8 1.2.4 2.4-.3 2.8-1.5l2.9-8c.3-.8.4-1.7.2-2.5"/><path d="m13.4 14.5.8-2.5c.3-1 .1-2.2-.6-3s-1.8-1.2-2.8-.9l-2.5.8c-1 .3-1.7 1.2-1.8 2.2s.3 2 .9 2.8l.8 2.5"/><path d="m13.4 14.5.8-2.5c.3-1 .1-2.2-.6-3s-1.8-1.2-2.8-.9l-2.5.8c-1 .3-1.7 1.2-1.8 2.2s.3 2 .9 2.8l.8 2.5"/><path d="M12 2a2.5 2.5 0 0 1 2.5 2.5c0 .4-.1.8-.2 1.2"/><path d="M12 2a2.5 2.5 0 0 0-2.5 2.5c0 .4.1.8.2 1.2"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Two Player Dodger</h3>
+                            <p class="text-sm text-slate-400">Team up to dodge falling obstacles in this fast-paced arcade challenge!</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
-    <h2 class="section-title">Quizzes &amp; Practice</h2>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Drone Part 107 Quiz">
-      <a href="part107.html" class="tool-card-link" aria-label="Open Drone Part 107 Quiz">
-        <div class="tool-icon">🚁</div>
-        <div class="tool-title">Drone Part 107 Quiz</div>
-        <div class="tool-desc">
-          Test your knowledge and prep for your FAA Part 107 Remote Pilot exam with realistic quizzes.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Amateur Radio License Quiz">
-      <a href="hamradio.html" class="tool-card-link" aria-label="Open Amateur Radio License Quiz">
-        <div class="tool-icon">📻</div>
-        <div class="tool-title">Amateur Radio License Quiz</div>
-        <div class="tool-desc">
-          Practice and master your FCC ham radio exam with a mix of real questions and instant feedback.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open N-400 Civics Test Practice">
-      <a href="n-400.html" class="tool-card-link" aria-label="Open N-400 Civics Test Practice">
-        <div class="tool-icon">🇺🇸</div>
-        <div class="tool-title">N-400 Civics Test Practice</div>
-        <div class="tool-desc">
-          Prepare for the U.S. citizenship civics test with interactive questions, instant feedback, hints, and a full review of your results. Practice with 100 real civics questions, track your timing, and build confidence!
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open California DMV Practice Test">
-      <a href="ca-dmv.html" class="tool-card-link" aria-label="Open California DMV Practice Test">
-        <div class="tool-icon">🚗</div>
-        <div class="tool-title">California DMV Practice Test</div>
-        <div class="tool-desc">
-          Get ready for your California driver’s license with interactive practice questions based on the real DMV knowledge test. Includes hints, instant feedback, quiz mode with grading, and full review.
-        </div>
-      </a>
-    </div>
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open First Aid Quiz">
-      <a href="firstaid.html" class="tool-card-link" aria-label="Open First Aid Quiz">
-        <div class="tool-icon">🚑</div>
-        <div class="tool-title">First Aid Quiz</div>
-        <div class="tool-desc">
-          Practice life-saving scenarios. Learn what to do in an emergency, get feedback, and boost your safety knowledge.
-        </div>
-      </a>
-    </div>
-    
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Typing Speed Test">
-      <a href="typing-test.html" class="tool-card-link" aria-label="Open Typing Speed Test">
-        <div class="tool-icon">⌨️</div>
-        <div class="tool-title">Typing Speed Test</div>
-        <div class="tool-desc">
-          Measure your typing speed, accuracy, and WPM with interactive modes for text, words, and code.
-        </div>
-      </a>
-    </div>
+        <!-- Section: Quizzes & Practice -->
+        <section id="quizzes" class="mt-16">
+            <h2 class="text-3xl font-bold text-white border-b-2 border-amber-500/50 pb-3 mb-8">Quizzes & Practice</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div class="group">
+                    <a href="part107.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18a6 6 0 0 0 6-6 6 6 0 0 0-6-6 6 6 0 0 0-6 6 6 6 0 0 0 6 6z"/><path d="M22 12c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="m2 12 h2"/><path d="m20 12 h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Drone Part 107 Quiz</h3>
+                            <p class="text-sm text-slate-400">Prep for your FAA Part 107 Remote Pilot exam with realistic quizzes.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="hamradio.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 18.36a9 9 0 1 0-12.72-12.72"/><path d="M12 12a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/><path d="m12 2 4 4"/><path d="m2 12 4 4"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Amateur Radio Quiz</h3>
+                            <p class="text-sm text-slate-400">Practice and master your FCC ham radio exam with real questions.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="n-400.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">N-400 Civics Test</h3>
+                            <p class="text-sm text-slate-400">Prepare for the U.S. citizenship civics test with interactive questions.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="ca-dmv.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M18 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/><path d="M6 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">CA DMV Practice Test</h3>
+                            <p class="text-sm text-slate-400">Get ready for your California driver’s license with practice questions.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="firstaid.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-1a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h1z"/><path d="M9 10h6"/><path d="M12 7v6"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">First Aid Quiz</h3>
+                            <p class="text-sm text-slate-400">Practice life-saving scenarios and boost your safety knowledge.</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="group">
+                    <a href="typing-test.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-amber-500 hover:-translate-y-1">
+                            <div class="bg-amber-900/50 text-amber-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Typing Speed Test</h3>
+                            <p class="text-sm text-slate-400">Measure your typing speed, accuracy, and WPM with interactive modes.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
-    <h2 class="section-title">Experimental</h2>
+        <!-- Section: Engineering & Math -->
+        <section id="engineering-math" class="mt-16">
+            <h2 class="text-3xl font-bold text-white border-b-2 border-green-500/50 pb-3 mb-8">Engineering & Math</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                 <div class="group">
+                    <a href="tether_launch.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-green-500 hover:-translate-y-1">
+                            <div class="bg-green-900/50 text-green-400 p-3 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10c0-4.42-2.86-8.17-6.84-9.5"/><path d="M12 12v-2a2.83 2.83 0 0 1 2-2.83"/><path d="M12 12v2a2.83 2.83 0 0 0-2 2.83"/><path d="M12 12h2a2.83 2.83 0 0 1 2.83 2"/><path d="M12 12H9.17a2.83 2.83 0 0 1-2.83-2"/><path d="m14 14 3-3"/><path d="M12 22l6-6"/></svg>
+                            </div>
+                            <h3 class="font-semibold text-white mb-2">Orbital Launch Tether</h3>
+                            <p class="text-sm text-slate-400">Simulate launching payloads into orbit using a rotating tether system.</p>
+                        </div>
+                    </a>
+                </div>
+                 <div class="group">
+                    <a href="skyhook.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-green-500 hover:-translate-y-1">
+                            <div class="bg-green-900/50 text-green-400 p-3 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12c-2.48 0-4.5 2.02-4.5 4.5c0 1.61.85 3.03 2.12 3.85C15.6 22.46 13.4 24 10.5 24c-4.14 0-7.5-3.36-7.5-7.5c0-2.38 1.11-4.5 2.82-5.88"/><path d="M19.5 12c2.48 0 4.5-2.02 4.5-4.5c0-1.61-.85-3.03-2.12-3.85C20.4 1.54 18.6 0 16.5 0c-4.14 0-7.5 3.36-7.5 7.5c0 2.38 1.11 4.5 2.82 5.88"/><path d="M12 12v-2a2 2 0 0 1 2-2h2"/><path d="M12 12v2a2 2 0 0 0 2 2h2"/></svg>
+                            </div>
+                            <h3 class="font-semibold text-white mb-2">Skyhook Simulator</h3>
+                            <p class="text-sm text-slate-400">Model a rotating skyhook to catch and launch spacecraft from orbit.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
+        <!-- Section: Experimental -->
+        <section id="experimental" class="mt-16">
+            <h2 class="text-3xl font-bold text-white border-b-2 border-rose-500/50 pb-3 mb-8">Experimental</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                 <div class="group">
+                    <a href="jumppenguin.html" class="tool-card-link block h-full">
+                        <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 h-full flex flex-col items-center text-center transition-all duration-300 ease-in-out hover:bg-slate-800 hover:border-rose-500 hover:-translate-y-1">
+                            <div class="bg-rose-900/50 text-rose-400 p-3 rounded-full mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.3 7.3a2.5 2.5 0 0 1 3.4 0 .9.9 0 0 0 1.3-.5c.2-.5 0-1.1-.5-1.3a6.5 6.5 0 0 0-8.5 0c-.5.2-.7.8-.5 1.3.2.5.8.7 1.3.5a2.5 2.5 0 0 1 3.5 0z"/><path d="M12 16a4 4 0 0 0-8 0c0 2 1.8 4 4 4s4-2 4-4z"/><path d="M8.5 8.5c-1 0-2.5 1-2.5 2.5"/><path d="M18 10.5c0-1.5-1.5-2.5-2.5-2.5"/></svg></div>
+                            <h3 class="font-semibold text-white mb-2">Jump Penguin</h3>
+                            <p class="text-sm text-slate-400">Help the penguin jump platforms and collect points. Cute and fun!</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
 
+    </main>
 
-    <div class="tool-card" tabindex="0" role="link" aria-label="Open Jump Penguin">
-      <a href="jumppenguin.html" class="tool-card-link" aria-label="Open Jump Penguin">
-        <div class="tool-icon">🐧</div>
-        <div class="tool-title">Jump Penguin</div>
-        <div class="tool-desc">
-          Help the penguin jump platforms and collect points. Cute, fast, and fun for all ages!
+    <!-- Footer Section -->
+    <footer class="bg-slate-950/70 border-t border-slate-800 mt-12">
+        <div class="container mx-auto px-6 py-8 text-center text-sm text-slate-500">
+            <p class="font-bold text-slate-400">Disclaimer</p>
+            <p class="mt-2 max-w-3xl mx-auto">This site is for personal and educational purposes only. Wellness information and estimators are not a substitute for medical, legal, or financial advice. All tools © 2024–2025 Dustin Gamble and contributors. All rights reserved.</p>
+            <p class="mt-2">Please do not copy, redistribute, or resell these tools or materials without permission.</p>
         </div>
-      </a>
-    </div>
-  </main>
-  <footer style="width:100%;text-align:center;margin:34px 0 22px 0;font-size:0.97em;color:#89a6c4;opacity:0.83;">
-    <div>
-      <b>Disclaimer:</b> This site is for personal and educational purposes only. Wellness information and estimators are not a substitute for medical, legal, or financial advice. All tools © 2024–2025 Dustin Gamble and contributors. All rights reserved.<br>
-      Please do not copy, redistribute, or resell these tools or materials without permission.
-    </div>
-  </footer>
+    </footer>
+
 </body>
 </html>

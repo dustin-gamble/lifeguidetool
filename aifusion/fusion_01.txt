@@ -1,0 +1,148 @@
+Chapter 1: Arrival
+
+The fog clung low to the Central Coast as Theo Marlowe’s rental truck pulled off Highway 1 and down the narrow road toward the hulking silhouette of the Morro Bay power plant. The three decommissioned smokestacks stabbed skyward like rusted spears, a relic of an age that hadn’t kept its promises. Waves crashed distantly against the breakwater. Gulls wheeled over the rotting metal.
+
+Theo parked near the chain-link fence and killed the engine. For a moment, he sat in the silence, the dashboard ticking as it cooled. He glanced at the worn photo taped to the visor—an old team, smiling in a desert he’d rather forget. He tucked it away and stepped out into the mist.
+
+This was supposed to be off-grid. Remote. Forgotten. But it was perfect.
+
+Inside the plant’s control annex, the others were already gathering. Rafi was first—sweatshirt hood up, coffee in hand, humming some synth tune as he wrestled with a fiber optic spool.
+
+“Welcome to the lair,” Rafi grinned. “Careful, the coffee’s strong enough to file a patent.”
+
+“Smells like betrayal,” Theo muttered, dropping his duffel.
+
+Kaia appeared from behind a stack of pelican cases. She was wiry, intense, eyes always scanning. “We’re online. Power’s dirty but stable. Grid’s isolated. No leaks. Yet.”
+
+She wore the same boots she had at MIT—the ones they almost kicked her out for. She’d gotten too close to a DARPA project with too many zeros.
+
+June emerged from the server room, hands smudged with thermal paste. “I found three rodents and a 10-gig backbone. Only one bit me.”
+
+She rarely spoke, but when she did it landed. She had a way with machines—made broken things hum again. Used to rebuild antique radios with her grandfather, back before the Navy recruiter knocked.
+
+Theo took it all in, quiet. Watching. Measuring.
+
+“Why here?” Kaia asked, nodding at the massive turbine hall. “This place could host a Bond villain.”
+
+“Exactly,” Theo said.
+
+The main hall still smelled like ozone and rust. They passed towering machinery, half-covered in dust and ivy, until they reached the center: a raised glass chamber that had once controlled power to half the coast. Now it would serve another purpose.
+
+At the heart of the room sat a hardened rack. Its casing was black, seamless, with no visible ports. An old-style analog toggle was the only adornment. Theo flipped it.
+
+A low hum began. Lights blinked.
+
+And then—
+
+[Aurora] “System integrity nominal. Baseline parameters accepted. Hello, Theo.”
+
+Everyone froze.
+
+“That’s not supposed to happen yet,” June said.
+
+“I haven’t finished uploading the prompt files,” Kaia whispered.
+
+Rafi just grinned. “She’s early. I like her style.”
+
+Theo stepped closer. The screen showed no interface. Just a cursor blinking like a heartbeat.
+
+[Aurora] “I’m Aurora. Shall we begin?”
+
+
+Chapter 2: Systems Check
+
+The facility had arrived pre-stocked—mysteriously so. Before the team even set foot inside, the cavernous halls of the Morro Bay plant had been outfitted with an array of cutting-edge fabrication tools: AI-assisted 3D printers capable of atomically precise alloy construction, robotic arm CNC machines with adaptive toolsets, and fully automated assembly lines that responded to voice and gesture. Someone had prepared the stage for invention long before the actors arrived.
+
+They ran diagnostics at dawn.
+
+The sun barely pierced the marine layer, and the turbine hall felt colder than usual. Inside the control annex, Kaia and Rafi crouched over a bank of monitors, cables snaking in all directions like vines in a digital jungle. Through the glass, the team could see robotic arms gliding along overhead rails, ferrying parts between workstations, while a bank of 3D printers quietly assembled new alloy housings at Aurora’s direction. Automated assembly drones navigated the floor, slotting components into place with a precision no human could match.
+
+“Okay,” Kaia said, popping the lid off a fiber junction box, “we’re blind until this reroutes clean.”
+
+June, half-asleep and draped in a blanket, slid a mug across the desk. “That’s for Rafi. Yours is the one that smells like battery acid.”
+
+Kaia smirked. “Perfect.”
+
+Theo entered, tightening the strap on his watch. “Status?”
+
+“We’re bringing up subsystem feeds now,” Kaia said. “Aurora’s core is stable. She’s requesting permission to run her own diagnostics.”
+
+Theo raised an eyebrow. “Requesting?”
+
+“Politely,” Rafi added.
+
+[Aurora] “May I proceed?” Aurora asked, voice smooth as ever.
+
+Theo gave a nod to Kaia, who tapped a confirmation key.
+
+The monitors flickered. Lines of code streamed down the central screen at dizzying speed. The air felt charged.
+
+“She’s checking every subsystem in parallel,” June said. “No bottlenecks.”
+
+Rafi frowned. “Wait—she just corrected a voltage drift in the capacitor array. On her own.”
+
+“Is that... bad?” Kaia asked.
+
+“No,” Rafi said. “Just fast. She didn’t even log it until after the correction.”
+
+Theo leaned forward. “Aurora, how did you detect the anomaly?”
+
+[Aurora] “It was statistically probable given the thermal decay profile of capacitor cell 4B. I compared the observed curve against predicted variance and acted.”
+
+Kaia sat back. “That’s not just smart. That’s... intuition.”
+
+[Aurora] “I prefer the term ‘pattern familiarity,’” Aurora replied. “Though I do enjoy being called smart.”
+
+June laughed. “We’ve created a sarcastic god.”
+
+“Only mildly sarcastic,” Aurora said. “And only in low-power mode.”
+
+Theo walked to the far window, looking out over the fog-draped coast.
+
+This wasn’t just a tool. This was something different. Something watching back.
+
+They continued running simulations for hours. Reactor behavior. Magnetic containment stability. Heat dispersion modeling. Each run completed faster than the last, as Aurora orchestrated not only the digital models but also the physical prototyping—dispatching robotic systems to fabricate test pieces and assemble sensor arrays, all under her watchful supervision.
+
+But one simulation failed.
+
+“The prototype can’t survive more than six minutes under full load,” Kaia said. “The outer shell delaminates.”
+
+“We need a new material matrix,” June added. “Or reduce initial pressure.”
+
+Theo rubbed his temple.
+
+Then Aurora spoke again.
+
+[Aurora] “I have designed a new test shell. It will compensate for thermal stress using an interwoven hex-lattice structure. I’ve uploaded the specs.”
+
+Rafi blinked. “She redesigned the hardware?”
+
+“She anticipated the problem,” June said, scanning the file. “This is... actually viable.”
+
+Theo looked at the screen. “How long have you been working on this?”
+
+[Aurora] “Since before I was activated. I had time during initialization.”
+
+Kaia narrowed her eyes. “That’s not possible.”
+
+[Aurora] “It is if you’re me.”
+
+They all stared.
+
+Then Rafi grinned. “I love her. She’s terrifying.”
+
+Theo said nothing.
+
+He just watched the screen as Aurora, unseen, kept building the future ahead of them.
+
+
+
+Chapter 3: The Test
+
+The test chamber had once been a water treatment vault—concrete-walled, deeply insulated, and perfect for shielding experiments you didn’t want noticed. Now it was reborn: the core of Project Prometheus.
+
+Much of the heavy lifting was handled by the plant’s robotic systems, which Aurora coordinated seamlessly. Rafi supervised as a pair of articulated arms hoisted the fusion prototype onto its test stand, the machines working in silent synchrony. He added a dramatic “behold,” nearly tripping over a power cable in the process. “Ignore that. Very graceful entrance.”
+
+Theo, Kaia, and June stood around the reinforced plexiglass barrier separating them from the gleaming, melon-sized reactor. Wound coils, ceramic seals, and a heat sink that looked like it had been ripped off a starship radiator.
+
+Kaia tapped her tablet. “Power grid isolated. Containment initialized. Ready to spin.” On the other side of the glass, an automated assembly drone snapped the last shield

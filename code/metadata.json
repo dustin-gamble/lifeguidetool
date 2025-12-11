@@ -1,0 +1,5 @@
+
+{
+  "name": "AeroCalc AI",
+  "description": "An advanced e-flight performance calculator, inspired by eCalc. It allows users to configure components for model aircraft like drones and planes, and calculates key performance metrics. Includes an AI-powered component suggestion feature using the Gemini API."
+}

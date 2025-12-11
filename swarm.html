@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Swarm Simulator - Full Feature Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMVIROPtOQ9dNAESeLI+f4cgUpaU5aaNErqM8ECRLQC9PcAFG" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        #map { height: 100%; width: 100%; background-color: #111827; cursor: default; }
+        #map.tasking-mode { cursor: crosshair; }
+        .sidebar-panel { scrollbar-width: thin; scrollbar-color: #4b5563 #1f2937; }
+        .sidebar-panel::-webkit-scrollbar { width: 8px; }
+        .sidebar-panel::-webkit-scrollbar-track { background: #1f2937; }
+        .sidebar-panel::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 4px; border: 2px solid #1f2937; }
+        .header { background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #374151; }
+        .drone-icon {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e5e7eb" stroke="%234b5563" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5-10-5-10 5z"/></svg>');
+            background-size: contain;
+            transition: transform 0.2s ease-out, filter 0.3s;
+        }
+        .drone-icon.selected { filter: drop-shadow(0 0 5px #06b6d4) drop-shadow(0 0 10px #06b6d4) brightness(1.2); }
+        .drone-icon.found-target {
+             filter: drop-shadow(0 0 8px #10b981) drop-shadow(0 0 15px #10b981) brightness(1.5);
+             animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2d3748; color: #e5e7eb; border-radius: 8px; }
+        .env-object-icon { text-align: center; line-height: 1; transition: transform 0.2s linear; }
+        .wifi-range-circle, .waypoint-marker { pointer-events: none; }
+        .camera-feed-map { border-radius: 0.5rem; border: 2px solid #374151; }
+        .modal-content h3 { font-size: 1.25rem; font-weight: 600; color: #67e8f9; margin-bottom: 0.5rem; }
+        .modal-content h4 { font-size: 1.1rem; font-weight: 600; color: #a5f3fc; margin-top: 1rem; margin-bottom: 0.25rem; }
+        .modal-content p, .modal-content li { color: #d1d5db; }
+        .modal-content code { background-color: #111827; color: #e5e7eb; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.9em; }
+        .modal-content ul { list-style-position: inside; padding-left: 0.5rem; }
+        .leaflet-control-layers { background: rgba(31, 41, 55, 0.8); backdrop-filter: blur(5px); border: 1px solid #4b5563; border-radius: 0.5rem; color: #e5e7eb; }
+        .leaflet-control-layers-selector { margin-right: 5px; }
+        .katex-display { margin: 0.5em 0; }
+        /* Speed Toggle Styles */
+        .speed-toggle .dot { transform: translateX(0); transition: transform 0.2s ease-in-out; }
+        .speed-toggle input:checked ~ .dot { transform: translateX(100%); }
+        .speed-toggle input:checked ~ .block { background-color: #06b6d4; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="header w-full py-3 px-6 flex items-center justify-between z-20">
+        <div class="flex items-center">
+            <svg class="w-8 h-8 mr-3 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 6.984 6 7.664 6 8.58c0 .916.845 1.596 1.976 1.614 1.327.018 2.672.018 4.024 0 .636 0 1.25-.114 1.844-.328m-2.132 3.338c.944.328 1.955.522 3.024.522 1.069 0 2.08-.194 3.024-.522m-6.048 0c-.944.328-1.955.522-3.024-.522-1.069 0-2.08-.194-3.024.522m12.096 0c.944.328 1.955.522 3.024.522 1.069 0 2.08.194 3.024.522M12 18.75v-1.5m0 1.5c-1.355 0-2.697-.056-4.024-.166C6.845 18.016 6 17.336 6 16.42c0-.916.845-1.596 1.976-1.614 1.327-.018 2.672-.018 4.024 0 .636 0 1.25.114 1.844-.328m-2.132-3.338c.944-.328 1.955-.522 3.024-.522 1.069 0 2.08.194 3.024.522m-6.048 0c-.944-.328-1.955-.522-3.024-.522-1.069 0-2.08-.194-3.024.522m12.096 0c.944-.328 1.955.522 3.024-.522 1.069 0 2.08.194 3.024.522" /></svg>
+            <h1 class="text-2xl font-bold text-gray-200">Drone Innovation Garage</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-400">Swarm Control Interface v9.4 (Tasking Mode)</span>
+            <button id="techInfoButton" title="Show Technical Info" class="text-gray-400 hover:text-cyan-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 h-full overflow-hidden">
+        <div class="flex-1 relative">
+            <div id="map" class="w-full h-full"></div>
+             <!-- AI Command Panel (Overlay) -->
+            <div id="ai-command-overlay" class="absolute bottom-4 left-4 w-96 z-[1000] bg-gray-800/50 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-700">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-lg text-cyan-400">AI Command</h3>
+                        <button id="aiHelpButton" title="AI Command Help" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </button>
+                    </div>
+                    <div class="bg-gray-900/50 rounded-lg p-3">
+                        <textarea id="aiCommandInput" class="w-full bg-gray-900 border border-gray-600 rounded-md p-2 text-sm text-gray-200 focus:ring-2 focus:ring-cyan-500 focus:outline-none" rows="2" placeholder="e.g., find the red truck"></textarea>
+                        <div class="relative">
+                            <button id="commonCommandsButton" class="text-xs text-cyan-400 hover:text-cyan-300 mt-1">Common Commands</button>
+                            <div id="commonCommandsPopup" class="hidden absolute bottom-full mb-2 w-full bg-gray-700 rounded-md shadow-lg p-2 text-sm space-y-1">
+                                <button class="w-full text-left bg-gray-600 hover:bg-gray-500 p-2 rounded text-white transition-colors">find the red truck</button>
+                                <button class="w-full text-left bg-gray-600 hover:bg-gray-500 p-2 rounded text-white transition-colors">all drones blanket the area</button>
+                                <button class="w-full text-left bg-gray-600 hover:bg-gray-500 p-2 rounded text-white transition-colors">send all drones to dash to the library</button>
+                                <button class="w-full text-left bg-gray-600 hover:bg-gray-500 p-2 rounded text-white transition-colors">all drones fly north</button>
+                            </div>
+                        </div>
+                        <button id="sendCommandButton" class="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-md transition-colors flex items-center justify-center">
+                            <span id="buttonText">Send Command</span>
+                            <svg id="buttonSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </button>
+                        <p id="aiCommandStatus" class="text-xs text-gray-400 mt-2 h-4"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="w-96 bg-gray-800/50 backdrop-blur-sm p-4 flex flex-col shadow-2xl border-l border-gray-700 z-10 sidebar-panel overflow-y-auto">
+            <h2 class="text-xl font-bold mb-2 text-gray-300 border-b border-gray-700 pb-2 flex-shrink-0">Swarm Status</h2>
+            <div class="bg-gray-900/50 rounded-lg p-3 mb-4 text-sm flex-shrink-0">
+                <div class="grid grid-cols-2 gap-1 items-center">
+                    <div>Total: <span id="totalDrones" class="font-bold">0</span></div>
+                    <div class="flex items-center space-x-2">
+                        <button id="selectAllButton" title="Select All Drones" class="text-gray-400 hover:text-cyan-400 transition-colors">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <span>Selected: <span id="selectedDronesCount" class="font-bold">0</span></span>
+                    </div>
+                    <div>Orbiting: <span id="orbitingDrones" class="font-bold">0</span></div>
+                    <div>Moving: <span id="movingDrones" class="font-bold">0</span></div>
+                </div>
+                <div class="mt-2 pt-2 border-t border-gray-700">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="showTrailsToggle" class="form-checkbox h-4 w-4 bg-gray-700 border-gray-600 rounded text-cyan-500 focus:ring-cyan-500">
+                        <span>Show All Trails</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="infoPanelContainer" class="flex-grow"></div>
+        </div>
+    </div>
+
+    <!-- Technical Info Modal -->
+    <div id="techInfoModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[2000]">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-200">Technical Report</h2>
+                <button id="closeModalButton" class="text-gray-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div class="p-6 overflow-y-auto modal-content">
+                <p class="text-sm text-gray-400 italic mb-4">Developed by Dustin Gamble using AI</p>
+                <h3>Abstract</h3>
+                <p>This document details the technical architecture and underlying principles of the Drone Swarm Simulator, a web-based platform for visualizing and commanding unmanned aerial vehicles (UAVs) in a real-world geographical context. The system integrates a dynamic physics model, sensor simulation, and a natural language command interface powered by the Gemini Large Language Model (LLM) to provide an interactive and extensible simulation environment.</p>
+                
+                <h3>System Architecture</h3>
+                <h4>Frontend & Visualization</h4>
+                <p>The simulator is built entirely with standard web technologies, ensuring maximum portability and accessibility without requiring specialized software.</p>
+                <ul>
+                    <li><strong>HTML5 & Tailwind CSS:</strong> The core structure and modern, responsive user interface are built with HTML5 and styled using the utility-first Tailwind CSS framework.</li>
+                    <li><strong>Leaflet.js:</strong> This open-source library is the cornerstone of the visualization layer. It renders the interactive map, drone markers, environmental objects, and overlays like sensor ranges and flight paths. It was chosen over a 2D canvas for its inherent support for geodesic data and rich cartographic features.</li>
+                </ul>
+                <h4>Core Logic & Simulation Loop</h4>
+                <p>The simulation's state is managed and updated in a continuous loop, a pattern common in real-time applications and games.</p>
+                <ul>
+                    <li><strong>JavaScript (ES6+):</strong> All client-side logic is written in modern JavaScript. The system is architected in an object-oriented fashion, primarily around the <code>Drone</code> and <code>SwarmManager</code> classes, which encapsulate the state and behavior of the swarm.</li>
+                    <li><strong>Game Loop:</strong> The simulation is driven by the <code>requestAnimationFrame</code> browser API. This ensures that updates and renderings are performed efficiently and are synchronized with the browser's paint cycle, leading to smooth animations. Each frame, the loop iterates through every drone, updates its state, and redraws it on the map.</li>
+                </ul>
+
+                <h3>Core Physics & Geodesic Calculations</h3>
+                <p>Drone movement is not based on a simple 2D grid but on geodesic calculations that account for the Earth's curvature, providing a more realistic simulation.</p>
+                <h4>Bearing Calculation</h4>
+                <p>To determine the direction a drone must travel from a starting point $(\phi_1, \lambda_1)$ to a target $(\phi_2, \lambda_2)$, the initial bearing $\theta$ is calculated. The formula used is:</p>
+                <div class="text-center py-2">$\theta = \text{atan2}(\sin(\Delta\lambda) \cdot \cos(\phi_2), \cos(\phi_1) \cdot \sin(\phi_2) - \sin(\phi_1) \cdot \cos(\phi_2) \cdot \cos(\Delta\lambda))$</div>
+                <p>Where $\phi$ is latitude, $\lambda$ is longitude, and $\Delta\lambda = \lambda_2 - \lambda_1$.</p>
+                
+                <h4>Destination Calculation</h4>
+                <p>Given a starting point, a bearing $\theta$, and a distance $d$, the destination point $(\phi_2, \lambda_2)$ is calculated using the spherical law of cosines. The angular distance $\delta$ is first found by $\delta = d/R$, where $R$ is the Earth's radius (~6371 km).</p>
+                <div class="text-center py-2">$\phi_2 = \text{asin}(\sin(\phi_1) \cdot \cos(\delta) + \cos(\phi_1) \cdot \sin(\delta) \cdot \cos(\theta))$</div>
+                <div class="text-center py-2">$\lambda_2 = \lambda_1 + \text{atan2}(\sin(\theta) \cdot \sin(\delta) \cdot \cos(\phi_1), \cos(\delta) - \sin(\phi_1) \cdot \sin(\phi_2))$</div>
+                <p>The <code>calculateDestination</code> function includes several guard-rails to handle potential floating-point inaccuracies and ensure valid coordinates are always produced.</p>
+
+                <h3>AI & Command Processing</h3>
+                <p>The natural language command interface utilizes the Google Gemini API to translate user intent into actionable commands.</p>
+                <h4>Full AI Prompt Template</h4>
+                <p>The following template is sent to the Gemini API. The placeholders are filled with real-time simulation data before the request is made.</p>
+                <pre class="bg-gray-900 p-2 rounded-md text-xs overflow-x-auto"><code>You are a drone swarm command parser. Convert the user's request into a JSON command.
+The user is looking at a map of San Luis Obispo.
+Known locations: ${knownObjects}.
+Currently selected drones: ${selectedSerials}.
+If specific drones are selected and the user does not explicitly say 'all', assume the command applies ONLY to the selected drones. In this case, set 'target' to 'selected'. Otherwise, determine if the target is 'all' or a specific serial number.
+Valid commands are 'select', 'task', 'search', 'area_search'.
+For 'task', if a known location is mentioned, use its coordinates.
+For 'search', the 'query' should be the object to find, e.g., 'blue sedan'.
+For 'area_search', extract the separation distance in meters. If units are 'ft' or 'feet', convert to meters (1 ft = 0.3048 m). The 'target' is always 'all'.
+User command: "${command}"
+Respond ONLY with the JSON object.</code></pre>
+
+                <h3>Current Limitations & Future Work</h3>
+                <p>While the current simulator is a robust foundation, several features are necessary for a full-fledged swarm control system.</p>
+                <ul>
+                    <li><strong>Missing Features:</strong>
+                        <ul>
+                            <li><strong>Collision Avoidance:</strong> Drones are unaware of each other and will fly through one another and through environmental objects.</li>
+                            <li><strong>Battery & Resource Simulation:</strong> Drones have infinite "fuel." A battery model would introduce resource management challenges.</li>
+                            <li><strong>Advanced Sensor Models:</strong> The current sensor is a simple proximity check. A more advanced model would account for line-of-sight (occlusion by buildings) and field-of-view.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Potential Enhancements:</strong>
+                        <ul>
+                            <li><strong>Graphical Mission Planning:</strong> Allowing users to draw polygons on the map to define search areas or patrol routes.</li>
+                            <li><strong>Persistent State:</strong> Saving and loading simulation scenarios, including drone positions and environmental objects.</li>
+                            <li><strong>Backend Integration:</strong> The ultimate goal is to connect this frontend to a backend service (e.g., via WebSockets) that can translate simulated commands into real-world commands for ArduPlane/MAVLink-compatible drones.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Help Modal -->
+    <div id="aiHelpModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[2000]">
+        <div class="bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-200">AI Command Helper</h2>
+                <button id="closeAiHelpModalButton" class="text-gray-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div class="p-6 overflow-y-auto modal-content">
+                <p>The AI can understand four types of commands. It knows the locations of named objects on the map.</p>
+                
+                <h4>1. Select Drone(s)</h4>
+                <p>Selects one or more drones by their serial number.</p>
+                <ul>
+                    <li><code>select DIG-123456</code></li>
+                    <li><code>show me DIG-987654</code></li>
+                </ul>
+
+                <h4>2. Task to Point</h4>
+                <p>Sends one or more drones to a specific location (either a named object or coordinates).</p>
+                <ul>
+                    <li><code>send all drones to the library</code></li>
+                    <li><code>task DIG-123456 to 35.282, -120.661</code></li>
+                    <li><code>move selected drones to the red truck</code></li>
+                </ul>
+
+                <h4>3. Search for Object</h4>
+                <p>Tasks one or more drones to fly to a specific object and confirm its location.</p>
+                <ul>
+                    <li><code>find the white van</code></li>
+                    <li><code>all drones search for the yellow taxi</code></li>
+                </ul>
+
+                <h4>4. Area Search</h4>
+                <p>Commands the entire swarm to create a grid and cover the visible map area.</p>
+                <ul>
+                    <li><code>all drones blanket the area 500 ft apart</code></li>
+                    <li><code>start a coverage search with 200 meter separation</code></li>
+                    <li><code>grid the area</code> (uses a default separation)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.min.js"></script>
+
+    <script>
+        // --- UI Elements ---
+        const ui = {
+            totalDrones: document.getElementById('totalDrones'),
+            selectedDronesCount: document.getElementById('selectedDronesCount'),
+            orbitingDrones: document.getElementById('orbitingDrones'),
+            movingDrones: document.getElementById('movingDrones'),
+            infoPanelContainer: document.getElementById('infoPanelContainer'),
+            aiCommandInput: document.getElementById('aiCommandInput'),
+            sendCommandButton: document.getElementById('sendCommandButton'),
+            buttonText: document.getElementById('buttonText'),
+            buttonSpinner: document.getElementById('buttonSpinner'),
+            aiCommandStatus: document.getElementById('aiCommandStatus'),
+            techInfoModal: document.getElementById('techInfoModal'),
+            techInfoButton: document.getElementById('techInfoButton'),
+            closeModalButton: document.getElementById('closeModalButton'),
+            aiHelpModal: document.getElementById('aiHelpModal'),
+            aiHelpButton: document.getElementById('aiHelpButton'),
+            closeAiHelpModalButton: document.getElementById('closeAiHelpModalButton'),
+            showTrailsToggle: document.getElementById('showTrailsToggle'),
+            selectAllButton: document.getElementById('selectAllButton'),
+            commonCommandsButton: document.getElementById('commonCommandsButton'),
+            commonCommandsPopup: document.getElementById('commonCommandsPopup'),
+        };
+
+        // --- Map & Sim State ---
+        let map, swarmManager;
+        let drones = [];
+        let environmentObjects = [];
+        let movingEnvironmentObjects = [];
+        let selectedDrones = new Set();
+        let cameraMaps = new Map();
+        let showHistoryTrails = false;
+        let isTaskingMode = false;
+        const SIM_CENTER = [35.2828, -120.6596];
+        const SIM_RADIUS_METERS = 2000;
+
+        // --- Classes ---
+        class Drone {
+            constructor(id, lat, lng) {
+                this.id = id;
+                this.serialNumber = `DIG-${Math.floor(100000 + Math.random() * 900000)}`;
+                this.position = L.latLng(lat, lng);
+                this.target = null;
+                this.cruiseSpeed = 15.65; // m/s (~35 mph)
+                this.dashSpeed = 31.3; // m/s (~70 mph)
+                this.speedMode = 'cruise';
+                
+                this.status = 'orbiting';
+                this.angle = Math.random() * 360;
+                this.history = [];
+                this.maxHistory = 3600; // ~60 seconds at 60fps
+                
+                this.orbitCenter = L.latLng(lat, lng);
+                this.orbitRadius = 50;
+                this.orbitAngle = Math.random() * 360;
+                
+                this.sensorRange = 300;
+                this.sensorData = { signalStrength: 0, detectedObjects: [] };
+                this.task = null;
+
+                const iconHTML = `<div class="drone-icon" style="width: 24px; height: 24px;"></div>`;
+                this.icon = L.divIcon({ html: iconHTML, className: '', iconSize: [24, 24], iconAnchor: [12, 12] });
+                this.marker = L.marker(this.position, { icon: this.icon, zIndexOffset: 1000 }).addTo(map);
+                this.polyline = L.polyline(this.history, { color: '#6b7280', weight: 2, opacity: 0 }).addTo(map);
+                this.predictiveLine = L.polyline([], { color: 'white', weight: 2, dashArray: '5, 10' }).addTo(map);
+                
+                this.marker.on('click', (e) => { L.DomEvent.stopPropagation(e); this.toggleSelection(); });
+            }
+            
+            get speed() {
+                return this.speedMode === 'dash' ? this.dashSpeed : this.cruiseSpeed;
+            }
+
+            setSpeedMode(mode) {
+                if (mode === 'cruise' || mode === 'dash') {
+                    this.speedMode = mode;
+                }
+            }
+
+            update(deltaTime) {
+                if (!Number.isFinite(this.orbitRadius) || this.orbitRadius <= 0) this.orbitRadius = 50;
+                if (!Number.isFinite(this.orbitAngle)) this.orbitAngle = 0;
+
+                if (this.target) {
+                    this.status = 'moving';
+                    const distanceToTarget = this.position.distanceTo(this.target);
+                    const moveDistance = this.speed * deltaTime;
+
+                    if (distanceToTarget < moveDistance) {
+                        this.position = this.target;
+                        this.orbitCenter = this.target;
+                        this.target = null;
+                        this.status = 'orbiting';
+                    } else {
+                        const bearing = this.calculateBearing(this.position, this.target);
+                        this.position = Drone.calculateDestination(this.position, bearing, moveDistance);
+                        this.angle = bearing;
+                    }
+                } else {
+                    this.status = 'orbiting';
+                    this.orbitAngle = (this.orbitAngle + (this.speed / this.orbitRadius) * deltaTime * (180 / Math.PI)) % 360;
+                    const nextOrbitPoint = Drone.calculateDestination(this.orbitCenter, this.orbitAngle, this.orbitRadius);
+                    this.angle = this.calculateBearing(this.position, nextOrbitPoint);
+                    this.position = nextOrbitPoint;
+                }
+                
+                this.updateSensors();
+                this.history.push(L.latLng(this.position.lat, this.position.lng));
+                if (this.history.length > this.maxHistory) this.history.shift();
+                this.updateMarker();
+
+                if (this.task && this.task.type === 'collaborative_search') {
+                    const found = this.sensorData.detectedObjects.some(obj => obj.name.toLowerCase().includes(this.task.query));
+                    if (found) {
+                        const allObjects = [...environmentObjects, ...movingEnvironmentObjects];
+                        const foundObject = allObjects.find(obj => obj.name.toLowerCase().includes(this.task.query));
+                        if(foundObject) {
+                            this.target = null; // Stop moving to waypoint
+                            this.orbitCenter = foundObject.latlng;
+                            this.marker.getElement()?.querySelector('.drone-icon').classList.add('found-target');
+                            setAIStatus(`${this.serialNumber} found ${this.task.query}!`, 'success');
+                            this.task = null;
+                        }
+                    }
+                }
+            }
+            
+            updateSensors() {
+                this.sensorData.detectedObjects = [];
+                let maxSignal = 0;
+                const allObjects = [...environmentObjects, ...movingEnvironmentObjects];
+                allObjects.forEach(obj => {
+                    const dist = this.position.distanceTo(obj.latlng);
+                    if (dist <= this.sensorRange) this.sensorData.detectedObjects.push({ name: obj.name, type: obj.type, distance: dist });
+                    if (obj.type === 'wifi' && obj.range && dist <= obj.range) {
+                        const signal = Math.max(0, 100 * (1 - dist / obj.range));
+                        if (signal > maxSignal) maxSignal = signal;
+                    }
+                });
+                this.sensorData.signalStrength = maxSignal;
+                this.sensorData.detectedObjects.sort((a, b) => a.distance - b.distance);
+            }
+
+            updateMarker() {
+                this.marker.setLatLng(this.position);
+                const iconElement = this.marker.getElement()?.querySelector('.drone-icon');
+                if (iconElement) iconElement.style.transform = `rotate(${this.angle}deg)`;
+                
+                const isSelected = selectedDrones.has(this);
+                this.polyline.setLatLngs(this.history);
+                this.polyline.setStyle({
+                    color: isSelected ? 'rgba(34, 211, 238, 0.7)' : '#6b7280',
+                    opacity: isSelected || showHistoryTrails ? (isSelected ? 0.7 : 0.4) : 0
+                });
+
+                if (this.target) {
+                    this.predictiveLine.setLatLngs([this.position, this.target]);
+                    this.predictiveLine.setStyle({ opacity: 0.7 });
+                } else {
+                    this.predictiveLine.setStyle({ opacity: 0 });
+                }
+            }
+
+            setTarget(latlng) { this.target = latlng; this.task = null; this.marker.getElement()?.querySelector('.drone-icon').classList.remove('found-target'); }
+            select() { if (selectedDrones.has(this)) return; selectedDrones.add(this); this.marker.getElement()?.querySelector('.drone-icon').classList.add('selected'); }
+            deselect() { if (!selectedDrones.has(this)) return; selectedDrones.delete(this); this.marker.getElement()?.querySelector('.drone-icon').classList.remove('selected'); }
+            toggleSelection() { selectedDrones.has(this) ? this.deselect() : this.select(); updateInfoPanel(); }
+            calculateBearing(start, end) { const toRad = Math.PI / 180, toDeg = 180 / Math.PI; const lat1 = start.lat * toRad, lon1 = start.lng * toRad; const lat2 = end.lat * toRad, lon2 = end.lng * toRad; const y = Math.sin(lon2 - lon1) * Math.cos(lat2); const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1); return (Math.atan2(y, x) * toDeg + 360) % 360; }
+            static calculateDestination(start, bearing, distance) {
+                if (!start || !Number.isFinite(start.lat) || !Number.isFinite(start.lng)) { return L.latLng(0, 0); }
+                if (!Number.isFinite(bearing) || !Number.isFinite(distance)) { return L.latLng(start.lat, start.lng); }
+                bearing = ((bearing % 360) + 360) % 360;
+                distance = Math.max(0, distance);
+                const R = 6371e3;
+                const toRad = Math.PI / 180, toDeg = 180 / Math.PI;
+                const lat1 = start.lat * toRad, lon1 = start.lng * toRad;
+                const brng = bearing * toRad, d = distance / R;
+                const sinLat2 = Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(brng);
+                const lat2 = Math.asin(Math.max(-1, Math.min(1, sinLat2)));
+                const y = Math.sin(brng) * Math.sin(d) * Math.cos(lat1);
+                const x = Math.cos(d) - Math.sin(lat1) * Math.sin(lat2);
+                let lon2 = lon1 + Math.atan2(y, x);
+                lon2 = ((lon2 + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+                const latDeg = lat2 * toDeg, lonDeg = lon2 * toDeg;
+                if (!Number.isFinite(latDeg) || !Number.isFinite(lonDeg)) { return L.latLng(start.lat, start.lng); }
+                return L.latLng(latDeg, lonDeg);
+            }
+        }
+
+        class MovingObject {
+            constructor(data) {
+                this.name = data.name;
+                this.type = data.type;
+                this.latlng = L.latLng(data.latlng[0], data.latlng[1]);
+                this.speed = (Math.random() * 10 + 5); // 5-15 m/s
+                this.angle = Math.random() * 360;
+
+                const iconHTML = `<div class="env-object-icon" style="color:${data.color}; font-size: 24px;">${getIconForType(this.type)}</div>`;
+                this.icon = L.divIcon({ html: iconHTML, className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+                this.marker = L.marker(this.latlng, { icon: this.icon }).addTo(map);
+            }
+
+            update(deltaTime) {
+                this.latlng = Drone.calculateDestination(this.latlng, this.angle, this.speed * deltaTime);
+                this.marker.setLatLng(this.latlng);
+
+                const bounds = map.getBounds().pad(-0.1); // a little padding
+                if (!bounds.contains(this.latlng)) {
+                    this.angle = (this.angle + 180) % 360;
+                }
+            }
+        }
+
+        class SwarmManager {
+            constructor(drones, map) {
+                this.drones = drones;
+                this.map = map;
+                this.waypointLayer = L.layerGroup().addTo(map);
+            }
+
+            executeAreaSearch(separationMeters) {
+                const bounds = this.map.getBounds();
+                const waypoints = this.calculateSearchGrid(bounds, separationMeters);
+                
+                this.visualizeWaypoints(waypoints, '#34d399');
+                this.assignTasks(waypoints);
+            }
+
+            executeCollaborativeSearch(query) {
+                const center = this.map.getCenter();
+                const waypoints = this.calculateSpiralSearch(center, this.drones.length);
+
+                this.visualizeWaypoints(waypoints, '#38bdf8');
+                
+                this.drones.forEach((drone, index) => {
+                    if (waypoints[index]) {
+                        drone.setTarget(waypoints[index]);
+                        drone.task = { type: 'collaborative_search', query: query };
+                    }
+                });
+            }
+
+            calculateSpiralSearch(center, numPoints) {
+                const points = [];
+                const separation = 150; // meters between points on spiral
+                let angle = 0;
+                let radius = separation;
+                for (let i = 0; i < numPoints; i++) {
+                    const point = Drone.calculateDestination(center, angle, radius);
+                    points.push(point);
+                    angle += 137.5; // Golden angle for spiral distribution
+                    radius = separation * Math.sqrt(i + 1);
+                }
+                return points;
+            }
+
+            calculateSearchGrid(bounds, separationMeters) {
+                const waypoints = [];
+                const northEast = bounds.getNorthEast();
+                const southWest = bounds.getSouthWest();
+                const west = southWest.lng;
+                const east = northEast.lng;
+                const south = southWest.lat;
+                const north = northEast.lat;
+
+                let rowStartPoint = L.latLng(south, west);
+
+                while (rowStartPoint.lat < north) {
+                    let currentPoint = L.latLng(rowStartPoint.lat, rowStartPoint.lng);
+                    while (currentPoint.lng < east) {
+                        waypoints.push(L.latLng(currentPoint.lat, currentPoint.lng));
+                        currentPoint = Drone.calculateDestination(currentPoint, 90, separationMeters);
+                    }
+                    rowStartPoint = Drone.calculateDestination(rowStartPoint, 0, separationMeters);
+                }
+                return waypoints;
+            }
+
+            assignTasks(waypoints) {
+                const availableDrones = this.drones.filter(d => d.status !== 'moving');
+                waypoints.forEach((waypoint, index) => {
+                    if (index < availableDrones.length) {
+                        availableDrones[index].setTarget(waypoint);
+                    }
+                });
+            }
+            
+            visualizeWaypoints(waypoints, color) {
+                this.waypointLayer.clearLayers();
+                waypoints.forEach(wp => {
+                    L.circle(wp, {
+                        radius: 5,
+                        color: color,
+                        fillOpacity: 0.8,
+                        className: 'waypoint-marker'
+                    }).addTo(this.waypointLayer);
+                });
+                setTimeout(() => this.waypointLayer.clearLayers(), 4000);
+            }
+        }
+        
+        // --- Initialization ---
+        function init() {
+            initMap();
+            createEnvironment();
+            createDrones(15);
+            swarmManager = new SwarmManager(drones, map);
+            setupEventListeners();
+            requestAnimationFrame(gameLoop);
+            updateInfoPanel();
+        }
+
+        function initMap() {
+            map = L.map('map', { contextmenu: true }).setView(SIM_CENTER, 15);
+            const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                maxZoom: 20
+            });
+            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            });
+            
+            darkLayer.addTo(map);
+
+            const baseMaps = {
+                "Dark": darkLayer,
+                "Satellite": satelliteLayer
+            };
+
+            L.control.layers(baseMaps).addTo(map);
+        }
+
+        function createDrones(count) {
+            drones = [];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * 360;
+                const distance = Math.random() * SIM_RADIUS_METERS;
+                const startPos = L.latLng(SIM_CENTER[0], SIM_CENTER[1]);
+                const dronePos = Drone.calculateDestination(startPos, angle, distance);
+                drones.push(new Drone(i, dronePos.lat, dronePos.lng));
+            }
+        }
+        
+        function createEnvironment() {
+            const staticObjects = [
+                { type: 'building', name: 'Cal Poly Library', coords: [[35.2838, -120.6625], [35.2830, -120.6620], [35.2834, -120.6610], [35.2842, -120.6615]] },
+                { type: 'building', name: 'University Union', coords: [[35.2815, -120.6600], [35.2810, -120.6590], [35.2818, -120.6585], [35.2823, -120.6595]] },
+                { type: 'wifi', name: 'Campus WiFi', latlng: [35.2830, -120.6600], range: 200, color: '#10b981' },
+                { type: 'wifi', name: 'Downtown WiFi', latlng: [35.2808, -120.6645], range: 150, color: '#10b981' },
+                { type: 'wifi', name: 'North Campus WiFi', latlng: [35.2860, -120.6610], range: 180, color: '#10b981' },
+            ];
+
+            const movingObjectData = [
+                { type: 'car', name: 'Blue Sedan', color: '#3b82f6' }, { type: 'car', name: 'Yellow Taxi', color: '#facc15' },
+                { type: 'car', name: 'Another Blue Car', color: '#3b82f6' }, { type: 'truck', name: 'Red Truck', color: '#ef4444' },
+                { type: 'van', name: 'White Van', color: '#e5e7eb' }, { type: 'person', name: 'Student', color: '#ec4899' },
+                { type: 'car', name: 'Green Car', color: '#22c55e' }, { type: 'car', name: 'Purple Car', color: '#a855f7' },
+                { type: 'truck', name: 'Orange Truck', color: '#f97316' }, { type: 'van', name: 'Service Van', color: '#64748b' },
+                { type: 'person', name: 'Professor', color: '#d946ef' }, { type: 'person', name: 'Visitor', color: '#fde047' },
+            ];
+
+            movingObjectData.forEach(data => {
+                const angle = Math.random() * 360;
+                const distance = Math.random() * SIM_RADIUS_METERS;
+                const startPos = L.latLng(SIM_CENTER[0], SIM_CENTER[1]);
+                const objPos = Drone.calculateDestination(startPos, angle, distance);
+                data.latlng = [objPos.lat, objPos.lng];
+                movingEnvironmentObjects.push(new MovingObject(data));
+            });
+            
+            staticObjects.forEach(obj => {
+                if (obj.type === 'building') {
+                    L.polygon(obj.coords, { color: '#6b7280', weight: 1, fillOpacity: 0.5 }).addTo(map);
+                    obj.latlng = L.polygon(obj.coords).getBounds().getCenter();
+                } else {
+                    obj.latlng = L.latLng(obj.latlng[0], obj.latlng[1]);
+                    const iconHTML = `<div class="env-object-icon" style="color:${obj.color}; font-size: 24px;">${getIconForType(obj.type)}</div>`;
+                    const icon = L.divIcon({ html: iconHTML, className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+                    L.marker(obj.latlng, { icon: icon }).addTo(map);
+                    if (obj.type === 'wifi') L.circle(obj.latlng, { radius: obj.range, color: obj.color, fillOpacity: 0.1, className: 'wifi-range-circle' }).addTo(map);
+                }
+                environmentObjects.push(obj);
+            });
+        }
+        
+        function getIconForType(type) {
+            switch(type) {
+                case 'car': return '&#128663;';
+                case 'truck': return '&#128666;';
+                case 'van': return '&#128656;';
+                case 'person': return '&#128694;';
+                case 'wifi': return '&#128246;';
+                default: return '';
+            }
+        }
+
+        // --- Game Loop ---
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+            drones.forEach(drone => drone.update(deltaTime));
+            movingEnvironmentObjects.forEach(obj => obj.update(deltaTime));
+            updateStatsUI();
+            
+            cameraMaps.forEach((cam, droneId) => {
+                const drone = drones.find(d => d.id === droneId);
+                if (drone) {
+                    cam.panTo(drone.position, { animate: false, duration: 0 });
+                }
+            });
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- UI & AI ---
+        function updateStatsUI() {
+            ui.totalDrones.textContent = drones.length;
+            ui.selectedDronesCount.textContent = selectedDrones.size;
+            const orbitingCount = drones.filter(d => d.status === 'orbiting').length;
+            ui.orbitingDrones.textContent = orbitingCount;
+            ui.movingDrones.textContent = drones.length - orbitingCount;
+        }
+
+        function clearInfoPanel() {
+            cameraMaps.forEach(cam => cam.remove());
+            cameraMaps.clear();
+            ui.infoPanelContainer.innerHTML = '';
+        }
+
+        function updateInfoPanel() {
+            clearInfoPanel();
+
+            if (selectedDrones.size === 0) {
+                ui.infoPanelContainer.innerHTML = '<h3 class="font-semibold text-lg text-cyan-400 p-2">No Drone Selected</h3><p class="text-gray-400 text-center p-4">Click on a drone to see its details.</p>';
+            } else if (selectedDrones.size === 1) {
+                const drone = selectedDrones.values().next().value;
+                
+                const detectedObjectsHTML = drone.sensorData.detectedObjects.map(obj => `<div class="flex justify-between items-center text-xs py-1"><span class="text-gray-300">${obj.name} (${obj.type})</span><span class="text-gray-400">${obj.distance.toFixed(0)}m</span></div>`).join('') || '<div class="text-xs text-gray-500">No objects in range.</div>';
+                
+                const speedToggleId = `speed-toggle-${drone.id}`;
+                const speedToggleChecked = drone.speedMode === 'dash' ? 'checked' : '';
+
+                ui.infoPanelContainer.innerHTML = `
+                    <button id="taskToPositionButton" class="w-full mb-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md transition-colors">Task to Position</button>
+                    <div id="camera-feed-${drone.id}-container" class="mb-4 flex-shrink-0">
+                        <h3 class="font-semibold text-lg text-cyan-400 mb-2">Camera Feed: ${drone.serialNumber}</h3>
+                        <div id="camera-feed-${drone.id}" class="h-48 w-full camera-feed-map"></div>
+                    </div>
+                    <h3 class="font-semibold text-lg text-cyan-400 p-2">Drone Details</h3>
+                    <div class="p-2 space-y-3 text-sm">
+                        <div class="flex justify-between"><strong>Serial:</strong> <span>${drone.serialNumber}</span></div>
+                        <div class="flex justify-between"><strong>Status:</strong> <span class="font-semibold ${drone.status === 'orbiting' ? 'text-blue-400' : 'text-yellow-400'}">${drone.status.toUpperCase()}</span></div>
+                        <div class="flex justify-between items-center">
+                            <strong>Speed:</strong>
+                            <label for="${speedToggleId}" class="flex items-center cursor-pointer speed-toggle">
+                                <span class="mr-2 text-gray-400">Cruise</span>
+                                <div class="relative">
+                                    <input type="checkbox" id="${speedToggleId}" class="sr-only" ${speedToggleChecked}>
+                                    <div class="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                                </div>
+                                <span class="ml-2 font-semibold text-cyan-400">Dash</span>
+                            </label>
+                        </div>
+                        <div class="flex justify-between"><strong>Coords:</strong> <span>${drone.position.lat.toFixed(5)}, ${drone.position.lng.toFixed(5)}</span></div>
+                        
+                        <div class="pt-2 border-t border-gray-700">
+                            <h4 class="font-semibold text-cyan-400 mb-1">Sensor Feed (Range: ${drone.sensorRange}m)</h4>
+                            <div class="flex justify-between"><strong>WiFi Signal:</strong> <span>${drone.sensorData.signalStrength.toFixed(1)}%</span></div>
+                            <h5 class="font-semibold mt-2 mb-1 text-gray-400">Detected Objects</h5>
+                            <div class="text-xs text-gray-400 max-h-28 overflow-y-auto bg-gray-800/50 p-2 rounded">${detectedObjectsHTML}</div>
+                        </div>
+                    </div>`;
+                
+                initCameraMap(drone.id, `camera-feed-${drone.id}`);
+                
+                const speedToggle = document.getElementById(speedToggleId);
+                speedToggle.addEventListener('change', (e) => {
+                    drone.setSpeedMode(e.target.checked ? 'dash' : 'cruise');
+                });
+                const dot = speedToggle.nextElementSibling.nextElementSibling;
+                if(speedToggle.checked) dot.style.transform = 'translateX(100%)';
+
+            } else { // Multiple drones selected
+                let contentHTML = `<button id="taskToPositionButton" class="w-full mb-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md transition-colors">Task to Position</button>
+                                   <div class="grid grid-cols-2 gap-2">`;
+                selectedDrones.forEach(drone => {
+                    contentHTML += `
+                        <div id="camera-feed-${drone.id}-container" class="mb-2 flex-shrink-0">
+                            <h4 class="font-semibold text-sm text-cyan-400 mb-1 truncate">${drone.serialNumber}</h4>
+                            <div id="camera-feed-${drone.id}" class="h-32 w-full camera-feed-map"></div>
+                        </div>`;
+                });
+                contentHTML += '</div>';
+                ui.infoPanelContainer.innerHTML = contentHTML;
+
+                selectedDrones.forEach(drone => {
+                    initCameraMap(drone.id, `camera-feed-${drone.id}`);
+                });
+            }
+            updateStatsUI();
+        }
+        
+        function initCameraMap(droneId, containerId) {
+            if(cameraMaps.has(droneId)) cameraMaps.get(droneId).remove();
+            
+            const drone = drones.find(d => d.id === droneId);
+            if (!drone) return;
+
+            const camMap = L.map(containerId, { zoomControl: false, dragging: false, doubleClickZoom: false, scrollWheelZoom: false }).setView(drone.position, 19);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(camMap);
+            
+            const allObjects = [...environmentObjects, ...movingEnvironmentObjects];
+            allObjects.forEach(obj => {
+                if (obj.type === 'building') {
+                    L.polygon(obj.coords, { color: '#6b7280', weight: 1, fillOpacity: 0.5, interactive: false }).addTo(camMap);
+                } else {
+                    const iconHTML = `<div class="env-object-icon" style="color:${obj.color}; font-size: 24px;">${getIconForType(obj.type)}</div>`;
+                    const icon = L.divIcon({ html: iconHTML, className: '', iconSize: [24, 24], iconAnchor: [12, 24] });
+                    L.marker(obj.latlng, { icon: icon, interactive: false }).addTo(camMap);
+                    if (obj.type === 'wifi') L.circle(obj.latlng, { radius: obj.range, color: obj.color, fillOpacity: 0.1, className: 'wifi-range-circle', interactive: false }).addTo(camMap);
+                }
+            });
+            cameraMaps.set(droneId, camMap);
+
+            setTimeout(() => {
+                if (camMap) camMap.invalidateSize();
+            }, 100);
+        }
+
+        function zoomToDrone(id) { const drone = drones.find(d => d.id === id); if(drone) map.setView(drone.position, 18); }
+        
+        async function processAICommandWithGemini(command) {
+            setAIStatus('Processing with Gemini...', 'info');
+            ui.sendCommandButton.disabled = true;
+            ui.buttonText.classList.add('hidden');
+            ui.buttonSpinner.classList.remove('hidden');
+
+            const selectedSerials = Array.from(selectedDrones).map(d => d.serialNumber);
+            const knownObjects = environmentObjects
+                .filter(o => o.latlng)
+                .map(o => `'${o.name.toLowerCase()}' at (${o.latlng.lat.toFixed(5)}, ${o.latlng.lng.toFixed(5)})`).join(', ');
+
+            const prompt = `You are a drone swarm command parser. Convert the user's request into a JSON command.
+                The user is looking at a map of San Luis Obispo.
+                Known locations: ${knownObjects}.
+                Currently selected drones: ${selectedSerials.length > 0 ? selectedSerials.join(', ') : 'none'}.
+                If specific drones are selected and the user does not explicitly say 'all', assume the command applies ONLY to the selected drones. In this case, set 'target' to 'selected'. Otherwise, determine if the target is 'all' or a specific serial number.
+                Valid commands are 'select', 'task', 'search', 'area_search', 'set_speed', 'directional_move'.
+                For 'task', if a known location is mentioned, use its coordinates. Also check if the user specifies a speed like 'dash' or 'cruise'.
+                For 'search', the 'query' should be the object to find, e.g., 'blue sedan'. This is a collaborative search, so the AI should not return a location.
+                For 'area_search', extract the separation distance in meters. If units are 'ft' or 'feet', convert to meters (1 ft = 0.3048 m). The 'target' is always 'all'.
+                For 'set_speed', the parameter 'mode' should be 'cruise' or 'dash'.
+                For 'directional_move', the parameter 'direction' should be 'north', 'south', 'east', or 'west'.
+                User command: "${command}"
+                Respond ONLY with the JSON object.`;
+            
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    "command": { "type": "STRING", "enum": ["select", "task", "search", "area_search", "set_speed", "directional_move"] },
+                    "target": { "type": "STRING" },
+                    "parameters": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "location": { "type": "OBJECT", "properties": { "lat": { "type": "NUMBER" }, "lng": { "type": "NUMBER" } } },
+                            "query": { "type": "STRING" },
+                            "separation": { "type": "NUMBER" },
+                            "mode": { "type": "STRING", "enum": ["cruise", "dash"] },
+                            "direction": { "type": "STRING", "enum": ["north", "south", "east", "west"] },
+                            "distance": { "type": "NUMBER" }
+                        }
+                    }
+                }
+            };
+            
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory, generationConfig: { responseMimeType: "application/json", responseSchema: schema } };
+                const apiKey = "REDACTED"; // User's API Key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                
+                const result = await response.json();
+                if (!result.candidates || !result.candidates[0].content.parts[0].text) {
+                    throw new Error("Invalid response structure from API");
+                }
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const parsedJson = JSON.parse(jsonText);
+                executeParsedCommand(parsedJson);
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                setAIStatus('Error processing command.', 'error');
+            } finally {
+                ui.sendCommandButton.disabled = false;
+                ui.buttonText.classList.remove('hidden');
+                ui.buttonSpinner.classList.add('hidden');
+                ui.aiCommandInput.value = ''; // Clear input after command
+            }
+        }
+
+        function executeParsedCommand(cmd) {
+            if (!cmd || !cmd.command || !cmd.target) { setAIStatus('Invalid command structure from AI.', 'error'); return; }
+            const { command, target, parameters } = cmd;
+            
+            let targetDrones = [];
+            if (target.toLowerCase() === 'all') {
+                targetDrones = drones;
+            } else if (target.toLowerCase() === 'selected') {
+                targetDrones = Array.from(selectedDrones);
+            } else {
+                targetDrones = drones.filter(d => d.serialNumber === target.toUpperCase());
+            }
+
+            if (targetDrones.length === 0) { setAIStatus(`No applicable drones for target '${target}'.`, 'error'); return; }
+
+            switch (command) {
+                case 'select':
+                    drones.forEach(d => d.deselect());
+                    targetDrones.forEach(d => d.select());
+                    updateInfoPanel();
+                    if (targetDrones.length > 0) map.setView(targetDrones[0].position, 18);
+                    setAIStatus(`Selected ${targetDrones.length} drone(s).`, 'success');
+                    break;
+                case 'task':
+                    if (!parameters || !parameters.location) { setAIStatus('No location specified for task.', 'error'); break; }
+                    const latlng = L.latLng(parameters.location.lat, parameters.location.lng);
+                    targetDrones.forEach(d => {
+                        if (parameters.mode) d.setSpeedMode(parameters.mode);
+                        d.setTarget(latlng);
+                    });
+                    setAIStatus(`Tasking ${targetDrones.length} drone(s).`, 'success');
+                    break;
+                case 'set_speed':
+                    if (!parameters || !parameters.mode) { setAIStatus('No speed mode specified.', 'error'); break; }
+                    targetDrones.forEach(d => d.setSpeedMode(parameters.mode));
+                    setAIStatus(`Set speed to ${parameters.mode} for ${targetDrones.length} drone(s).`, 'success');
+                    break;
+                case 'search':
+                    if (!parameters || !parameters.query) { setAIStatus('No search query specified.', 'error'); break; }
+                    swarmManager.executeCollaborativeSearch(parameters.query);
+                    setAIStatus(`Initiating collaborative search for '${parameters.query}'...`, 'success');
+                    break;
+                case 'area_search':
+                    if (!parameters || !parameters.separation) { setAIStatus('No separation distance specified.', 'error'); break; }
+                    swarmManager.executeAreaSearch(parameters.separation);
+                    setAIStatus(`Executing area search with ${parameters.separation.toFixed(0)}m separation.`, 'success');
+                    break;
+                case 'directional_move':
+                    if (!parameters || !parameters.direction) { setAIStatus('No direction specified.', 'error'); break; }
+                    const bearings = { north: 0, east: 90, south: 180, west: 270 };
+                    const bearing = bearings[parameters.direction];
+                    const distance = parameters.distance || 5000; // Default to 5km
+                    targetDrones.forEach(d => {
+                        const targetPoint = Drone.calculateDestination(d.position, bearing, distance);
+                        d.setTarget(targetPoint);
+                    });
+                    setAIStatus(`Moving ${targetDrones.length} drone(s) ${parameters.direction}.`, 'success');
+                    break;
+                default:
+                    setAIStatus('Unknown command received from AI.', 'error');
+            }
+        }
+
+        function setAIStatus(message, type) {
+            ui.aiCommandStatus.textContent = message;
+            ui.aiCommandStatus.className = `text-xs mt-2 h-4 ${type === 'success' ? 'text-green-400' : (type === 'error' ? 'text-red-400' : 'text-gray-400')}`;
+        }
+
+        // --- Event Handling ---
+        function setupEventListeners() {
+            map.on('click', (e) => {
+                if (isTaskingMode) {
+                    if (selectedDrones.size > 0) {
+                        selectedDrones.forEach(drone => drone.setTarget(e.latlng));
+                        setAIStatus(`Tasked ${selectedDrones.size} drone(s) to new location.`, 'success');
+                    }
+                    isTaskingMode = false;
+                    map.getContainer().classList.remove('tasking-mode');
+                    updateInfoPanel(); // To remove the "cancel" button
+                } else {
+                    drones.forEach(d => d.deselect());
+                    updateInfoPanel();
+                }
+            });
+            ui.infoPanelContainer.addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'taskToPositionButton') {
+                    isTaskingMode = true;
+                    map.getContainer().classList.add('tasking-mode');
+                    setAIStatus('TASKING MODE: Click on the map to set target.', 'info');
+                    e.target.textContent = "Cancel Tasking";
+                    e.target.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+                    e.target.classList.add('bg-red-600', 'hover:bg-red-500');
+                } else if (e.target && e.target.id === 'taskToPositionButton' && isTaskingMode) {
+                     isTaskingMode = false;
+                    map.getContainer().classList.remove('tasking-mode');
+                    setAIStatus('', 'info');
+                    updateInfoPanel();
+                }
+            });
+            ui.sendCommandButton.addEventListener('click', () => processAICommandWithGemini(ui.aiCommandInput.value));
+            ui.aiCommandInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processAICommandWithGemini(ui.aiCommandInput.value); }});
+            ui.techInfoButton.addEventListener('click', () => {
+                ui.techInfoModal.classList.remove('hidden');
+                renderMathInElement(ui.techInfoModal, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            });
+            ui.closeModalButton.addEventListener('click', () => ui.techInfoModal.classList.add('hidden'));
+            ui.techInfoModal.addEventListener('click', (e) => { if (e.target === ui.techInfoModal) ui.techInfoModal.classList.add('hidden'); });
+            ui.aiHelpButton.addEventListener('click', () => ui.aiHelpModal.classList.remove('hidden'));
+            ui.closeAiHelpModalButton.addEventListener('click', () => ui.aiHelpModal.classList.add('hidden'));
+            ui.aiHelpModal.addEventListener('click', (e) => { if (e.target === ui.aiHelpModal) ui.aiHelpModal.classList.add('hidden'); });
+            ui.showTrailsToggle.addEventListener('change', (e) => {
+                showHistoryTrails = e.target.checked;
+                drones.forEach(d => d.updateMarker());
+            });
+            ui.selectAllButton.addEventListener('click', () => {
+                drones.forEach(d => d.select());
+                updateInfoPanel();
+            });
+            ui.commonCommandsButton.addEventListener('click', () => {
+                ui.commonCommandsPopup.classList.toggle('hidden');
+            });
+            document.querySelectorAll('#commonCommandsPopup button').forEach(button => {
+                button.addEventListener('click', () => {
+                    ui.aiCommandInput.value = button.textContent;
+                    ui.commonCommandsPopup.classList.add('hidden');
+                });
+            });
+        }
+
+        // --- Start Simulation ---
+        init();
+    </script>
+</body>
+</html>
