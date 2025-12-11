@@ -65,6 +65,7 @@
     // --- Icons ---
     const Icons = {
         MapPin: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+        Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
         Utensils: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
         Hotel: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>,
         Link: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -91,7 +92,7 @@
     ];
 
     // --- Data ---
-    const tripData = [
+    const baseTripData = [
         {
             day: 0,
             date: "3/22",
@@ -332,6 +333,147 @@
         },
     ];
 
+    // --- Food & Travel Enrichment ---
+    const foodSuggestionsByDay = {
+        0: [
+            "Ivar's clam chowder at SEA",
+            "Beecher's mac & cheese cups",
+            "Din Tai Fung dumplings (Concourse S)",
+            "Skillet Counter breakfast sandwich",
+            "Caffe Vita cold brew"
+        ],
+        1: [
+            "Capitol Hill Food Hall poke bowls to-go",
+            "Lucky Louie smoked salmon bagel",
+            "Dish D'Lish picnic box for the flight",
+            "Floret veggie grain bowl",
+            "Fran's sea salt caramels"
+        ],
+        2: [
+            "Tendon Kaneko Hannosuke tempura bowls",
+            "Gyukatsu Motomura Nihonbashi",
+            "Ningyocho Imahan sukiyaki lunch",
+            "Muromachi Sunaba soba",
+            "Taiyaki Wakaba red bean cones"
+        ],
+        3: [
+            "Afuri yuzu ramen in Harajuku",
+            "Luke's Lobster rolls (Omotesando)",
+            "Uobei conveyor-belt sushi",
+            "Gyukatsu Motomura Shibuya",
+            "Calbee+ hot potato chips"
+        ],
+        4: [
+            "Magellan's at DisneySea",
+            "Ristorante di Canaletto pizza & pasta",
+            "Sebastian's Calypso Kitchen gyoza dog",
+            "Zambini Brothers pasta bowls",
+            "Mamma Biscotti's bakery treats"
+        ],
+        5: [
+            "Tsurutontan Udon Odaiba",
+            "Ippudo Express ramen at DiverCity",
+            "Go! Go! Curry Akihabara",
+            "Tonkatsu Marugo (Akihabara)",
+            "Maidreamin parfait dessert"
+        ],
+        6: [
+            "Asakusa Kagetsudo melon pan",
+            "Ningyo-yaki stalls by Senso-ji",
+            "Daikokuya tempura tendon",
+            "Solamachi Ramen Yokocho picks",
+            "Ameyoko yakitori alley skewers"
+        ],
+        7: [
+            "Owakudani black eggs",
+            "Hakone Bakery curry buns",
+            "Gora Brewery & Grill pizza",
+            "Amazake Chaya sweet rice drink",
+            "Lake Ashi wakasagi tempura"
+        ],
+        8: [
+            "Ramen Koji food court (Kyoto Station)",
+            "Musashi sushi conveyor at the station",
+            "Nakamura Tokichi matcha parfait",
+            "Kyoto Tower Sando bakery bites",
+            "Yatsuhashi gift shop samples"
+        ],
+        9: [
+            "% Arabica Higashiyama espresso",
+            "Yasaka Endo tempura lunch",
+            "Nishiki Market soy donuts",
+            "Gion Kinana matcha ice cream",
+            "Pontocho yakitori at Torito"
+        ],
+        10: [
+            "Arashiyama Yoshimura soba by the river",
+            "Kameya mame-mochi snacks",
+            "Bamboo grove croquettes street-side",
+            "Yudofu Sagano tofu hotpot",
+            "Matcha soft serve from Nonomiya Tea House"
+        ],
+        11: [
+            "Takoyaki at Creo-ru Dotonbori",
+            "Okonomiyaki at Mizuno",
+            "Kushikatsu Daruma skewers",
+            "551 Horai pork buns",
+            "Rikuro Ojisan cheesecake"
+        ],
+        12: [
+            "Butterbeer at Hogsmeade",
+            "Kinopio's Cafe Superstar rice",
+            "Mel's Drive-In burgers & shakes",
+            "Minion Park banana popcorn",
+            "Amity Landing shrimp roll"
+        ],
+        13: [
+            "Okonomiyaki at Nagataya",
+            "Hiroshima oysters at Ekie Kaisen",
+            "Hassho okonomiyaki with squid",
+            "Bakudanya spicy tsukemen",
+            "Momiji manju at Nishiki-do"
+        ],
+        14: [
+            "Grilled oysters on the pier",
+            "Anago-meshi eel rice box",
+            "Deep-fried momiji manju",
+            "Umegae mochi warm rice cakes",
+            "Sea-salt soft serve by the ferry"
+        ],
+        15: [
+            "Saboten tonkatsu bento at NRT",
+            "Narita Dining Terrace kaisen don",
+            "Lawson karaage-kun chicken bites",
+            "Royce' nama chocolate to-go",
+            "Starbucks Reserve coffee before boarding"
+        ]
+    };
+
+    const travelTimeByDay = {
+        0: "SBP → SEA flight: ~2h 30m",
+        1: "SEA → Tokyo (NRT): ~10h 30m flight",
+        2: "Narita Express to Nihonbashi: ~1h",
+        3: "Shibuya/Harajuku transfers: 20-30m between stops",
+        4: "Into DisneySea area from central Tokyo: ~45m",
+        5: "Resort to Odaiba/Akihabara hops: ~35-45m",
+        6: "Asakusa, Ueno, and Skytree hops: 10-25m each",
+        7: "Tokyo → Hakone (RomanceCar): ~1h 25m",
+        8: "Hakone → Kyoto via Odawara Shinkansen: ~2h",
+        9: "Higashiyama to Gion loop: 10-15m walking",
+        10: "Kyoto → Arashiyama: ~25m by JR/Randen",
+        11: "Kyoto → Osaka: ~15m Shinkansen (~30m JR)",
+        12: "Osaka/Umeda → Universal City: ~15m train",
+        13: "Shin-Osaka → Hiroshima: ~1h 35m Shinkansen",
+        14: "Hiroshima → Miyajima: ~45m (train + ferry)",
+        15: "Hiroshima → Tokyo/NRT → SEA → SBP: ~12h total"
+    };
+
+    const tripData = baseTripData.map(stop => ({
+        ...stop,
+        foodSuggestions: foodSuggestionsByDay[stop.day] || [],
+        travelTime: travelTimeByDay[stop.day] || null
+    }));
+
     // --- Components ---
 
     const TripCard = ({ item, isLast, isActive, onClick }) => {
@@ -387,12 +529,38 @@
                             <span className="mt-0.5 text-gray-400"><Icons.MapPin /></span>
                             <span>{item.agenda}</span>
                         </p>
+
+                        {item.travelTime && (
+                            <p className="flex gap-2 text-xs sm:text-sm text-gray-600">
+                                <span className="mt-0.5 text-gray-400"><Icons.Clock /></span>
+                                <span><span className="font-semibold text-gray-700">Travel time:</span> {item.travelTime}</span>
+                            </p>
+                        )}
                         
                         {item.food && (
                             <p className="flex gap-2 text-emerald-700 bg-emerald-50 p-2 rounded-lg">
                                 <span className="mt-0.5"><Icons.Utensils /></span>
                                 <span className="italic">{item.food}</span>
                             </p>
+                        )}
+
+                        {isActive && item.foodSuggestions?.length > 0 && (
+                            <div className="border border-emerald-100 bg-white/70 rounded-lg p-3">
+                                <div className="flex items-center gap-2 text-emerald-800 font-semibold mb-2">
+                                    <Icons.Utensils />
+                                    <span>Food ideas nearby</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {item.foodSuggestions.map((food, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="px-2 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs text-emerald-700"
+                                        >
+                                            {food}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                         
                         {hasLinks && (
@@ -440,6 +608,24 @@
         const mapInstance = useRef(null);
         const markersRef = useRef({}); // Store references to markers by day index
         const [mapReady, setMapReady] = useState(false);
+
+        const buildPopupContent = (stop) => {
+            const foodList = stop.foodSuggestions?.length
+                ? `<div style="margin-top:6px;font-weight:600;color:#065f46;">Food picks</div><ul style="margin:4px 0 0;padding-left:18px;color:#065f46;">${stop.foodSuggestions.map(f => `<li>${f}</li>`).join('')}</ul>`
+                : '';
+            const travelLine = stop.travelTime
+                ? `<div style="margin-top:6px;font-weight:600;color:#374151;">Travel: <span style="font-weight:500;color:#111827;">${stop.travelTime}</span></div>`
+                : '';
+
+            return `
+                <div style="min-width: 200px">
+                    <div style="font-weight:700;color:#111827;">${stop.date} - ${stop.loc}</div>
+                    <div style="margin-top:2px;color:#4b5563;">${stop.title}</div>
+                    ${travelLine}
+                    ${foodList}
+                </div>
+            `;
+        };
 
         const focusStop = (stop, options = {}) => {
             if (!mapInstance.current || !stop?.coords) return;
@@ -494,7 +680,7 @@
 
                         const marker = L.marker(stop.coords, { icon: customIcon })
                          .addTo(map)
-                         .bindPopup(`<b>${stop.date} - ${stop.loc}</b><br>${stop.title}`);
+                         .bindPopup(buildPopupContent(stop));
                         
                          // Store marker reference
                          markersRef.current[stop.day] = marker;
