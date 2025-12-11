@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --border: #e2e8f0;
+            --muted: #475569;
+            --accent: #22c55e;
+            --shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+            --grid-size: 60px; /* 30 ft per grid -> 2px per ft */
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 20% 20%, #e0f2fe 0, transparent 30%), radial-gradient(circle at 80% 10%, #fce7f3 0, transparent 28%), #f8fafc;
+            color: #0f172a;
+            min-height: 100vh;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .page {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 32px 28px 40px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .title-block h1 {
+            margin: 6px 0 8px;
+            font-size: 28px;
+            letter-spacing: -0.02em;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: var(--shadow);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 18px;
+            min-height: 72vh;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px 16px 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .panel p {
+            margin: 0 0 12px;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: #0f172a;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .btn.soft {
+            background: var(--primary-soft);
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .btn.destructive {
+            background: #fee2e2;
+            border-color: #fecdd3;
+            color: #b91c1c;
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .palette-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface-soft);
+            cursor: pointer;
+            transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease, background 120ms ease;
+            user-select: none;
+        }
+
+        .palette-item:hover { transform: translateY(-1px); }
+
+        .palette-item.selected {
+            border-color: var(--primary);
+            background: #e0f2fe;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        }
+
+        .palette-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 12px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #ecfdf3;
+            color: #166534;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .badge.muted {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .layout-shell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 14px;
+            box-shadow: var(--shadow);
+            min-height: 70vh;
+        }
+
+        .layout-area {
+            position: relative;
+            height: 70vh;
+            min-height: 480px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background-color: #f8fafc;
+            background-image:
+                linear-gradient(0deg, rgba(226, 232, 240, 0.7) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(226, 232, 240, 0.7) 1px, transparent 1px);
+            background-size: var(--grid-size) var(--grid-size), var(--grid-size) var(--grid-size);
+            overflow: hidden;
+        }
+
+        #boundary-layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #items-layer {
+            position: absolute;
+            inset: 0;
+        }
+
+        .placed-item {
+            position: absolute;
+            width: 96px;
+            height: 96px;
+            border-radius: 16px;
+            background: #fff;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-align: center;
+            font-weight: 700;
+            color: #0f172a;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            transition: transform 100ms ease, box-shadow 120ms ease;
+        }
+
+        .placed-item:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        .item-icon {
+            font-size: 26px;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 10px;
+            right: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            color: #e2e8f0;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hint strong { color: #fff; }
+
+        .scale-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.82);
+            color: #e2e8f0;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+
+        .scale-line {
+            position: relative;
+            height: 6px;
+            background: linear-gradient(90deg, #f8fafc 0%, #f8fafc 50%, #cbd5e1 50%, #cbd5e1 100%);
+            border-radius: 999px;
+            flex-shrink: 0;
+        }
+
+        .scale-line::before,
+        .scale-line::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            width: 2px;
+            height: 18px;
+            background: #e2e8f0;
+        }
+
+        .scale-line::before { left: 0; }
+        .scale-line::after { right: 0; }
+
+        .scale-text {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .layout-shell { min-height: 60vh; }
+            .layout-area { height: 60vh; }
+        }
+
+        @media (max-width: 700px) {
+            .page { padding: 22px 16px 32px; }
+            header { flex-direction: column; align-items: flex-start; }
+            .layout-area { min-height: 420px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <div class="title-block">
+                <div class="eyebrow">Layout Planner</div>
+                <h1>Top-Down Layout Builder</h1>
+                <p style="margin:0;color:var(--muted);max-width:640px;">Outline boundaries, then drop outdoor or indoor items. Click on the canvas to add the selected item, drag to reposition. Draw boundaries point-by-point to map property lines, rooms, or zones.</p>
+            </div>
+            <a href="index.html" class="back-link">← Back to tools</a>
+        </header>
+
+        <div class="content">
+            <aside class="panel">
+                <h3>Boundaries</h3>
+                <p>Start drawing, click the canvas to add points, then finish to close the shape.</p>
+                <div class="button-row">
+                    <button class="btn primary" id="start-drawing">Start boundary</button>
+                    <button class="btn soft" id="finish-drawing" disabled>Finish boundary</button>
+                    <button class="btn" id="undo-point" disabled>Undo point</button>
+                </div>
+                <div class="button-row">
+                    <button class="btn destructive" id="clear-boundaries">Clear boundaries</button>
+                </div>
+                <div class="stat-row" style="margin-top:12px;">
+                    <span>Boundaries</span>
+                    <span class="badge" id="boundary-count">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Items placed</span>
+                    <span class="badge muted" id="item-count">0</span>
+                </div>
+
+                <h3 style="margin-top:18px;">Outdoor items</h3>
+                <div class="palette" id="outdoor-palette"></div>
+
+                <h3 style="margin-top:18px;">Indoor items</h3>
+                <div class="palette" id="indoor-palette"></div>
+
+                <div class="button-row" style="margin-top:14px;">
+                    <button class="btn destructive" id="clear-items">Clear items</button>
+                </div>
+                <p id="selection-text" style="margin-top:6px;">Tip: choose an item, then click the canvas to place it.</p>
+            </aside>
+
+            <main class="layout-shell">
+                <div id="layout-area" class="layout-area">
+                    <svg id="boundary-layer" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                    <div id="items-layer"></div>
+                    <div class="scale-bar" aria-hidden="true">
+                        <div class="scale-line" id="scale-line"></div>
+                        <div class="scale-text">30 ft per grid</div>
+                    </div>
+                    <div class="hint">
+                        <strong>Click</strong> add item • <strong>Drag</strong> to move • <strong>Double-click</strong> a point to finish drawing quickly
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const FEET_PER_GRID = 30;
+            const GRID_PX = 60; // matches --grid-size
+            const PX_PER_FOOT = GRID_PX / FEET_PER_GRID;
+
+            const outdoorItems = [
+                { id: 'car', label: 'Car', icon: '🚗', category: 'Outdoor' },
+                { id: 'animal', label: 'Animal', icon: '🐕', category: 'Outdoor' },
+                { id: 'house', label: 'House', icon: '🏠', category: 'Outdoor' },
+                { id: 'driveway', label: 'Driveway', icon: '🛣️', category: 'Outdoor' },
+                { id: 'tree', label: 'Tree', icon: '🌳', category: 'Outdoor' }
+            ];
+
+            const indoorItems = [
+                { id: 'bed', label: 'Bed', icon: '🛏️', category: 'Indoor' },
+                { id: 'couch', label: 'Couch', icon: '🛋️', category: 'Indoor' },
+                { id: 'kitchen', label: 'Kitchen', icon: '🍳', category: 'Indoor' },
+                { id: 'table', label: 'Table', icon: '🍽️', category: 'Indoor' },
+                { id: 'desk', label: 'Desk', icon: '🪑', category: 'Indoor' }
+            ];
+
+            const itemDimensionsFt = {
+                car: { w: 15, h: 6.5 },
+                animal: { w: 4, h: 2 },
+                house: { w: 40, h: 30 },
+                driveway: { w: 30, h: 12 },
+                tree: { w: 6, h: 6 },
+                bed: { w: 7, h: 7 },
+                couch: { w: 7, h: 3 },
+                kitchen: { w: 12, h: 8 },
+                table: { w: 6, h: 6 },
+                desk: { w: 5, h: 3 }
+            };
+
+            const state = {
+                selectedItem: null,
+                items: [],
+                boundaries: [],
+                currentPoints: [],
+                isDrawing: false,
+                layoutBounds: { width: 0, height: 0, left: 0, top: 0 },
+                nextBoundaryId: 1,
+                nextItemId: 1,
+                dragging: null
+            };
+
+            const layoutArea = document.getElementById('layout-area');
+            const boundaryLayer = document.getElementById('boundary-layer');
+            const itemsLayer = document.getElementById('items-layer');
+            const selectionText = document.getElementById('selection-text');
+            const boundaryCount = document.getElementById('boundary-count');
+            const itemCount = document.getElementById('item-count');
+            const finishBtn = document.getElementById('finish-drawing');
+            const startBtn = document.getElementById('start-drawing');
+            const undoBtn = document.getElementById('undo-point');
+            const scaleLine = document.getElementById('scale-line');
+            const scaleText = document.querySelector('.scale-text');
+
+            const clamp01 = (value) => Math.min(1, Math.max(0, value));
+
+            const updateLayoutBounds = () => {
+                const rect = layoutArea.getBoundingClientRect();
+                state.layoutBounds = {
+                    width: rect.width,
+                    height: rect.height,
+                    left: rect.left,
+                    top: rect.top
+                };
+                boundaryLayer.setAttribute('width', rect.width);
+                boundaryLayer.setAttribute('height', rect.height);
+                boundaryLayer.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+            };
+
+            const createPalette = (containerId, items) => {
+                const container = document.getElementById(containerId);
+                items.forEach((item) => {
+                    const btn = document.createElement('div');
+                    btn.className = 'palette-item';
+                    btn.dataset.key = item.id;
+                    btn.innerHTML = `
+                        <div class="palette-icon">${item.icon}</div>
+                        <div>
+                            <div style="font-weight:700;">${item.label}</div>
+                            <div style="color:var(--muted); font-size:12px;">${item.category}</div>
+                        </div>
+                    `;
+                    btn.addEventListener('click', () => {
+                        state.selectedItem = item;
+                        document.querySelectorAll('.palette-item').forEach(el => {
+                            el.classList.toggle('selected', el.dataset.key === item.id);
+                        });
+                        selectionText.textContent = `Selected: ${item.label}. Click the canvas to place it.`;
+                    });
+                    container.appendChild(btn);
+                });
+            };
+
+            const percentPointFromEvent = (event) => {
+                const { left, top, width, height } = state.layoutBounds;
+                const x = clamp01((event.clientX - left) / width);
+                const y = clamp01((event.clientY - top) / height);
+                return { x, y };
+            };
+
+            const pointString = (points) => {
+                const { width, height } = state.layoutBounds;
+                return points.map(pt => `${pt.x * width},${pt.y * height}`).join(' ');
+            };
+
+            const drawBoundaries = () => {
+                boundaryLayer.innerHTML = '';
+                if (!state.layoutBounds.width || !state.layoutBounds.height) return;
+                const ns = 'http://www.w3.org/2000/svg';
+
+                state.boundaries.forEach((boundary, idx) => {
+                    const poly = document.createElementNS(ns, 'polygon');
+                    poly.setAttribute('points', pointString(boundary.points));
+                    poly.setAttribute('fill', idx % 2 === 0 ? 'rgba(34,197,94,0.14)' : 'rgba(59,130,246,0.12)');
+                    poly.setAttribute('stroke', idx % 2 === 0 ? '#22c55e' : '#2563eb');
+                    poly.setAttribute('stroke-width', '2');
+                    poly.setAttribute('stroke-linejoin', 'round');
+                    boundaryLayer.appendChild(poly);
+
+                    boundary.points.forEach((pt) => {
+                        const circle = document.createElementNS(ns, 'circle');
+                        circle.setAttribute('cx', pt.x * state.layoutBounds.width);
+                        circle.setAttribute('cy', pt.y * state.layoutBounds.height);
+                        circle.setAttribute('r', '5');
+                        circle.setAttribute('fill', '#0f172a');
+                        boundaryLayer.appendChild(circle);
+                    });
+                });
+
+                if (state.isDrawing && state.currentPoints.length) {
+                    const active = document.createElementNS(ns, 'polyline');
+                    active.setAttribute('points', pointString(state.currentPoints));
+                    active.setAttribute('fill', 'none');
+                    active.setAttribute('stroke', '#f97316');
+                    active.setAttribute('stroke-width', '2');
+                    active.setAttribute('stroke-dasharray', '6 6');
+                    boundaryLayer.appendChild(active);
+
+                    state.currentPoints.forEach((pt, idx) => {
+                        const circle = document.createElementNS(ns, 'circle');
+                        circle.setAttribute('cx', pt.x * state.layoutBounds.width);
+                        circle.setAttribute('cy', pt.y * state.layoutBounds.height);
+                        circle.setAttribute('r', idx === 0 ? '7' : '5');
+                        circle.setAttribute('fill', idx === 0 ? '#f97316' : '#fff');
+                        circle.setAttribute('stroke', '#f97316');
+                        circle.setAttribute('stroke-width', '2');
+                        boundaryLayer.appendChild(circle);
+                    });
+                }
+            };
+
+            const renderItems = () => {
+                itemsLayer.innerHTML = '';
+                state.items.forEach((item) => {
+                    const dimsFt = itemDimensionsFt[item.typeId] || { w: 10, h: 10 };
+                    const rawW = dimsFt.w * PX_PER_FOOT;
+                    const rawH = dimsFt.h * PX_PER_FOOT;
+                    const minSide = 24;
+                    const scaleUp = Math.max(1, minSide / Math.min(rawW, rawH));
+                    const widthPx = rawW * scaleUp;
+                    const heightPx = rawH * scaleUp;
+
+                    const el = document.createElement('div');
+                    el.className = 'placed-item';
+                    el.dataset.id = item.id;
+                    el.style.width = `${widthPx}px`;
+                    el.style.height = `${heightPx}px`;
+                    el.style.left = `${item.x * 100}%`;
+                    el.style.top = `${item.y * 100}%`;
+                    el.innerHTML = `
+                        <div class="item-icon">${item.icon}</div>
+                        <div style="font-size:13px;">${item.label}</div>
+                    `;
+                    el.addEventListener('pointerdown', (e) => beginDrag(e, item.id));
+                    el.addEventListener('click', (e) => e.stopPropagation());
+                    itemsLayer.appendChild(el);
+                });
+                itemCount.textContent = state.items.length;
+            };
+
+            const beginDrag = (event, id) => {
+                event.stopPropagation();
+                const rect = state.layoutBounds;
+                if (!rect.width || !rect.height) return;
+                const item = state.items.find(it => it.id === id);
+                if (!item) return;
+                const currentPx = {
+                    x: item.x * rect.width,
+                    y: item.y * rect.height
+                };
+                state.dragging = {
+                    id,
+                    offsetX: event.clientX - (rect.left + currentPx.x),
+                    offsetY: event.clientY - (rect.top + currentPx.y)
+                };
+                event.currentTarget.setPointerCapture(event.pointerId);
+                event.currentTarget.addEventListener('pointermove', onDragMove);
+                event.currentTarget.addEventListener('pointerup', onDragEnd);
+                event.currentTarget.addEventListener('pointercancel', onDragEnd);
+            };
+
+            const onDragMove = (event) => {
+                if (!state.dragging) return;
+                const rect = state.layoutBounds;
+                const xPx = event.clientX - rect.left - state.dragging.offsetX;
+                const yPx = event.clientY - rect.top - state.dragging.offsetY;
+                const item = state.items.find(it => it.id === state.dragging.id);
+                if (!item) return;
+                item.x = clamp01(xPx / rect.width);
+                item.y = clamp01(yPx / rect.height);
+                renderItems();
+            };
+
+            const onDragEnd = (event) => {
+                if (event.currentTarget) {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                    event.currentTarget.removeEventListener('pointermove', onDragMove);
+                    event.currentTarget.removeEventListener('pointerup', onDragEnd);
+                    event.currentTarget.removeEventListener('pointercancel', onDragEnd);
+                }
+                state.dragging = null;
+            };
+
+            const handleLayoutClick = (event) => {
+                if (state.isDrawing) {
+                    const pt = percentPointFromEvent(event);
+                    state.currentPoints.push(pt);
+                    drawBoundaries();
+                    updateButtons();
+                    return;
+                }
+
+                if (state.selectedItem) {
+                    const pt = percentPointFromEvent(event);
+                    const newItem = {
+                        id: `item-${state.nextItemId++}`,
+                        typeId: state.selectedItem.id,
+                        label: state.selectedItem.label,
+                        icon: state.selectedItem.icon,
+                        category: state.selectedItem.category,
+                        x: pt.x,
+                        y: pt.y
+                    };
+                    state.items.push(newItem);
+                    renderItems();
+                }
+            };
+
+            const startBoundary = () => {
+                state.isDrawing = true;
+                state.currentPoints = [];
+                drawBoundaries();
+                updateButtons();
+            };
+
+            const finishBoundary = () => {
+                if (state.currentPoints.length < 3) return;
+                state.boundaries.push({
+                    id: `boundary-${state.nextBoundaryId++}`,
+                    points: [...state.currentPoints]
+                });
+                state.currentPoints = [];
+                state.isDrawing = false;
+                drawBoundaries();
+                updateCounts();
+                updateButtons();
+            };
+
+            const undoPoint = () => {
+                if (!state.currentPoints.length) return;
+                state.currentPoints.pop();
+                drawBoundaries();
+                updateButtons();
+            };
+
+            const clearBoundaries = () => {
+                state.boundaries = [];
+                state.currentPoints = [];
+                state.isDrawing = false;
+                drawBoundaries();
+                updateCounts();
+                updateButtons();
+            };
+
+            const clearItems = () => {
+                state.items = [];
+                renderItems();
+            };
+
+            const updateCounts = () => {
+                boundaryCount.textContent = state.boundaries.length;
+                itemCount.textContent = state.items.length;
+            };
+
+            const updateButtons = () => {
+                finishBtn.disabled = state.currentPoints.length < 3;
+                undoBtn.disabled = !state.currentPoints.length;
+                startBtn.textContent = state.isDrawing ? 'Drawing…' : 'Start boundary';
+            };
+
+            const updateScaleBar = () => {
+                document.documentElement.style.setProperty('--grid-size', `${GRID_PX}px`);
+                if (scaleLine) {
+                    scaleLine.style.width = `${GRID_PX}px`;
+                }
+                if (scaleText) {
+                    scaleText.textContent = `${FEET_PER_GRID} ft per grid`;
+                }
+            };
+
+            const init = () => {
+                createPalette('outdoor-palette', outdoorItems);
+                createPalette('indoor-palette', indoorItems);
+                updateScaleBar();
+                updateLayoutBounds();
+                updateButtons();
+                updateCounts();
+
+                layoutArea.addEventListener('click', handleLayoutClick);
+                layoutArea.addEventListener('dblclick', () => {
+                    if (state.isDrawing && state.currentPoints.length >= 3) {
+                        finishBoundary();
+                    }
+                });
+                window.addEventListener('resize', () => {
+                    updateLayoutBounds();
+                    drawBoundaries();
+                    renderItems();
+                });
+
+                document.getElementById('start-drawing').addEventListener('click', startBoundary);
+                document.getElementById('finish-drawing').addEventListener('click', finishBoundary);
+                document.getElementById('undo-point').addEventListener('click', undoPoint);
+                document.getElementById('clear-boundaries').addEventListener('click', clearBoundaries);
+                document.getElementById('clear-items').addEventListener('click', clearItems);
+
+                drawBoundaries();
+                renderItems();
+            };
+
+            init();
+        })();
+    </script>
+</body>
+</html>
