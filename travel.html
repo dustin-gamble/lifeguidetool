@@ -70,6 +70,26 @@
         Link: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
     };
 
+    // --- Rail Data (Approximate Shinkansen Path) ---
+    const shinkansenRoute = [
+        [35.6812, 139.7671], // Tokyo Station
+        [35.5090, 139.6175], // Shin-Yokohama
+        [35.2562, 139.1553], // Odawara (Hakone Stop)
+        [35.1032, 139.0777], // Atami
+        [34.9715, 138.3891], // Shizuoka
+        [34.7037, 137.7347], // Hamamatsu
+        [34.7697, 137.3829], // Toyohashi
+        [35.1709, 136.8815], // Nagoya
+        [35.3142, 136.2900], // Maibara (Route curves north around Lake Biwa)
+        [34.9858, 135.7588], // Kyoto
+        [34.7335, 135.5002], // Shin-Osaka
+        [34.6946, 135.1952], // Shin-Kobe
+        [34.8279, 134.6919], // Himeji
+        [34.6663, 133.9186], // Okayama
+        [34.4057, 133.1932], // Onomichi area
+        [34.3976, 132.4753]  // Hiroshima
+    ];
+
     // --- Data ---
     const tripData = [
         {
@@ -413,23 +433,8 @@
                     maxZoom: 19
                 }).addTo(map);
 
-                // --- DATA PROCESSING FOR PACIFIC VIEW ---
-                // We shift Western Hemisphere coordinates (like Seattle) by +360 longitude.
-                // This places them "East" of Japan on the map coordinate system,
-                // forcing the polyline to draw across the Pacific Ocean instead of Europe/Russia.
-                const pacificData = data.map(stop => {
-                    if (!stop.coords) return stop;
-                    // Check if longitude is negative (Western Hemisphere)
-                    if (stop.coords[1] < 0) {
-                        return {
-                            ...stop,
-                            coords: [stop.coords[0], stop.coords[1] + 360]
-                        };
-                    }
-                    return stop;
-                });
-
-                pacificData.forEach(stop => {
+                // --- 1. PLOT STOPS/MARKERS ---
+                data.forEach(stop => {
                     if (stop.coords) {
                         const markerColor = stop.color === 'blue' ? '#3b82f6' :
                                           stop.color === 'green' ? '#22c55e' :
@@ -439,9 +444,9 @@
                         
                         const customIcon = L.divIcon({
                             className: 'custom-div-icon',
-                            html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-                            iconSize: [12, 12],
-                            iconAnchor: [6, 6]
+                            html: `<div style="background-color: ${markerColor}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7]
                         });
 
                         L.marker(stop.coords, { icon: customIcon })
@@ -449,10 +454,37 @@
                          .bindPopup(`<b>${stop.date} - ${stop.loc}</b><br>${stop.title}`);
                     }
                 });
+
+                // --- 2. PLOT SHINKANSEN ROUTE ---
+                // We use the specific Shinkansen rail coordinate array
+                L.polyline(shinkansenRoute, {
+                    color: '#2563eb', // Blue for Rail
+                    weight: 4,
+                    opacity: 0.8
+                }).addTo(map);
                 
-                // Draw path
-                const latlngs = pacificData.filter(d => d.coords).map(d => d.coords);
-                L.polyline(latlngs, {color: '#ec4899', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+                // Add a "track" effect (dashed line on top)
+                L.polyline(shinkansenRoute, {
+                    color: 'white',
+                    weight: 2,
+                    opacity: 0.5,
+                    dashArray: '5, 10'
+                }).addTo(map);
+
+                // --- 3. FLIGHT PATHS (Simple Geodesic-ish) ---
+                // Seattle -> Tokyo
+                const flightPath = [
+                    [47.4435, -122.2961], // Seattle
+                    [35.6841, 139.7746]   // Tokyo
+                ];
+                
+                // Draw simple flight line (Leaflet will draw straight, we accept this over buggy date-line hacks)
+                L.polyline(flightPath, {
+                    color: '#9ca3af',
+                    weight: 2,
+                    opacity: 0.6,
+                    dashArray: '4, 8'
+                }).addTo(map);
             }
             
             // Fix map size when switching views or resizing
