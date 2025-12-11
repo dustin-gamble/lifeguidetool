@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>San Luis Obispo Flight Simulator</title>
     <script>
-        /* Ensure workers/assets resolve even when served from file:// */
-        window.CESIUM_BASE_URL = "https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/";
+        /* Ensure workers/assets resolve even when served locally; use a CDN without redirects. */
+        window.CESIUM_BASE_URL = "https://cdn.jsdelivr.net/npm/cesium@1.123.0/Build/Cesium/";
     </script>
-    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css">
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.123.0/Build/Cesium/Widgets/widgets.css">
+    <script src="https://cdn.jsdelivr.net/npm/cesium@1.123.0/Build/Cesium/Cesium.js"></script>
     <script src="flight_physics.js"></script>
     <style>
         :root {
