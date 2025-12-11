@@ -66,27 +66,250 @@
     const Icons = {
         MapPin: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
         Utensils: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
-        Hotel: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>
+        Hotel: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>,
+        Link: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
     };
 
     // --- Data ---
     const tripData = [
-        { day: 0, date: "3/22", dow: "SUN", loc: "Seattle", title: "Departure: SLO to Seattle", agenda: "Overnight Seattle Hotel. SBP 7:30pm -> SEA 9:55pm.", hotel: "Hilton Seattle Airport", coords: [47.4435, -122.2961], color: "gray" },
-        { day: 1, date: "3/23", dow: "MON", loc: "In Transit", title: "Fly to Tokyo", agenda: "Depart SEA 1:30pm. Cross the International Date Line.", hotel: "Airplane", coords: null, color: "gray" },
-        { day: 2, date: "3/24", dow: "TUE", loc: "Tokyo", title: "Arrive in Japan", agenda: "Land NRT 4:00pm. Harajuku or Shibuya if energy allows.", hotel: "Minn Nihonbashi", coords: [35.6841, 139.7746], color: "blue" },
-        { day: 3, date: "3/25", dow: "WED", loc: "Tokyo", title: "TeamLabs & Harajuku", agenda: "TeamLabs (9am), Shibuya (1pm), Harajuku (3pm), Shinjuku (4:30pm). Pokemon Center, Meiji Shrine.", food: "Uobei Sushi, Harajuku Crepes, Ichiran Ramen.", hotel: "Tokyo Disney Celebration Hotel", coords: [35.6595, 139.7005], color: "blue" },
-        { day: 4, date: "3/26", dow: "THU", loc: "Tokyo", title: "Disney Sea", agenda: "All day at Disney Sea.", hotel: "Tokyo Disney Celebration Hotel", coords: [35.6267, 139.8851], color: "blue" },
-        { day: 5, date: "3/27", dow: "FRI", loc: "Tokyo", title: "Akihabara & Odaiba", agenda: "TeamLab Borderless (Odaiba), Akihabara (Arcades, Gachapon), Ningyocho dinner.", food: "Mister Donut, Tenya Tempura, Go! Go! Curry.", hotel: "Minn Nihonbashi", coords: [35.6984, 139.7731], color: "blue" },
-        { day: 6, date: "3/28", dow: "SAT", loc: "Tokyo", title: "Ueno & Skytree", agenda: "Ueno Park (Cherry Blossoms!), Asakusa (Senso-ji), Tokyo Skytree, Karaoke.", hotel: "Minn Nihonbashi", coords: [35.7148, 139.7967], color: "blue" },
-        { day: 7, date: "3/29", dow: "SUN", loc: "Hakone", title: "RomanceCar to Hakone", agenda: "Travel to Hakone. Walk around Lake Ashi, see Mt Fuji. Onsen.", food: "Kaiseki Dinner included at Ryokan.", hotel: "Lalaca (Gora)", coords: [35.2500, 139.0400], color: "green" },
-        { day: 8, date: "3/30", dow: "MON", loc: "Kyoto", title: "Hakone to Kyoto", agenda: "Ropeway, Lake Ashi Boat. Shinkansen to Kyoto.", hotel: "Via Inn Prime Kyoto-eki", coords: [34.9858, 135.7588], color: "purple" },
-        { day: 9, date: "3/31", dow: "TUE", loc: "Kyoto", title: "Old Kyoto", agenda: "Kiyomizu-dera, Ninenzaka/Sannenzaka, Gion, Samurai Museum.", hotel: "Via Inn Prime Kyoto-eki", coords: [34.9949, 135.7850], color: "purple" },
-        { day: 10, date: "4/1", dow: "WED", loc: "Kyoto", title: "Bamboo Forest", agenda: "Arashiyama Bamboo Forest, Tenryu-ji, Monkey Park.", hotel: "Via Inn Prime Kyoto-eki", coords: [35.0094, 135.6668], color: "purple" },
-        { day: 11, date: "4/2", dow: "THU", loc: "Osaka", title: "Kyoto to Osaka", agenda: "Optional Nara Deer Park or Osaka Castle. Travel to Osaka evening.", hotel: "Hotel Keihan Univ. Tower", coords: [34.6654, 135.4323], color: "orange" },
-        { day: 12, date: "4/3", dow: "FRI", loc: "Osaka", title: "Universal Studios", agenda: "USJ All Day. *Mario World Reservation Required*.", hotel: "Hotel Keihan Univ. Tower", coords: [34.6654, 135.4323], color: "orange" },
-        { day: 13, date: "4/4", dow: "SAT", loc: "Hiroshima", title: "Peace Park & Okonomiyaki", agenda: "Travel to Hiroshima. Peace Museum, A-Bomb Dome, Cherry Blossom Picnic.", food: "Yagenbori Hassho (Okonomiyaki) or Nagataya.", hotel: "SUNDAY peace room", coords: [34.3929, 132.4526], color: "red" },
-        { day: 14, date: "4/5", dow: "SUN", loc: "Miyajima", title: "Miyajima Island", agenda: "Ferry to Miyajima Island. More Okonomiyaki.", hotel: "SUNDAY peace room", coords: [34.2974, 132.3197], color: "red" },
-        { day: 15, date: "4/6", dow: "MON", loc: "Home", title: "Return Home", agenda: "Hiroshima -> Tokyo (NRT) -> Seattle -> SLO.", hotel: "Home Sweet Home", coords: [35.7719, 140.3929], color: "gray" },
+        {
+            day: 0,
+            date: "3/22",
+            dow: "SUN",
+            loc: "Seattle",
+            title: "Departure: SLO to Seattle",
+            agenda: "Overnight Seattle Hotel. SBP 7:30pm -> SEA 9:55pm.",
+            hotel: "Hilton Seattle Airport",
+            coords: [47.4435, -122.2961],
+            color: "gray",
+            links: [
+                { text: "Hilton Seattle Airport", url: "https://www.hilton.com/en/hotels/seatac-hilton-seattle-airport-and-conference-center/" }
+            ]
+        },
+        {
+            day: 1,
+            date: "3/23",
+            dow: "MON",
+            loc: "In Transit",
+            title: "Fly to Tokyo",
+            agenda: "Depart SEA 1:30pm. Cross the International Date Line.",
+            hotel: "Airplane",
+            coords: null,
+            color: "gray"
+        },
+        {
+            day: 2,
+            date: "3/24",
+            dow: "TUE",
+            loc: "Tokyo",
+            title: "Arrive in Japan",
+            agenda: "Land NRT 4:00pm. Harajuku or Shibuya if energy allows.",
+            hotel: "Minn Nihonbashi",
+            coords: [35.6841, 139.7746],
+            color: "blue",
+            links: [
+                { text: "Minn Nihonbashi", url: "https://minn.inc/nihonbashi/" }
+            ]
+        },
+        {
+            day: 3,
+            date: "3/25",
+            dow: "WED",
+            loc: "Tokyo",
+            title: "TeamLabs & Harajuku",
+            agenda: "TeamLabs (9am), Shibuya (1pm), Harajuku (3pm), Shinjuku (4:30pm). Pokemon Center, Meiji Shrine.",
+            food: "Uobei Sushi, Harajuku Crepes, Ichiran Ramen.",
+            hotel: "Tokyo Disney Celebration Hotel",
+            coords: [35.6595, 139.7005],
+            color: "blue",
+            links: [
+                { text: "TeamLab Planets (Official)", url: "https://planets.teamlab.art/tokyo/" },
+                { text: "Meiji Jingu Shrine", url: "https://www.meijijingu.or.jp/en/" },
+                { text: "Shinjuku Gyoen Garden", url: "https://fng.or.jp/shinjuku/en/" },
+                { text: "Pokemon Center", url: "https://www.pokemon.co.jp/shop/en/" }
+            ]
+        },
+        {
+            day: 4,
+            date: "3/26",
+            dow: "THU",
+            loc: "Tokyo",
+            title: "Disney Sea",
+            agenda: "All day at Disney Sea.",
+            hotel: "Tokyo Disney Celebration Hotel",
+            coords: [35.6267, 139.8851],
+            color: "blue",
+            links: [
+                { text: "Tokyo Disney Sea", url: "https://www.tokyodisneyresort.jp/en/tds/" }
+            ]
+        },
+        {
+            day: 5,
+            date: "3/27",
+            dow: "FRI",
+            loc: "Tokyo",
+            title: "Akihabara & Odaiba",
+            agenda: "TeamLab Borderless (Odaiba), Akihabara (Arcades, Gachapon), Ningyocho dinner.",
+            food: "Mister Donut, Tenya Tempura, Go! Go! Curry.",
+            hotel: "Minn Nihonbashi",
+            coords: [35.6984, 139.7731],
+            color: "blue",
+            links: [
+                 { text: "TeamLab Borderless (Official)", url: "https://www.teamlab.art/e/borderless-azabudai/" },
+                 { text: "Akihabara Guide", url: "https://www.gotokyo.org/en/destinations/central-tokyo/akihabara/index.html" }
+            ]
+        },
+        {
+            day: 6,
+            date: "3/28",
+            dow: "SAT",
+            loc: "Tokyo",
+            title: "Ueno & Skytree",
+            agenda: "Ueno Park (Cherry Blossoms!), Asakusa (Senso-ji), Tokyo Skytree, Karaoke.",
+            hotel: "Minn Nihonbashi",
+            coords: [35.7148, 139.7967],
+            color: "blue",
+            links: [
+                { text: "Ueno Park", url: "https://www.gotokyo.org/en/spot/482/" },
+                { text: "Senso-ji Temple", url: "https://www.senso-ji.jp/english/" },
+                { text: "Tokyo Skytree", url: "https://www.tokyo-skytree.jp/en/" }
+            ]
+        },
+        {
+            day: 7,
+            date: "3/29",
+            dow: "SUN",
+            loc: "Hakone",
+            title: "RomanceCar to Hakone",
+            agenda: "Travel to Hakone. Walk around Lake Ashi, see Mt Fuji. Onsen.",
+            food: "Kaiseki Dinner included at Ryokan.",
+            hotel: "Lalaca (Gora)",
+            coords: [35.2500, 139.0400],
+            color: "green",
+            links: [
+                { text: "RomanceCar Reservations", url: "https://www.hakonenavi.jp/international/en/transportation/romancecar" },
+                { text: "Lalaca Ryokan", url: "http://lalaca.com/index-en.html" }
+            ]
+        },
+        {
+            day: 8,
+            date: "3/30",
+            dow: "MON",
+            loc: "Kyoto",
+            title: "Hakone to Kyoto",
+            agenda: "Ropeway, Lake Ashi Boat. Shinkansen to Kyoto.",
+            hotel: "Via Inn Prime Kyoto-eki",
+            coords: [34.9858, 135.7588],
+            color: "purple",
+            links: [
+                { text: "Hakone Ropeway", url: "https://www.hakoneropeway.co.jp/foreign/en/" },
+                { text: "Hakone Sightseeing Cruise", url: "https://www.hakone-kankosen.co.jp/foreign/en/" }
+            ]
+        },
+        {
+            day: 9,
+            date: "3/31",
+            dow: "TUE",
+            loc: "Kyoto",
+            title: "Old Kyoto",
+            agenda: "Kiyomizu-dera, Ninenzaka/Sannenzaka, Gion, Samurai Museum.",
+            hotel: "Via Inn Prime Kyoto-eki",
+            coords: [34.9949, 135.7850],
+            color: "purple",
+            links: [
+                { text: "Kiyomizu-dera Temple", url: "https://www.kiyomizudera.or.jp/en/" },
+                { text: "Samurai & Ninja Museum", url: "https://mai-ko.com/samurai/" }
+            ]
+        },
+        {
+            day: 10,
+            date: "4/1",
+            dow: "WED",
+            loc: "Kyoto",
+            title: "Bamboo Forest",
+            agenda: "Arashiyama Bamboo Forest, Tenryu-ji, Monkey Park.",
+            hotel: "Via Inn Prime Kyoto-eki",
+            coords: [35.0094, 135.6668],
+            color: "purple",
+            links: [
+                { text: "Arashiyama Bamboo Grove", url: "https://kyoto.travel/en/sightseeing/arashiyama-sagano.html" },
+                { text: "Tenryu-ji Temple", url: "http://www.tenryuji.com/en/" },
+                { text: "Iwatayama Monkey Park", url: "http://www.monkeypark.jp/" }
+            ]
+        },
+        {
+            day: 11,
+            date: "4/2",
+            dow: "THU",
+            loc: "Osaka",
+            title: "Kyoto to Osaka",
+            agenda: "Optional Nara Deer Park or Osaka Castle. Travel to Osaka evening.",
+            hotel: "Hotel Keihan Univ. Tower",
+            coords: [34.6654, 135.4323],
+            color: "orange",
+            links: [
+                { text: "Nara Deer Park", url: "https://www.visitnara.jp/venues/A00615/" },
+                { text: "Osaka Castle", url: "https://www.osakacastle.net/english/" }
+            ]
+        },
+        {
+            day: 12,
+            date: "4/3",
+            dow: "FRI",
+            loc: "Osaka",
+            title: "Universal Studios",
+            agenda: "USJ All Day. *Mario World Reservation Required*.",
+            hotel: "Hotel Keihan Univ. Tower",
+            coords: [34.6654, 135.4323],
+            color: "orange",
+            links: [
+                { text: "Universal Studios Japan", url: "https://www.usj.co.jp/web/en/us" },
+                { text: "Super Nintendo World", url: "https://www.usj.co.jp/web/en/us/areas/super-nintendo-world" }
+            ]
+        },
+        {
+            day: 13,
+            date: "4/4",
+            dow: "SAT",
+            loc: "Hiroshima",
+            title: "Peace Park & Okonomiyaki",
+            agenda: "Travel to Hiroshima. Peace Museum, A-Bomb Dome, Cherry Blossom Picnic.",
+            food: "Yagenbori Hassho (Okonomiyaki) or Nagataya.",
+            hotel: "SUNDAY peace room",
+            coords: [34.3929, 132.4526],
+            color: "red",
+            links: [
+                { text: "Peace Memorial Museum", url: "https://hpmmuseum.jp/?lang=eng" },
+                { text: "Atomic Bomb Dome", url: "https://www.city.hiroshima.lg.jp/site/english/17498.html" },
+                { text: "Shukkeien Garden", url: "https://shukkeien.jp/pdf/English_brochure.pdf" }
+            ]
+        },
+        {
+            day: 14,
+            date: "4/5",
+            dow: "SUN",
+            loc: "Miyajima",
+            title: "Miyajima Island",
+            agenda: "Ferry to Miyajima Island. More Okonomiyaki.",
+            hotel: "SUNDAY peace room",
+            coords: [34.2974, 132.3197],
+            color: "red",
+            links: [
+                { text: "Miyajima Tourist Info", url: "https://www.miyajima.or.jp/english/" },
+                { text: "Itsukushima Shrine", url: "http://www.itsukushimajinja.jp/index.html" }
+            ]
+        },
+        {
+            day: 15,
+            date: "4/6",
+            dow: "MON",
+            loc: "Home",
+            title: "Return Home",
+            agenda: "Hiroshima -> Tokyo (NRT) -> Seattle -> SLO.",
+            hotel: "Home Sweet Home",
+            coords: [35.7719, 140.3929],
+            color: "gray"
+        },
     ];
 
     // --- Components ---
@@ -132,7 +355,7 @@
                         </span>
                     </div>
                     
-                    <div className="space-y-2 text-sm text-gray-700">
+                    <div className="space-y-3 text-sm text-gray-700">
                         <p className="flex gap-2">
                             <span className="mt-0.5 text-gray-400"><Icons.MapPin /></span>
                             <span>{item.agenda}</span>
@@ -145,6 +368,23 @@
                             </p>
                         )}
                         
+                        {item.links && item.links.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-gray-200/50">
+                                {item.links.map((link, idx) => (
+                                    <a
+                                        key={idx}
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-pink-600 hover:bg-pink-50 hover:border-pink-200 transition-colors"
+                                    >
+                                        <Icons.Link />
+                                        {link.text}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
                         <p className="flex gap-2 text-gray-500 border-t border-gray-200 pt-2 mt-2">
                             <span className="mt-0.5"><Icons.Hotel /></span>
                             <span className="font-medium">{item.hotel}</span>
@@ -173,7 +413,23 @@
                     maxZoom: 19
                 }).addTo(map);
 
-                data.forEach(stop => {
+                // --- DATA PROCESSING FOR PACIFIC VIEW ---
+                // We shift Western Hemisphere coordinates (like Seattle) by +360 longitude.
+                // This places them "East" of Japan on the map coordinate system,
+                // forcing the polyline to draw across the Pacific Ocean instead of Europe/Russia.
+                const pacificData = data.map(stop => {
+                    if (!stop.coords) return stop;
+                    // Check if longitude is negative (Western Hemisphere)
+                    if (stop.coords[1] < 0) {
+                        return {
+                            ...stop,
+                            coords: [stop.coords[0], stop.coords[1] + 360]
+                        };
+                    }
+                    return stop;
+                });
+
+                pacificData.forEach(stop => {
                     if (stop.coords) {
                         const markerColor = stop.color === 'blue' ? '#3b82f6' :
                                           stop.color === 'green' ? '#22c55e' :
@@ -195,7 +451,7 @@
                 });
                 
                 // Draw path
-                const latlngs = data.filter(d => d.coords).map(d => d.coords);
+                const latlngs = pacificData.filter(d => d.coords).map(d => d.coords);
                 L.polyline(latlngs, {color: '#ec4899', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
             }
             
