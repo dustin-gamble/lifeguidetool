@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan Spring 2025 Itinerary</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fdf2f8;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent body scroll, handle in app */
+        }
+        /* Custom Scrollbar for the timeline */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fbcfe8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f472b6;
+        }
+        
+        .custom-div-icon {
+            background: transparent;
+            border: none;
+        }
+
+        /* Ensure Leaflet containers fill their parent */
+        .leaflet-container {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+    const { useState, useEffect, useRef } = React;
+    
+    // --- Icons ---
+    const Icons = {
+        MapPin: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+        Utensils: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>,
+        Hotel: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>
+    };
+
+    // --- Data ---
+    const tripData = [
+        { day: 0, date: "3/22", dow: "SUN", loc: "Seattle", title: "Departure: SLO to Seattle", agenda: "Overnight Seattle Hotel. SBP 7:30pm -> SEA 9:55pm.", hotel: "Hilton Seattle Airport", coords: [47.4435, -122.2961], color: "gray" },
+        { day: 1, date: "3/23", dow: "MON", loc: "In Transit", title: "Fly to Tokyo", agenda: "Depart SEA 1:30pm. Cross the International Date Line.", hotel: "Airplane", coords: null, color: "gray" },
+        { day: 2, date: "3/24", dow: "TUE", loc: "Tokyo", title: "Arrive in Japan", agenda: "Land NRT 4:00pm. Harajuku or Shibuya if energy allows.", hotel: "Minn Nihonbashi", coords: [35.6841, 139.7746], color: "blue" },
+        { day: 3, date: "3/25", dow: "WED", loc: "Tokyo", title: "TeamLabs & Harajuku", agenda: "TeamLabs (9am), Shibuya (1pm), Harajuku (3pm), Shinjuku (4:30pm). Pokemon Center, Meiji Shrine.", food: "Uobei Sushi, Harajuku Crepes, Ichiran Ramen.", hotel: "Tokyo Disney Celebration Hotel", coords: [35.6595, 139.7005], color: "blue" },
+        { day: 4, date: "3/26", dow: "THU", loc: "Tokyo", title: "Disney Sea", agenda: "All day at Disney Sea.", hotel: "Tokyo Disney Celebration Hotel", coords: [35.6267, 139.8851], color: "blue" },
+        { day: 5, date: "3/27", dow: "FRI", loc: "Tokyo", title: "Akihabara & Odaiba", agenda: "TeamLab Borderless (Odaiba), Akihabara (Arcades, Gachapon), Ningyocho dinner.", food: "Mister Donut, Tenya Tempura, Go! Go! Curry.", hotel: "Minn Nihonbashi", coords: [35.6984, 139.7731], color: "blue" },
+        { day: 6, date: "3/28", dow: "SAT", loc: "Tokyo", title: "Ueno & Skytree", agenda: "Ueno Park (Cherry Blossoms!), Asakusa (Senso-ji), Tokyo Skytree, Karaoke.", hotel: "Minn Nihonbashi", coords: [35.7148, 139.7967], color: "blue" },
+        { day: 7, date: "3/29", dow: "SUN", loc: "Hakone", title: "RomanceCar to Hakone", agenda: "Travel to Hakone. Walk around Lake Ashi, see Mt Fuji. Onsen.", food: "Kaiseki Dinner included at Ryokan.", hotel: "Lalaca (Gora)", coords: [35.2500, 139.0400], color: "green" },
+        { day: 8, date: "3/30", dow: "MON", loc: "Kyoto", title: "Hakone to Kyoto", agenda: "Ropeway, Lake Ashi Boat. Shinkansen to Kyoto.", hotel: "Via Inn Prime Kyoto-eki", coords: [34.9858, 135.7588], color: "purple" },
+        { day: 9, date: "3/31", dow: "TUE", loc: "Kyoto", title: "Old Kyoto", agenda: "Kiyomizu-dera, Ninenzaka/Sannenzaka, Gion, Samurai Museum.", hotel: "Via Inn Prime Kyoto-eki", coords: [34.9949, 135.7850], color: "purple" },
+        { day: 10, date: "4/1", dow: "WED", loc: "Kyoto", title: "Bamboo Forest", agenda: "Arashiyama Bamboo Forest, Tenryu-ji, Monkey Park.", hotel: "Via Inn Prime Kyoto-eki", coords: [35.0094, 135.6668], color: "purple" },
+        { day: 11, date: "4/2", dow: "THU", loc: "Osaka", title: "Kyoto to Osaka", agenda: "Optional Nara Deer Park or Osaka Castle. Travel to Osaka evening.", hotel: "Hotel Keihan Univ. Tower", coords: [34.6654, 135.4323], color: "orange" },
+        { day: 12, date: "4/3", dow: "FRI", loc: "Osaka", title: "Universal Studios", agenda: "USJ All Day. *Mario World Reservation Required*.", hotel: "Hotel Keihan Univ. Tower", coords: [34.6654, 135.4323], color: "orange" },
+        { day: 13, date: "4/4", dow: "SAT", loc: "Hiroshima", title: "Peace Park & Okonomiyaki", agenda: "Travel to Hiroshima. Peace Museum, A-Bomb Dome, Cherry Blossom Picnic.", food: "Yagenbori Hassho (Okonomiyaki) or Nagataya.", hotel: "SUNDAY peace room", coords: [34.3929, 132.4526], color: "red" },
+        { day: 14, date: "4/5", dow: "SUN", loc: "Miyajima", title: "Miyajima Island", agenda: "Ferry to Miyajima Island. More Okonomiyaki.", hotel: "SUNDAY peace room", coords: [34.2974, 132.3197], color: "red" },
+        { day: 15, date: "4/6", dow: "MON", loc: "Home", title: "Return Home", agenda: "Hiroshima -> Tokyo (NRT) -> Seattle -> SLO.", hotel: "Home Sweet Home", coords: [35.7719, 140.3929], color: "gray" },
+    ];
+
+    // --- Components ---
+
+    const TripCard = ({ item, isLast }) => {
+        const getBgColor = (loc) => {
+            if (loc === "Tokyo") return "bg-blue-50 border-blue-200";
+            if (loc === "Hakone") return "bg-green-50 border-green-200";
+            if (loc === "Kyoto") return "bg-purple-50 border-purple-200";
+            if (loc === "Osaka") return "bg-orange-50 border-orange-200";
+            if (loc === "Hiroshima" || loc === "Miyajima") return "bg-red-50 border-red-200";
+            return "bg-gray-50 border-gray-200";
+        };
+
+        const getBadgeColor = (loc) => {
+            if (loc === "Tokyo") return "bg-blue-100 text-blue-800";
+            if (loc === "Hakone") return "bg-green-100 text-green-800";
+            if (loc === "Kyoto") return "bg-purple-100 text-purple-800";
+            if (loc === "Osaka") return "bg-orange-100 text-orange-800";
+            if (loc === "Hiroshima" || loc === "Miyajima") return "bg-red-100 text-red-800";
+            return "bg-gray-200 text-gray-800";
+        };
+
+        return (
+            <div className="flex gap-4 mb-6 relative">
+                {/* Timeline Line */}
+                {!isLast && <div className="absolute left-[2.25rem] top-12 bottom-[-1.5rem] w-0.5 border-l-2 border-dashed border-gray-300"></div>}
+                
+                {/* Date Bubble */}
+                <div className="flex-shrink-0 w-20 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white border-4 border-pink-200 flex flex-col items-center justify-center shadow-sm z-10">
+                        <span className="text-xs font-bold text-gray-500">{item.dow}</span>
+                        <span className="text-sm font-bold text-pink-600">{item.date}</span>
+                    </div>
+                </div>
+
+                {/* Content Card */}
+                <div className={`flex-grow rounded-xl border p-5 shadow-sm hover:shadow-md transition-shadow ${getBgColor(item.loc)}`}>
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-lg text-gray-800">{item.title}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(item.loc)}`}>
+                            {item.loc}
+                        </span>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-700">
+                        <p className="flex gap-2">
+                            <span className="mt-0.5 text-gray-400"><Icons.MapPin /></span>
+                            <span>{item.agenda}</span>
+                        </p>
+                        
+                        {item.food && (
+                            <p className="flex gap-2 text-emerald-700 bg-emerald-50 p-2 rounded-lg">
+                                <span className="mt-0.5"><Icons.Utensils /></span>
+                                <span className="italic">{item.food}</span>
+                            </p>
+                        )}
+                        
+                        <p className="flex gap-2 text-gray-500 border-t border-gray-200 pt-2 mt-2">
+                            <span className="mt-0.5"><Icons.Hotel /></span>
+                            <span className="font-medium">{item.hotel}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const MapView = ({ data, activeView }) => {
+        const mapRef = useRef(null);
+        const mapInstance = useRef(null);
+
+        useEffect(() => {
+            if (!document.getElementById('map')) return;
+
+            // Initialize map only once
+            if (!mapInstance.current) {
+                const map = L.map('map').setView([35.3606, 138.7274], 6);
+                mapInstance.current = map;
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 19
+                }).addTo(map);
+
+                data.forEach(stop => {
+                    if (stop.coords) {
+                        const markerColor = stop.color === 'blue' ? '#3b82f6' :
+                                          stop.color === 'green' ? '#22c55e' :
+                                          stop.color === 'purple' ? '#a855f7' :
+                                          stop.color === 'orange' ? '#f97316' :
+                                          stop.color === 'red' ? '#ef4444' : '#6b7280';
+                        
+                        const customIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        });
+
+                        L.marker(stop.coords, { icon: customIcon })
+                         .addTo(map)
+                         .bindPopup(`<b>${stop.date} - ${stop.loc}</b><br>${stop.title}`);
+                    }
+                });
+                
+                // Draw path
+                const latlngs = data.filter(d => d.coords).map(d => d.coords);
+                L.polyline(latlngs, {color: '#ec4899', weight: 3, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+            }
+            
+            // Fix map size when switching views or resizing
+            if(mapInstance.current) {
+                setTimeout(() => {
+                    mapInstance.current.invalidateSize();
+                }, 100);
+            }
+        }, [data, activeView]);
+
+        return <div id="map" className="w-full h-full bg-gray-100"></div>;
+    };
+
+    const App = () => {
+        const [view, setView] = useState('itinerary');
+
+        return (
+            <div className="h-screen flex flex-col bg-white overflow-hidden">
+                {/* Header */}
+                <header className="bg-gradient-to-r from-pink-500 to-rose-400 p-4 lg:p-6 text-white shrink-0 shadow-lg z-20 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
+                            🌸 Japan Trip 2025
+                        </h1>
+                        <p className="text-pink-100 text-xs lg:text-sm mt-1">March 22 - April 6 • 15 Days</p>
+                    </div>
+                    <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm hidden sm:block">
+                        <span className="font-bold text-lg">15</span>
+                        <span className="text-xs block text-center">Days</span>
+                    </div>
+                </header>
+
+                {/* Mobile Tabs (Hidden on Desktop) */}
+                <div className="flex border-b border-gray-200 shrink-0 bg-white z-10 lg:hidden">
+                    <button
+                        onClick={() => setView('itinerary')}
+                        className={`flex-1 py-3 text-sm font-medium transition-colors duration-200 ${view === 'itinerary' ? 'text-pink-600 border-b-2 border-pink-600 bg-pink-50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Daily Itinerary
+                    </button>
+                    <button
+                        onClick={() => setView('map')}
+                        className={`flex-1 py-3 text-sm font-medium transition-colors duration-200 ${view === 'map' ? 'text-pink-600 border-b-2 border-pink-600 bg-pink-50' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Map View
+                    </button>
+                </div>
+
+                {/* Main Content: Split Screen on Desktop, Tabbed on Mobile */}
+                <div className="flex-grow flex flex-col lg:flex-row overflow-hidden relative bg-[#fdf2f8]">
+                    
+                    {/* LEFT COLUMN: Itinerary */}
+                    <div className={`
+                        h-full overflow-y-auto bg-[#fdf2f8] scroll-smooth
+                        ${view === 'itinerary' ? 'block' : 'hidden'} 
+                        lg:block lg:w-1/2 lg:border-r border-gray-200 lg:shadow-xl z-10
+                    `}>
+                        <div className="max-w-xl mx-auto p-4 md:p-8">
+                            {tripData.map((item, index) => (
+                                <TripCard key={index} item={item} isLast={index === tripData.length - 1} />
+                            ))}
+                            
+                            <div className="mt-8 bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center mb-8">
+                                <h3 className="font-bold text-gray-800 mb-2">Important Notes</h3>
+                                <ul className="text-sm text-gray-600 space-y-2 text-left list-disc pl-5">
+                                    <li>Get <strong>Mario World Reservation</strong> for Day 12 (USJ) in advance!</li>
+                                    <li>Send large bags from Tokyo to Kyoto on Day 7.</li>
+                                    <li>Eat Okonomiyaki in Hiroshima!</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Map */}
+                    <div className={`
+                        h-full relative
+                        ${view === 'map' ? 'block' : 'hidden'} 
+                        lg:block lg:w-1/2
+                    `}>
+                        <MapView data={tripData} activeView={view} />
+                    </div>
+
+                </div>
+            </div>
+        );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+
+</script>
+
+</body>
+</html>
