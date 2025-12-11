@@ -334,14 +334,15 @@
 
     // --- Components ---
 
-    const TripCard = ({ item, isLast }) => {
-        const getBgColor = (loc) => {
-            if (loc === "Tokyo") return "bg-blue-50 border-blue-200";
-            if (loc === "Hakone") return "bg-green-50 border-green-200";
-            if (loc === "Kyoto") return "bg-purple-50 border-purple-200";
-            if (loc === "Osaka") return "bg-orange-50 border-orange-200";
-            if (loc === "Hiroshima" || loc === "Miyajima") return "bg-red-50 border-red-200";
-            return "bg-gray-50 border-gray-200";
+    const TripCard = ({ item, isLast, isActive, onClick }) => {
+        const getBgColor = (loc, active) => {
+            if (active) return "bg-pink-100 border-pink-400 ring-2 ring-pink-300";
+            if (loc === "Tokyo") return "bg-blue-50 border-blue-200 hover:bg-blue-100";
+            if (loc === "Hakone") return "bg-green-50 border-green-200 hover:bg-green-100";
+            if (loc === "Kyoto") return "bg-purple-50 border-purple-200 hover:bg-purple-100";
+            if (loc === "Osaka") return "bg-orange-50 border-orange-200 hover:bg-orange-100";
+            if (loc === "Hiroshima" || loc === "Miyajima") return "bg-red-50 border-red-200 hover:bg-red-100";
+            return "bg-gray-50 border-gray-200 hover:bg-gray-100";
         };
 
         const getBadgeColor = (loc) => {
@@ -354,20 +355,23 @@
         };
 
         return (
-            <div className="flex gap-4 mb-6 relative">
+            <div
+                className="flex gap-4 mb-6 relative cursor-pointer group"
+                onClick={onClick}
+            >
                 {/* Timeline Line */}
-                {!isLast && <div className="absolute left-[2.25rem] top-12 bottom-[-1.5rem] w-0.5 border-l-2 border-dashed border-gray-300"></div>}
+                {!isLast && <div className="absolute left-[2.25rem] top-12 bottom-[-1.5rem] w-0.5 border-l-2 border-dashed border-gray-300 group-hover:border-pink-300 transition-colors"></div>}
                 
                 {/* Date Bubble */}
                 <div className="flex-shrink-0 w-20 flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-white border-4 border-pink-200 flex flex-col items-center justify-center shadow-sm z-10">
+                    <div className={`w-16 h-16 rounded-full border-4 flex flex-col items-center justify-center shadow-sm z-10 transition-all ${isActive ? 'bg-pink-50 border-pink-400 scale-110' : 'bg-white border-pink-200 group-hover:border-pink-300'}`}>
                         <span className="text-xs font-bold text-gray-500">{item.dow}</span>
                         <span className="text-sm font-bold text-pink-600">{item.date}</span>
                     </div>
                 </div>
 
                 {/* Content Card */}
-                <div className={`flex-grow rounded-xl border p-5 shadow-sm hover:shadow-md transition-shadow ${getBgColor(item.loc)}`}>
+                <div className={`flex-grow rounded-xl border p-5 shadow-sm transition-all duration-300 ${getBgColor(item.loc, isActive)}`}>
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="font-bold text-lg text-gray-800">{item.title}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(item.loc)}`}>
@@ -396,6 +400,7 @@
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()} // Prevent card click when clicking link
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-pink-600 hover:bg-pink-50 hover:border-pink-200 transition-colors"
                                     >
                                         <Icons.Link />
@@ -415,7 +420,7 @@
         );
     };
 
-    const MapView = ({ data, activeView }) => {
+    const MapView = ({ data, activeView, activeDay }) => {
         const mapRef = useRef(null);
         const mapInstance = useRef(null);
 
@@ -456,14 +461,12 @@
                 });
 
                 // --- 2. PLOT SHINKANSEN ROUTE ---
-                // We use the specific Shinkansen rail coordinate array
                 L.polyline(shinkansenRoute, {
                     color: '#2563eb', // Blue for Rail
                     weight: 4,
                     opacity: 0.8
                 }).addTo(map);
                 
-                // Add a "track" effect (dashed line on top)
                 L.polyline(shinkansenRoute, {
                     color: 'white',
                     weight: 2,
@@ -471,14 +474,12 @@
                     dashArray: '5, 10'
                 }).addTo(map);
 
-                // --- 3. FLIGHT PATHS (Simple Geodesic-ish) ---
-                // Seattle -> Tokyo
+                // --- 3. FLIGHT PATHS ---
                 const flightPath = [
                     [47.4435, -122.2961], // Seattle
                     [35.6841, 139.7746]   // Tokyo
                 ];
                 
-                // Draw simple flight line (Leaflet will draw straight, we accept this over buggy date-line hacks)
                 L.polyline(flightPath, {
                     color: '#9ca3af',
                     weight: 2,
@@ -495,11 +496,22 @@
             }
         }, [data, activeView]);
 
+        // Effect to handle zooming to active day
+        useEffect(() => {
+            if (mapInstance.current && activeDay && activeDay.coords) {
+                mapInstance.current.flyTo(activeDay.coords, 12, {
+                    animate: true,
+                    duration: 1.5
+                });
+            }
+        }, [activeDay]);
+
         return <div id="map" className="w-full h-full bg-gray-100"></div>;
     };
 
     const App = () => {
         const [view, setView] = useState('itinerary');
+        const [activeDay, setActiveDay] = useState(null);
 
         return (
             <div className="h-screen flex flex-col bg-white overflow-hidden">
@@ -544,7 +556,19 @@
                     `}>
                         <div className="max-w-xl mx-auto p-4 md:p-8">
                             {tripData.map((item, index) => (
-                                <TripCard key={index} item={item} isLast={index === tripData.length - 1} />
+                                <TripCard
+                                    key={index}
+                                    item={item}
+                                    isLast={index === tripData.length - 1}
+                                    isActive={activeDay?.day === item.day}
+                                    onClick={() => {
+                                        setActiveDay(item);
+                                        // On mobile, switch to map view when clicking a card
+                                        if (window.innerWidth < 1024 && item.coords) {
+                                            setView('map');
+                                        }
+                                    }}
+                                />
                             ))}
                             
                             <div className="mt-8 bg-white p-6 rounded-xl border border-gray-200 shadow-sm text-center mb-8">
@@ -564,7 +588,7 @@
                         ${view === 'map' ? 'block' : 'hidden'} 
                         lg:block lg:w-1/2
                     `}>
-                        <MapView data={tripData} activeView={view} />
+                        <MapView data={tripData} activeView={view} activeDay={activeDay} />
                     </div>
 
                 </div>
