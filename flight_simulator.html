@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>San Luis Obispo Flight Simulator</title>
+    <script>
+        /* Ensure workers/assets resolve even when served from file:// */
+        window.CESIUM_BASE_URL = "https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/";
+    </script>
+    <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+    <script src="flight_physics.js"></script>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+        #cesiumContainer {
+            position: absolute;
+            inset: 0;
+        }
+        .hud {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 12px;
+            padding: 12px 14px;
+            backdrop-filter: blur(6px);
+            min-width: 260px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .hud h1 {
+            margin: 0 0 6px 0;
+            font-size: 16px;
+            letter-spacing: 0.4px;
+            color: #a5f3fc;
+        }
+        .hud .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            font-size: 13px;
+        }
+        .hud .stat {
+            padding: 6px 8px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            text-align: center;
+        }
+        .hud .stat .label {
+            display: block;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .hud .instructions {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+        .hud .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .hud .chip {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #e0f2fe;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+        .joystick {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle at center, rgba(148, 163, 184, 0.14), rgba(15, 23, 42, 0.4));
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 50%;
+            touch-action: none;
+            user-select: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+        .joystick .knob {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(145deg, #0ea5e9, #06b6d4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.45);
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .mobile-tip {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            padding: 8px 10px;
+            font-size: 12px;
+            border-radius: 10px;
+            backdrop-filter: blur(6px);
+            max-width: 240px;
+            line-height: 1.4;
+        }
+        a { color: #67e8f9; }
+    </style>
+</head>
+<body>
+    <div id="cesiumContainer"></div>
+    <div class="hud">
+        <h1>SLO Flight Simulator</h1>
+        <div class="stats">
+            <div class="stat">
+                <span class="label">Speed (kts)</span>
+                <span id="speed">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">Altitude (ft)</span>
+                <span id="altitude">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">Heading (°)</span>
+                <span id="heading">0</span>
+            </div>
+        </div>
+        <div class="chips">
+            <div class="chip">W/S: throttle</div>
+            <div class="chip">↑/↓ pitch</div>
+            <div class="chip">←/→ turn</div>
+            <div class="chip">Space: level</div>
+            <div class="chip">Joystick: turn & pitch</div>
+        </div>
+        <div class="instructions" id="ringStatus">Fly through the glowing rings!</div>
+    </div>
+    <div class="joystick" id="joystick">
+        <div class="knob" id="joystickKnob"></div>
+    </div>
+    <div class="mobile-tip">
+        Drag the joystick or use arrow keys to steer. Keep altitude and fly through all rings.
+    </div>
+
+    <script>
+        Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZDBmMjg2NS0xNzcyLTQyMzMtODJlYy1hZTA0ZTE0NGJhYmIiLCJpZCI6MzE2ODg4LCJpYXQiOjE3NTEyNDk4OTB9.EbGAfuYyPEPANHvRB-gbWiK4tiOQBM5MdBHICx4aC4o";
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+            animation: false,
+            timeline: false,
+            geocoder: false,
+            baseLayerPicker: false,
+            homeButton: false,
+            navigationHelpButton: false,
+            sceneModePicker: false,
+            fullscreenButton: false,
+            vrButton: false,
+            requestRenderMode: false
+        });
+
+        // Backwards/forwards compatible terrain setup across Cesium versions
+        const loadTerrain = async () => {
+            try {
+                if (Cesium.Terrain && Cesium.Terrain.fromWorldTerrain) {
+                    const terrain = await Cesium.Terrain.fromWorldTerrain();
+                    if (viewer.scene.setTerrain) {
+                        viewer.scene.setTerrain(terrain);
+                    } else {
+                        viewer.terrainProvider = terrain;
+                    }
+                    return;
+                }
+                if (Cesium.createWorldTerrainAsync) {
+                    const terrain = await Cesium.createWorldTerrainAsync();
+                    if (viewer.scene.setTerrain) {
+                        viewer.scene.setTerrain(terrain);
+                    } else {
+                        viewer.terrainProvider = terrain;
+                    }
+                    return;
+                }
+                if (Cesium.createWorldTerrain) {
+                    const terrain = Cesium.createWorldTerrain();
+                    viewer.terrainProvider = terrain;
+                }
+            } catch (err) {
+                console.warn("Falling back to ellipsoid terrain:", err);
+                viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+            }
+        };
+        loadTerrain();
+        viewer.scene.globe.enableLighting = true;
+        viewer.scene.skyBox.show = true;
+        viewer.scene.skyAtmosphere.show = true;
+        viewer.clock.shouldAnimate = true;
+
+        const startLat = 35.2828;
+        const startLon = -120.6596;
+        const startAlt = 610; // meters (~2000 ft)
+
+        const flightState = {
+            heading: Cesium.Math.toRadians(70),
+            pitch: Cesium.Math.toRadians(-5),
+            roll: 0,
+            throttle: 0.55,
+            speedMin: 55,
+            speedMax: 130,
+            speed: 0,
+            position: Cesium.Cartesian3.fromDegrees(startLon, startLat, startAlt),
+            minPitch: Cesium.Math.toRadians(-50),
+            maxPitch: Cesium.Math.toRadians(50),
+            baseTurnRate: Cesium.Math.toRadians(80),
+            basePitchRate: Cesium.Math.toRadians(55),
+            rollAuthority: Cesium.Math.toRadians(40),
+            minAltitude: 120,
+            maxAltitude: 2000,
+            orientation: null,
+            cartographic: null
+        };
+        flightState.speed = Cesium.Math.lerp(flightState.speedMin, flightState.speedMax, flightState.throttle);
+
+        const plane = viewer.entities.add({
+            name: "Cesium Air",
+            position: flightState.position,
+            orientation: Cesium.Transforms.headingPitchRollQuaternion(
+                flightState.position,
+                new Cesium.HeadingPitchRoll(flightState.heading, flightState.pitch, flightState.roll)
+            ),
+            model: {
+                uri: "https://cesium.com/downloads/cesiumjs/releases/1.123/Apps/SampleData/models/CesiumAir/Cesium_Air.glb",
+                minimumPixelSize: 64,
+                maximumScale: 20,
+                scale: 1.2
+            }
+        });
+
+        const rings = [
+            { lat: 35.2836, lon: -120.6590, alt: 670 },
+            { lat: 35.2798, lon: -120.6615, alt: 640 },
+            { lat: 35.2850, lon: -120.6555, alt: 690 },
+            { lat: 35.2815, lon: -120.6530, alt: 660 },
+            { lat: 35.2770, lon: -120.6580, alt: 650 },
+            { lat: 35.2845, lon: -120.6665, alt: 700 }
+        ].map((ring, idx) => {
+            const entity = viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(ring.lon, ring.lat, ring.alt),
+                ellipse: {
+                    semiMajorAxis: 55,
+                    semiMinorAxis: 55,
+                    height: ring.alt,
+                    material: Cesium.Color.fromBytes(56, 189, 248, 70),
+                    outline: true,
+                    outlineColor: Cesium.Color.CYAN
+                },
+                label: {
+                    text: `Ring ${idx + 1}`,
+                    pixelOffset: new Cesium.Cartesian2(0, -50),
+                    fillColor: Cesium.Color.LIGHTCYAN,
+                    font: "16px sans-serif",
+                    showBackground: true,
+                    backgroundColor: Cesium.Color.fromBytes(15, 23, 42, 180),
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM
+                },
+                properties: {
+                    collected: false
+                }
+            });
+            return entity;
+        });
+
+        function updateRingStatus() {
+            const collected = rings.filter(r => r.properties.collected.getValue()).length;
+            document.getElementById("ringStatus").textContent = `Rings: ${collected}/${rings.length} collected`;
+        }
+        updateRingStatus();
+
+        // Input handling
+        const inputState = {
+            turn: 0,
+            pitch: 0,
+            joystickTurn: 0,
+            joystickPitch: 0
+        };
+
+        const keyMap = {
+            ArrowLeft: () => inputState.turn = -1,
+            ArrowRight: () => inputState.turn = 1,
+            ArrowUp: () => inputState.pitch = -1,
+            ArrowDown: () => inputState.pitch = 1,
+            KeyW: () => throttle = Math.min(1, throttle + 0.05),
+            KeyS: () => throttle = Math.max(0, throttle - 0.05),
+            Space: () => { pitch = 0; roll = 0; }
+        };
+
+        window.addEventListener("keydown", (e) => {
+            const fn = keyMap[e.code];
+            if (fn) {
+                fn();
+                e.preventDefault();
+            }
+        });
+        window.addEventListener("keyup", (e) => {
+            if (e.code === "ArrowLeft" || e.code === "ArrowRight") inputState.turn = 0;
+            if (e.code === "ArrowUp" || e.code === "ArrowDown") inputState.pitch = 0;
+        });
+
+        // Joystick
+        const joystick = document.getElementById("joystick");
+        const knob = document.getElementById("joystickKnob");
+        let joystickActive = false;
+        const joyRect = () => joystick.getBoundingClientRect();
+        const maxRadius = 55;
+
+        function setKnob(dx, dy) {
+            knob.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+
+        function updateJoystick(clientX, clientY) {
+            const rect = joyRect();
+            const x = clientX - (rect.left + rect.width / 2);
+            const y = clientY - (rect.top + rect.height / 2);
+            const dist = Math.min(Math.hypot(x, y), maxRadius);
+            const angle = Math.atan2(y, x);
+            const nx = Math.cos(angle) * dist / maxRadius;
+            const ny = Math.sin(angle) * dist / maxRadius;
+            setKnob(nx * maxRadius, ny * maxRadius);
+            inputState.joystickTurn = nx;
+            inputState.joystickPitch = ny;
+        }
+
+        function resetJoystick() {
+            setKnob(0, 0);
+            inputState.joystickTurn = 0;
+            inputState.joystickPitch = 0;
+        }
+
+        joystick.addEventListener("pointerdown", (e) => {
+            joystickActive = true;
+            joystick.setPointerCapture(e.pointerId);
+            updateJoystick(e.clientX, e.clientY);
+        });
+        joystick.addEventListener("pointermove", (e) => {
+            if (joystickActive) updateJoystick(e.clientX, e.clientY);
+        });
+        joystick.addEventListener("pointerup", () => {
+            joystickActive = false;
+            resetJoystick();
+        });
+        joystick.addEventListener("pointercancel", () => {
+            joystickActive = false;
+            resetJoystick();
+        });
+
+        // Flight update
+        const scratchMatrix = new Cesium.Matrix3();
+        const scratchDir = new Cesium.Cartesian3();
+        const scratchOffset = new Cesium.HeadingPitchRange();
+
+        viewer.clock.onTick.addEventListener((clock) => {
+            const dt = Math.min(clock.deltaTime, 0.05);
+            FlightPhysics.step(
+                flightState,
+                {
+                    turn: inputState.turn + inputState.joystickTurn * 1.2,
+                    pitch: inputState.pitch + inputState.joystickPitch,
+                    joystickTurn: 0,
+                    joystickPitch: 0,
+                    throttle: flightState.throttle
+                },
+                dt,
+                Cesium
+            );
+
+            plane.position = flightState.position;
+            plane.orientation = flightState.orientation;
+
+            const cameraRange = 230;
+            const camPitch = Cesium.Math.toRadians(-12);
+            scratchOffset.heading = flightState.heading + Math.PI;
+            scratchOffset.pitch = camPitch;
+            scratchOffset.range = cameraRange;
+            viewer.scene.camera.lookAt(flightState.position, scratchOffset);
+
+            updateHUD(flightState.cartographic);
+            checkRings();
+        });
+
+        function updateHUD(carto) {
+            document.getElementById("speed").textContent = Math.round(flightState.speed * 1.94384); // m/s to kts
+            document.getElementById("heading").textContent = (Cesium.Math.toDegrees(flightState.heading) + 360).toFixed(0) % 360;
+            document.getElementById("altitude").textContent = Math.round(carto.height * 3.28084);
+        }
+
+        function checkRings() {
+            rings.forEach((ring) => {
+                if (ring.properties.collected.getValue()) return;
+                const dist = Cesium.Cartesian3.distance(flightState.position, ring.position.getValue());
+                if (dist < 45) {
+                    ring.properties.collected = new Cesium.ConstantProperty(true);
+                    ring.ellipse.material = Cesium.Color.fromBytes(74, 222, 128, 90);
+                    ring.ellipse.outlineColor = Cesium.Color.LIME;
+                    ring.label.text = "Cleared";
+                    updateRingStatus();
+                }
+            });
+        }
+
+        // Initial camera placement
+        viewer.scene.camera.lookAt(
+            flightState.position,
+            new Cesium.HeadingPitchRange(flightState.heading + Math.PI, Cesium.Math.toRadians(-10), 240)
+        );
+        viewer.scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    </script>
+</body>
+</html>
