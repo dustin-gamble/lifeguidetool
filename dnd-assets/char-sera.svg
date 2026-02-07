@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" role="img" aria-label="Sera Dawnwell portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#46354f"/>
+      <stop offset="100%" stop-color="#1a1126"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#bg)"/>
+  <ellipse cx="320" cy="282" rx="126" ry="138" fill="#f4d6c0"/>
+  <path d="M190 252 Q320 106 450 252 L450 300 Q320 220 190 300 Z" fill="#c8b07f"/>
+  <circle cx="270" cy="286" r="12" fill="#22314a"/><circle cx="370" cy="286" r="12" fill="#22314a"/>
+  <path d="M272 338 Q320 366 368 338" stroke="#743a35" stroke-width="8" fill="none"/>
+  <rect x="196" y="396" width="248" height="186" rx="38" fill="#d7dce9"/>
+  <rect x="300" y="425" width="40" height="90" fill="#f5d770"/>
+  <rect x="275" y="450" width="90" height="40" fill="#f5d770"/>
+  <rect x="150" y="560" width="340" height="175" rx="18" fill="#1a1126" opacity="0.93"/>
+  <text x="170" y="620" fill="#f4edff" font-size="38" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Sera Dawnwell</text>
+  <text x="170" y="665" fill="#d2c8e8" font-size="24" font-family="Trebuchet MS, Arial, sans-serif">Human Cleric - Heart of the Team</text>
+</svg>

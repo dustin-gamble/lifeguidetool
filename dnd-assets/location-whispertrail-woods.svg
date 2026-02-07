@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Whispertrail Woods">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6ca2a8"/>
+      <stop offset="100%" stop-color="#293f42"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <rect y="430" width="1200" height="245" fill="#274d33"/>
+  <path d="M0 560 C220 520, 360 610, 560 560 C760 510, 980 620, 1200 560 L1200 675 L0 675 Z" fill="#1f3f29"/>
+  <rect x="120" y="180" width="34" height="300" fill="#3a281d"/><circle cx="137" cy="170" r="84" fill="#2f6a3d"/>
+  <rect x="290" y="140" width="36" height="340" fill="#3a281d"/><circle cx="308" cy="130" r="100" fill="#356f42"/>
+  <rect x="880" y="160" width="36" height="320" fill="#3a281d"/><circle cx="898" cy="148" r="96" fill="#2f6640"/>
+  <rect x="1030" y="200" width="28" height="280" fill="#3a281d"/><circle cx="1044" cy="190" r="78" fill="#2d5c38"/>
+  <path d="M380 520 C480 470, 560 560, 660 510 C740 470, 820 550, 900 510" stroke="#b9d5ff" stroke-width="12" fill="none" opacity="0.7"/>
+  <text x="64" y="90" fill="#d6f7ff" font-size="56" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Whispertrail Woods</text>
+  <text x="64" y="134" fill="#bde4ee" font-size="28" font-family="Trebuchet MS, Arial, sans-serif">Tracks, puzzles, and hidden paths</text>
+</svg>

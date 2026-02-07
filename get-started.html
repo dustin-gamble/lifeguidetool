@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D Get Started | Life Guide Tool</title>
+  <style>
+    :root {
+      --bg: #0d1426;
+      --panel: #101f3a;
+      --panel-2: #15284a;
+      --ink: #e6eefb;
+      --muted: #b7c6df;
+      --accent: #6ee7b7;
+      --accent-2: #93c5fd;
+      --border: #2c466d;
+      --danger: #fca5a5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top, #1a2f56 0%, #0d1426 45%);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 22px 18px 54px;
+    }
+
+    .top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .top a {
+      text-decoration: none;
+      color: var(--ink);
+      border: 1px solid var(--border);
+      background: rgba(16, 31, 58, 0.86);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .top a:hover {
+      border-color: #4e6ea4;
+      background: rgba(20, 41, 72, 0.95);
+    }
+
+    .hero {
+      margin-top: 14px;
+      background: linear-gradient(140deg, rgba(21, 40, 74, 0.95), rgba(16, 31, 58, 0.92));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .hero h1 {
+      margin: 8px 0 8px;
+      font-size: clamp(1.7rem, 3vw, 2.45rem);
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 900px;
+    }
+
+    .hero-row {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .hero-row img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #3b5f90;
+      display: block;
+      background: #0f1c33;
+    }
+
+    .panel {
+      margin-top: 16px;
+      background: rgba(16, 31, 58, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.08rem;
+    }
+
+    h4 {
+      margin: 0 0 7px;
+      font-size: 1rem;
+      color: #deedff;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .tiny {
+      font-size: 0.86rem;
+      color: #9fb4d6;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      border: 1px solid #3a5b8a;
+      background: #0f213f;
+      border-radius: 12px;
+      padding: 10px;
+      position: relative;
+      min-height: 120px;
+    }
+
+    .flow-step h4 {
+      margin: 0 0 7px;
+      font-size: 0.98rem;
+      color: #d9ebff;
+    }
+
+    .flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .flow-step::after {
+      content: ">";
+      position: absolute;
+      top: 50%;
+      right: -9px;
+      transform: translateY(-50%);
+      color: #8cb6e5;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .flow-step:last-child::after {
+      display: none;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .scene-card {
+      border: 1px solid #355784;
+      border-radius: 12px;
+      background: #0f213d;
+      padding: 12px;
+    }
+
+    .scene-card img {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+      border: 1px solid #3a5e8e;
+      margin-bottom: 8px;
+      height: 170px;
+      object-fit: cover;
+    }
+
+    .scene-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid #3f5f90;
+      border-radius: 9px;
+      background: #153058;
+      color: #dff0ff;
+      padding: 7px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+
+    .btn:hover {
+      background: #1c3d6c;
+      border-color: #5f86bf;
+    }
+
+    .btn-danger {
+      background: #3a2030;
+      border-color: #6f3b5a;
+      color: #ffdbe7;
+    }
+
+    .btn-danger:hover {
+      background: #522942;
+      border-color: #975983;
+    }
+
+    .read {
+      margin: 0 0 10px;
+      color: #dbe9ff;
+      font-style: italic;
+      background: rgba(8, 16, 30, 0.8);
+      border-left: 3px solid var(--accent-2);
+      border-radius: 8px;
+      padding: 9px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #2d4a72;
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: #112846;
+      color: #d9e8ff;
+      font-weight: 700;
+    }
+
+    td {
+      background: #0f1f37;
+      color: var(--muted);
+    }
+
+    .dm-roadmap {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .dm-roadmap-art {
+      margin-bottom: 12px;
+    }
+
+    .dm-roadmap-art img {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #3a5e8e;
+      display: block;
+      background: #0f1c33;
+      max-height: 280px;
+      object-fit: cover;
+    }
+
+    .dm-node {
+      border: 1px solid #3f5f8f;
+      border-radius: 11px;
+      background: #10223f;
+      padding: 10px;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dm-node p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      flex: 1;
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid #3f5f8f;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.76rem;
+      color: #d6e6ff;
+      background: rgba(18, 43, 78, 0.75);
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    dialog {
+      width: min(860px, calc(100vw - 22px));
+      border: 1px solid #5579ad;
+      border-radius: 14px;
+      padding: 0;
+      color: #0f1c33;
+      background: #f4f8ff;
+    }
+
+    dialog::backdrop {
+      background: rgba(5, 11, 23, 0.7);
+    }
+
+    .modal-shell {
+      padding: 16px;
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .modal-top h3 {
+      margin: 0;
+      color: #13284a;
+      font-size: 1.2rem;
+    }
+
+    .modal-top p {
+      margin: 6px 0 0;
+      color: #26456f;
+      font-size: 0.92rem;
+    }
+
+    .close-btn {
+      appearance: none;
+      border: 1px solid #86a6d6;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #e6efff;
+      color: #173256;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .monster-art {
+      width: 100%;
+      border: 1px solid #c4d8f7;
+      border-radius: 10px;
+      display: block;
+      margin-bottom: 10px;
+      max-height: 220px;
+      object-fit: cover;
+      background: #e7f0ff;
+    }
+
+    .modal-block {
+      border: 1px solid #c4d8f7;
+      border-radius: 10px;
+      padding: 10px;
+      background: #ffffff;
+    }
+
+    .modal-block h4 {
+      color: #19365f;
+    }
+
+    .modal-block ul {
+      color: #2f4d76;
+      margin-top: 2px;
+    }
+
+    .modal-read {
+      border-left: 3px solid #73a8f0;
+      background: #eff5ff;
+      border-radius: 8px;
+      padding: 9px;
+      color: #1f3e68;
+      font-style: italic;
+      margin: 0;
+    }
+
+    .footer {
+      margin-top: 18px;
+      text-align: center;
+      color: #9cb2d4;
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-row,
+      .grid-two,
+      .cards-grid,
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow,
+      .dm-roadmap {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step::after {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <a href="index.html">Back to Home</a>
+        <a href="dnd-starter-table.html">Back to Starter Table</a>
+      </div>
+      <span class="tiny">Get Started page: story map, play flow, scripted pop-outs, and DM encounter map.</span>
+    </div>
+
+    <section class="hero">
+      <p class="tiny" style="letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:700;">Session One Control Center</p>
+      <h1>Get Started: Story Roadmap + Play Flow</h1>
+      <p>
+        Start with compact scene cards, then click into pop-out script details during play.
+        Each pop-out includes what to read, likely player lines, and example DM responses.
+      </p>
+      <div class="hero-row">
+        <img src="dnd-assets/story-roadmap.png" onerror="this.onerror=null;this.src='dnd-assets/story-roadmap.svg';" alt="Roadmap diagram for the adventure">
+        <div class="panel" style="margin-top:0;">
+          <h2 style="margin-top:0;">Before You Begin (5 Minutes)</h2>
+          <ul>
+            <li>Open <a href="dnd-starter-table.html">D&amp;D Starter Table</a> and let each player pick a hero.</li>
+            <li>Set expectation: players can talk, investigate, negotiate, or fight.</li>
+            <li>Use quick DC language: 10 easy, 13 medium, 16 hard.</li>
+            <li>When in doubt, say "yes" with a small consequence.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Play Flow Map</h2>
+      <div class="flow">
+        <article class="flow-step">
+          <h4>1. Hook in Town</h4>
+          <p>Lantern is missing. Introduce each hero with one sentence.</p>
+        </article>
+        <article class="flow-step">
+          <h4>2. Gather Clues</h4>
+          <p>Talk to 3 townsfolk. Team picks which clue to chase first.</p>
+        </article>
+        <article class="flow-step">
+          <h4>3. Forest Challenges</h4>
+          <p>Log bridge, carved arrows, and a social beat by the fire.</p>
+        </article>
+        <article class="flow-step">
+          <h4>4. Cave Choice</h4>
+          <p>Rune puzzle + goblin misunderstanding + possible fight.</p>
+        </article>
+        <article class="flow-step">
+          <h4>5. Festival Return</h4>
+          <p>Shared-light ending, rewards, and next quest teaser.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Quick Scene Cards (Tap to Pop Out Script)</h2>
+      <p class="tiny" style="margin-bottom:10px;">Use these during play to keep pacing fast. Each card opens full scripted detail.</p>
+      <div class="cards-grid">
+        <article class="scene-card">
+          <img src="dnd-assets/location-mossbrook-square.png" onerror="this.onerror=null;this.src='dnd-assets/location-mossbrook-square.svg';" alt="Mossbrook chapter image">
+          <h4>Scene 1: Shadows in the Square</h4>
+          <p>Town intro, missing lantern, and first clue chain.</p>
+          <button class="btn" data-scene="scene1">Open Script Details</button>
+        </article>
+
+        <article class="scene-card">
+          <img src="dnd-assets/location-whispertrail-woods.png" onerror="this.onerror=null;this.src='dnd-assets/location-whispertrail-woods.svg';" alt="Whispertrail chapter image">
+          <h4>Scene 2: The Laughing Trail</h4>
+          <p>Forest skill checks and teamwork challenge choices.</p>
+          <button class="btn" data-scene="scene2">Open Script Details</button>
+        </article>
+
+        <article class="scene-card">
+          <img src="dnd-assets/location-glowmoss-cave.png" onerror="this.onerror=null;this.src='dnd-assets/location-glowmoss-cave.svg';" alt="Glowmoss chapter image">
+          <h4>Scene 3: Door of Three Symbols</h4>
+          <p>Puzzle door and first goblin contact.</p>
+          <button class="btn" data-scene="scene3">Open Script Details</button>
+        </article>
+
+        <article class="scene-card">
+          <img src="dnd-assets/location-festival-return.png" onerror="this.onerror=null;this.src='dnd-assets/location-festival-return.svg';" alt="Festival chapter image">
+          <h4>Scene 4: A Light for Everyone</h4>
+          <p>Final moral choice and celebration ending.</p>
+          <button class="btn" data-scene="scene4">Open Script Details</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Intermission Story Beat</h2>
+      <div class="grid-two">
+        <img src="dnd-assets/timeline-campfire.png" onerror="this.onerror=null;this.src='dnd-assets/timeline-campfire.svg';" alt="Campfire story beat image" style="width:100%;border-radius:12px;border:1px solid #3c5f8f;display:block;object-fit:cover;min-height:220px;">
+        <div>
+          <p class="read">"You pause by a small fire as the sky darkens. Everyone shares one fear and one hope before entering the cave."</p>
+          <ul>
+            <li>Ask each player to speak in character for 20 seconds.</li>
+            <li>If a player gives a meaningful answer, award advantage on next roll.</li>
+            <li>Use this beat to transition from clues into higher stakes.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Dungeon Master Roadmap (Encounter Version)</h2>
+      <p class="tiny" style="margin-bottom:10px;">This is the DM clone of the story roadmap, including where monsters may appear.</p>
+      <div class="dm-roadmap-art">
+        <img src="dnd-assets/story-roadmap-dm.png" onerror="this.onerror=null;this.src='dnd-assets/story-roadmap.png';" alt="Dungeon master story roadmap with encounter notes">
+      </div>
+      <div class="dm-roadmap">
+        <article class="dm-node">
+          <h4>Town Hook</h4>
+          <div>
+            <span class="tag">Combat: none</span>
+            <span class="tag">Tone: mystery</span>
+          </div>
+          <p>Drive clue gathering and set the moral tone: this is a misunderstanding story, not pure villainy.</p>
+        </article>
+
+        <article class="dm-node">
+          <h4>Forest Route</h4>
+          <div>
+            <span class="tag">Optional monster</span>
+            <span class="tag">Bramble Wolf</span>
+          </div>
+          <p>If pacing is slow, add wolf encounter. Let players calm it with smart roleplay.</p>
+          <button class="btn btn-danger" data-monster="wolf">Pop Out Monster Sheet</button>
+        </article>
+
+        <article class="dm-node">
+          <h4>Cave Entrance</h4>
+          <div>
+            <span class="tag">Optional monster</span>
+            <span class="tag">Bat Swarm</span>
+          </div>
+          <p>Use bat swarm if players trigger loud noise or force entry.</p>
+          <button class="btn btn-danger" data-monster="bats">Pop Out Monster Sheet</button>
+        </article>
+
+        <article class="dm-node">
+          <h4>Cave Interior</h4>
+          <div>
+            <span class="tag">Core encounter</span>
+            <span class="tag">Mudfoot Scout</span>
+          </div>
+          <p>Scout is defensive, not evil. Start with dialogue before initiative.</p>
+          <button class="btn btn-danger" data-monster="scout">Pop Out Monster Sheet</button>
+        </article>
+
+        <article class="dm-node">
+          <h4>Festival End</h4>
+          <div>
+            <span class="tag">No monster</span>
+            <span class="tag">Reward scene</span>
+          </div>
+          <p>Close with hero medals and hook for Clocktower Ruins session two.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Character-Specific DM Suggestions</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Hero</th>
+              <th>Prompted Questions</th>
+              <th>Example Player Line</th>
+              <th>Example DM Response</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Borin (Fighter)</td>
+              <td>"Who are you protecting right now?"</td>
+              <td>"I step in front of the mayor and raise my shield."</td>
+              <td>"Great choice. You create cover for the group. Take advantage on your next defense roll."</td>
+            </tr>
+            <tr>
+              <td>Pip (Rogue)</td>
+              <td>"What clue do you think everyone missed?"</td>
+              <td>"I check the muddy prints and look for a second trail."</td>
+              <td>"Nice detective move. You spot smaller footprints beside the boots; mark a bonus clue."</td>
+            </tr>
+            <tr>
+              <td>Sera (Cleric)</td>
+              <td>"What do you say to calm this conflict?"</td>
+              <td>"No one is stealing tonight. We can share the light."</td>
+              <td>"That lands well. The scout lowers their weapon and asks what you suggest."</td>
+            </tr>
+            <tr>
+              <td>Rowan (Wizard)</td>
+              <td>"How can your spell help without hurting anyone?"</td>
+              <td>"I cast a harmless spark pattern to test the rune order."</td>
+              <td>"Perfect. The runes flash in sequence and reveal a hint about night to dawn."</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Session Debrief Questions (Post-Game)</h2>
+      <div class="grid-two">
+        <ul>
+          <li>Which scene felt most exciting?</li>
+          <li>What was one clever thing your team did?</li>
+          <li>Did you choose fighting or diplomacy, and why?</li>
+        </ul>
+        <ul>
+          <li>What would your character do differently next time?</li>
+          <li>Which NPC should return in session two?</li>
+          <li>What quest should come from the Clocktower map fragment?</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="footer">Get Started page for Jasper's D&amp;D campaign space with pop-out scripts and DM encounter flow.</p>
+  </main>
+
+  <dialog id="sceneDialog">
+    <div class="modal-shell">
+      <div class="modal-top">
+        <div>
+          <h3 id="sceneTitle"></h3>
+          <p id="sceneSubtitle"></p>
+        </div>
+        <button class="close-btn" onclick="closeDialog('sceneDialog')">Close</button>
+      </div>
+      <div class="modal-grid">
+        <article class="modal-block">
+          <h4>Read Aloud</h4>
+          <p class="modal-read" id="sceneRead"></p>
+        </article>
+        <article class="modal-block">
+          <h4>DM Notes</h4>
+          <ul id="sceneNotes"></ul>
+        </article>
+        <article class="modal-block">
+          <h4>Example Player Lines</h4>
+          <ul id="scenePlayers"></ul>
+        </article>
+        <article class="modal-block">
+          <h4>Example DM Responses</h4>
+          <ul id="sceneDmResponses"></ul>
+        </article>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="monsterDialog">
+    <div class="modal-shell">
+      <div class="modal-top">
+        <div>
+          <h3 id="monsterTitle"></h3>
+          <p id="monsterSubtitle"></p>
+        </div>
+        <button class="close-btn" onclick="closeDialog('monsterDialog')">Close</button>
+      </div>
+      <img id="monsterImage" class="monster-art" src="" alt="Monster reference art">
+      <div class="modal-grid">
+        <article class="modal-block">
+          <h4>Quick Stats</h4>
+          <ul id="monsterStats"></ul>
+        </article>
+        <article class="modal-block">
+          <h4>Behavior</h4>
+          <ul id="monsterBehavior"></ul>
+        </article>
+        <article class="modal-block">
+          <h4>Roleplay Line</h4>
+          <p class="modal-read" id="monsterLine"></p>
+        </article>
+        <article class="modal-block">
+          <h4>Soft Landing Option</h4>
+          <ul id="monsterSoft"></ul>
+        </article>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const scenes = {
+      scene1: {
+        title: "Scene 1: Shadows in the Square",
+        subtitle: "Missing lantern + clue kickoff",
+        read: "\"Banners snap in the wind above Mossbrook Square. Music stops when everyone sees the empty lantern stand. Mayor Elira says, 'Without that light, the festival cannot begin.'\"",
+        notes: [
+          "Give 3 clue sources: blacksmith, baker, stable hand.",
+          "If kids stall, mayor asks directly: 'Who will check the stables?'",
+          "Let each hero roll once before moving scene forward."
+        ],
+        players: [
+          "Borin: 'I keep the crowd calm while we investigate.'",
+          "Pip: 'I search near the stand for tiny prints.'",
+          "Sera: 'I ask the baker who looked scared this morning.'",
+          "Rowan: 'I inspect the post for magical residue.'"
+        ],
+        dmResponses: [
+          "'The crowd settles when they see your confidence.'",
+          "'You spot two sets of tracks: boots and smaller bare feet.'",
+          "'The baker mentions hearing cave echoes at dawn.'",
+          "'A faint glow confirms the lantern was moved recently.'"
+        ]
+      },
+      scene2: {
+        title: "Scene 2: The Laughing Trail",
+        subtitle: "Forest challenges + team decisions",
+        read: "\"The path narrows under old trees. Glowing prints skip over a creek. Carved arrows point left, right, and up a rocky slope.\"",
+        notes: [
+          "Offer 3 routes: bridge, slope, stream crossing.",
+          "Reward combined plans with advantage.",
+          "If failed roll, keep success possible with a small cost."
+        ],
+        players: [
+          "Borin: 'I brace the log and help each person cross.'",
+          "Pip: 'I test each arrow carving for fake trails.'",
+          "Sera: 'I calm the frightened pony blocking the path.'",
+          "Rowan: 'I use light sparks to reveal hidden moss marks.'"
+        ],
+        dmResponses: [
+          "'Nice teamwork. The whole party crosses safely.'",
+          "'You find one arrow scratched over the real direction.'",
+          "'The pony trusts you and nudges toward the correct route.'",
+          "'Your sparks reveal blue spores leading to the cave.'"
+        ]
+      },
+      scene3: {
+        title: "Scene 3: Door of Three Symbols",
+        subtitle: "Rune puzzle + first contact",
+        read: "\"At the cave mouth, three symbols glow: star, moon, and sun. Small voices whisper from inside, and one says, 'Keep the light safe.'\"",
+        notes: [
+          "Correct order is Star -> Moon -> Sun.",
+          "Intelligence DC 12 gives hint: night to dawn.",
+          "Scout prefers warning shots before full attack."
+        ],
+        players: [
+          "Borin: 'I guard the team while Rowan tries the puzzle.'",
+          "Pip: 'I listen for how many voices are behind the door.'",
+          "Sera: 'I announce we came to help, not hurt anyone.'",
+          "Rowan: 'I test each rune in sequence with cantrip light.'"
+        ],
+        dmResponses: [
+          "'The runes brighten as your plan aligns with the cycle.'",
+          "'You count several younger voices and one older guard.'",
+          "'A nervous reply comes back: Keep your weapons low.'",
+          "'The door opens with a low stone click.'"
+        ]
+      },
+      scene4: {
+        title: "Scene 4: A Light for Everyone",
+        subtitle: "Moral choice + ending branch",
+        read: "\"Goblin kids huddle around the lantern. Their scout says, 'Our cave is dark and they are scared. We only borrowed it.'\"",
+        notes: [
+          "Offer 3 ending routes: diplomacy, trade, combat then truce.",
+          "If combat occurs, keep enemies defensive and retreat-friendly.",
+          "Close by asking each hero for one festival speech line."
+        ],
+        players: [
+          "Borin: 'Take this extra shield-lamp frame. Return the town lantern.'",
+          "Pip: 'I can map a safe supply route between cave and town.'",
+          "Sera: 'We can build two lights if everyone helps.'",
+          "Rowan: 'I can enchant a glowstone so both sides have light.'"
+        ],
+        dmResponses: [
+          "'The scout nods and lowers their blade.'",
+          "'Kids cheer when they hear they can keep a light source.'",
+          "'Mayor agrees to a shared-light pact for the festival.'",
+          "'The square erupts in cheers as both groups arrive together.'"
+        ]
+      }
+    };
+
+    const monsters = {
+      scout: {
+        title: "Mudfoot Scout",
+        subtitle: "Core cave encounter (defensive, not evil)",
+        image: "dnd-assets/monster-mudfoot-scout.png",
+        stats: ["AC 13", "HP 11", "Attack +4 (sling/scimitar)", "Speed 30 ft"],
+        behavior: [
+          "Opens with warning, not lethal intent.",
+          "Targets loudest threat first.",
+          "Retreats if kids are in danger."
+        ],
+        line: "\"We do not want war. We just cannot go back to darkness.\"",
+        soft: [
+          "Persuasion DC 13 to pause combat for talk.",
+          "Offer supplies or shared lantern agreement.",
+          "Sera/Rowan empathy roleplay can auto-shift to truce."
+        ]
+      },
+      bats: {
+        title: "Cave Bat Swarm",
+        subtitle: "Optional cave hazard",
+        image: "dnd-assets/monster-cave-bat-swarm.png",
+        stats: ["AC 12", "HP 18", "Attack +3 (2d4 bite)", "Fly 30 ft"],
+        behavior: [
+          "Triggered by loud noises or torches waved wildly.",
+          "Distracts more than kills.",
+          "Scatters if strong sound or smoke is used."
+        ],
+        line: "\"A spiral of wings bursts from the ceiling in squealing panic.\"",
+        soft: [
+          "Use Performance or Survival DC 12 to guide them away.",
+          "Throw rations to redirect swarm.",
+          "One round of calm lighting ends encounter."
+        ]
+      },
+      wolf: {
+        title: "Bramble Wolf",
+        subtitle: "Optional forest pacing encounter",
+        image: "dnd-assets/monster-bramble-wolf.png",
+        stats: ["AC 13", "HP 16", "Attack +4 (1d6+2 bite)", "Speed 40 ft"],
+        behavior: [
+          "Protective of territory, not hungry predator.",
+          "Circles and growls before attacking.",
+          "Backs off if treated with calm authority."
+        ],
+        line: "\"The wolf's ears flatten, but it pauses when you lower your weapon.\"",
+        soft: [
+          "Animal Handling DC 14 to calm.",
+          "Offer food and slow movement.",
+          "Borin shield stance + Sera calm voice grants advantage."
+        ]
+      }
+    };
+
+    function fillList(elementId, items) {
+      const list = document.getElementById(elementId);
+      list.innerHTML = "";
+      for (const item of items) {
+        const li = document.createElement("li");
+        li.textContent = item;
+        list.appendChild(li);
+      }
+    }
+
+    function openSceneDialog(sceneId) {
+      const data = scenes[sceneId];
+      if (!data) return;
+      document.getElementById("sceneTitle").textContent = data.title;
+      document.getElementById("sceneSubtitle").textContent = data.subtitle;
+      document.getElementById("sceneRead").textContent = data.read;
+      fillList("sceneNotes", data.notes);
+      fillList("scenePlayers", data.players);
+      fillList("sceneDmResponses", data.dmResponses);
+      document.getElementById("sceneDialog").showModal();
+    }
+
+    function openMonsterDialog(monsterId) {
+      const data = monsters[monsterId];
+      if (!data) return;
+      document.getElementById("monsterTitle").textContent = data.title;
+      document.getElementById("monsterSubtitle").textContent = data.subtitle;
+      document.getElementById("monsterLine").textContent = data.line;
+      const img = document.getElementById("monsterImage");
+      img.style.display = "block";
+      img.src = data.image;
+      img.onerror = function() {
+        this.style.display = "none";
+      };
+      fillList("monsterStats", data.stats);
+      fillList("monsterBehavior", data.behavior);
+      fillList("monsterSoft", data.soft);
+      document.getElementById("monsterDialog").showModal();
+    }
+
+    function closeDialog(id) {
+      const dialog = document.getElementById(id);
+      if (dialog && dialog.open) dialog.close();
+    }
+
+    document.querySelectorAll("[data-scene]").forEach((btn) => {
+      btn.addEventListener("click", () => openSceneDialog(btn.dataset.scene));
+    });
+
+    document.querySelectorAll("[data-monster]").forEach((btn) => {
+      btn.addEventListener("click", () => openMonsterDialog(btn.dataset.monster));
+    });
+  </script>
+</body>
+</html>

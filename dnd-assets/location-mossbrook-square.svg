@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Mossbrook village square">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#87d0ff"/>
+      <stop offset="100%" stop-color="#cfeeff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <rect y="420" width="1200" height="255" fill="#7dc27d"/>
+  <rect y="500" width="1200" height="175" fill="#6dad67"/>
+  <rect x="80" y="270" width="220" height="220" fill="#d8b485"/><polygon points="60,270 190,170 320,270" fill="#9f6941"/>
+  <rect x="360" y="300" width="220" height="190" fill="#e2bc90"/><polygon points="340,300 470,212 600,300" fill="#8f5d38"/>
+  <rect x="640" y="275" width="220" height="215" fill="#dfb48a"/><polygon points="620,275 750,185 880,275" fill="#a06c44"/>
+  <rect x="920" y="300" width="190" height="190" fill="#d7aa80"/><polygon points="900,300 1015,226 1130,300" fill="#8f603d"/>
+  <rect x="562" y="308" width="76" height="172" fill="#6e4a30"/>
+  <circle cx="600" cy="290" r="26" fill="#ffe48f"/>
+  <text x="64" y="90" fill="#1f4b6d" font-size="56" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Mossbrook Village Square</text>
+  <text x="64" y="134" fill="#2f6588" font-size="28" font-family="Trebuchet MS, Arial, sans-serif">Where the lantern mystery begins</text>
+</svg>

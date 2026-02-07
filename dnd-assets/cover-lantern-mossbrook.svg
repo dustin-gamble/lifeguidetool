@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="The Missing Lantern of Mossbrook cover art">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#17223f"/>
+      <stop offset="55%" stop-color="#1e2f57"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="lanternGlow" cx="50%" cy="48%" r="34%">
+      <stop offset="0%" stop-color="#fff8b0" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#ffd56b" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffb703" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <circle cx="1045" cy="110" r="44" fill="#d7e8ff" opacity="0.92"/>
+  <g fill="#f4f8ff" opacity="0.7">
+    <circle cx="112" cy="78" r="2"/><circle cx="220" cy="44" r="2"/><circle cx="305" cy="132" r="2"/><circle cx="422" cy="78" r="2"/>
+    <circle cx="588" cy="54" r="2"/><circle cx="662" cy="114" r="2"/><circle cx="774" cy="62" r="2"/><circle cx="882" cy="101" r="2"/>
+  </g>
+  <rect x="0" y="458" width="1200" height="217" fill="#0c1324"/>
+  <path d="M0 500 L90 448 L160 500 L240 452 L320 500 L390 452 L470 500 L560 440 L650 500 L740 452 L830 500 L920 448 L1005 500 L1080 452 L1200 500 L1200 675 L0 675 Z" fill="#101b32"/>
+  <g transform="translate(600 338)">
+    <circle cx="0" cy="0" r="215" fill="url(#lanternGlow)"/>
+    <rect x="-42" y="-96" width="84" height="160" rx="20" fill="#ffc447" stroke="#ffe29d" stroke-width="6"/>
+    <rect x="-32" y="-78" width="64" height="126" rx="14" fill="#fff2bf" opacity="0.9"/>
+    <rect x="-62" y="52" width="124" height="20" rx="9" fill="#a26420"/>
+    <path d="M-48 -96 C-48 -145, 48 -145, 48 -96" fill="none" stroke="#d8a258" stroke-width="10"/>
+  </g>
+  <g transform="translate(145 610)">
+    <circle cx="0" cy="0" r="20" fill="#f0f7ff"/><circle cx="38" cy="0" r="20" fill="#f0f7ff"/><circle cx="76" cy="0" r="20" fill="#f0f7ff"/>
+    <rect x="-10" y="-26" width="95" height="24" rx="11" fill="#f0f7ff"/>
+  </g>
+  <text x="72" y="108" fill="#9fd3ff" font-size="28" font-family="Trebuchet MS, Arial, sans-serif">Jasper's First Adventure</text>
+  <text x="72" y="165" fill="#ffffff" font-size="64" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">The Missing Lantern of Mossbrook</text>
+  <text x="72" y="214" fill="#c9deff" font-size="26" font-family="Trebuchet MS, Arial, sans-serif">A friendly D&amp;D starter quest for young heroes</text>
+</svg>

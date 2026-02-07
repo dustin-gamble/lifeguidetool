@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Festival of lights celebration">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#152545"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="50%" cy="42%" r="40%">
+      <stop offset="0%" stop-color="#fff2b0" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ffad33" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#night)"/>
+  <rect y="448" width="1200" height="227" fill="#1f2f4c"/>
+  <circle cx="600" cy="300" r="240" fill="url(#lamp)"/>
+  <rect x="560" y="290" width="80" height="170" rx="24" fill="#ffc855" stroke="#ffe9a0" stroke-width="6"/>
+  <rect x="576" y="306" width="48" height="120" rx="12" fill="#fff3be"/>
+  <path d="M60 520 L220 470 L380 520 L540 470 L700 520 L860 470 L1020 520 L1140 470" stroke="#6ea0d6" stroke-width="8" fill="none"/>
+  <g fill="#f6d986">
+    <circle cx="175" cy="500" r="10"/><circle cx="335" cy="500" r="10"/><circle cx="495" cy="500" r="10"/><circle cx="655" cy="500" r="10"/><circle cx="815" cy="500" r="10"/><circle cx="975" cy="500" r="10"/>
+  </g>
+  <text x="64" y="92" fill="#ffe8a8" font-size="56" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Festival of Starlight</text>
+  <text x="64" y="136" fill="#d7e5ff" font-size="28" font-family="Trebuchet MS, Arial, sans-serif">Heroes return the light and celebrate together</text>
+</svg>

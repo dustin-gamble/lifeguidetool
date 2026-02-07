@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" role="img" aria-label="Borin Stonepath portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#293b66"/>
+      <stop offset="100%" stop-color="#121d33"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#bg)"/>
+  <circle cx="320" cy="280" r="132" fill="#f3d1b4"/>
+  <rect x="194" y="390" width="252" height="190" rx="40" fill="#6a4e3a"/>
+  <rect x="204" y="390" width="232" height="82" rx="25" fill="#a06f4f"/>
+  <circle cx="268" cy="268" r="15" fill="#1f2a3f"/><circle cx="374" cy="268" r="15" fill="#1f2a3f"/>
+  <path d="M270 330 Q320 362 370 330" stroke="#6c2f26" stroke-width="8" fill="none"/>
+  <rect x="150" y="560" width="340" height="175" rx="18" fill="#101a2e" opacity="0.92"/>
+  <text x="170" y="620" fill="#d9ecff" font-size="38" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Borin Stonepath</text>
+  <text x="170" y="665" fill="#a9c6e8" font-size="24" font-family="Trebuchet MS, Arial, sans-serif">Dwarf Fighter - Shield of the Party</text>
+</svg>

@@ -13,6 +13,16 @@
   <priority>1.00</priority>
 </url>
 <url>
+  <loc>https://lifeguidetool.com/dnd-starter-table.html</loc>
+  <lastmod>2026-02-07T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://lifeguidetool.com/get-started.html</loc>
+  <lastmod>2026-02-07T00:00:00+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
   <loc>https://lifeguidetool.com/ai.html</loc>
   <lastmod>2025-06-16T01:40:51+00:00</lastmod>
   <priority>0.80</priority>

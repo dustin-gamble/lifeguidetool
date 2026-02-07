@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Glowmoss Cave entrance">
+  <defs>
+    <linearGradient id="caveSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d2e48"/>
+      <stop offset="100%" stop-color="#0e1728"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#caveSky)"/>
+  <rect y="470" width="1200" height="205" fill="#2e3f55"/>
+  <path d="M80 470 L220 250 L430 150 L770 150 L980 250 L1120 470 Z" fill="#263548"/>
+  <path d="M260 470 L390 280 L810 280 L940 470 Z" fill="#111c2e"/>
+  <rect x="500" y="335" width="200" height="135" rx="10" fill="#2d3e58" stroke="#526d94" stroke-width="4"/>
+  <circle cx="566" cy="402" r="22" fill="#8bc6ff" opacity="0.9"/>
+  <circle cx="600" cy="402" r="22" fill="#ffd986" opacity="0.9"/>
+  <circle cx="634" cy="402" r="22" fill="#bde0ff" opacity="0.9"/>
+  <circle cx="350" cy="500" r="12" fill="#88ffbb"/><circle cx="430" cy="540" r="14" fill="#88ffbb"/><circle cx="790" cy="520" r="13" fill="#88ffbb"/>
+  <text x="64" y="92" fill="#dce8ff" font-size="56" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Glowmoss Cave</text>
+  <text x="64" y="136" fill="#bdcdf4" font-size="28" font-family="Trebuchet MS, Arial, sans-serif">Solve the rune door and meet the goblin kids</text>
+</svg>

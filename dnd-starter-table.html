@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D Starter Table | Life Guide Tool</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111f38;
+      --panel-2: #162947;
+      --ink: #e2e8f0;
+      --ink-muted: #b8c4db;
+      --accent: #34d399;
+      --accent-2: #60a5fa;
+      --border: #2b3d5e;
+      --card: #0d1a2f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top, #162947 0%, #0f172a 45%);
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    a {
+      color: var(--accent-2);
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px 56px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .topbar-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .back-link {
+      display: inline-block;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: var(--ink);
+      background: rgba(17, 31, 56, 0.75);
+    }
+
+    .back-link:hover {
+      border-color: #4d72a7;
+      background: rgba(23, 45, 75, 0.92);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(22, 41, 71, 0.95), rgba(17, 31, 56, 0.92));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .hero-media {
+      margin: 0;
+      border: 1px solid #365a8a;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #0d1627;
+    }
+
+    .hero-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      min-height: 280px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 8px 0 6px;
+      font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--ink-muted);
+      max-width: 820px;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button,
+    .action-row a {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: #10243f;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    button:hover,
+    .action-row a:hover {
+      border-color: #4e6ea0;
+      background: #173153;
+    }
+
+    .chip {
+      border-color: #2f6d5f;
+      background: #12382f;
+      color: #c8ffe8;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .panel {
+      background: rgba(17, 31, 56, 0.87);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 2px 0 12px;
+      font-size: 1.35rem;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.12rem;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--ink-muted);
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .tiny {
+      font-size: 0.86rem;
+      color: #9fb4d6;
+    }
+
+    .cards {
+      margin-top: 18px;
+    }
+
+    .roadmap-wrap {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .roadmap-wrap img {
+      width: 100%;
+      border: 1px solid #3b5f90;
+      border-radius: 12px;
+      display: block;
+      background: #0f1c33;
+    }
+
+    .scene-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .scene-tile {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #0f1f37;
+    }
+
+    .scene-tile img {
+      display: block;
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+    }
+
+    .scene-tile p {
+      margin: 0;
+      padding: 10px;
+      font-size: 0.9rem;
+      color: #d2def1;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .print-card {
+      background: linear-gradient(180deg, rgba(13, 26, 47, 0.95), rgba(10, 19, 34, 0.95));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+      break-inside: avoid;
+    }
+
+    .portrait {
+      margin: 0 0 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #3c5d87;
+      background: #121a2b;
+    }
+
+    .portrait img {
+      width: 100%;
+      display: block;
+      height: 260px;
+      object-fit: cover;
+    }
+
+    .encounter-art {
+      margin: 0 0 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #3c5d87;
+      background: #101a2f;
+    }
+
+    .encounter-art img {
+      width: 100%;
+      display: block;
+      height: 190px;
+      object-fit: cover;
+    }
+
+    .print-card h4 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+      color: #d7f4ff;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #355b89;
+      font-size: 0.76rem;
+      color: #d9e6ff;
+      background: rgba(20, 42, 71, 0.9);
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .stat {
+      background: #112642;
+      border: 1px solid #29476f;
+      border-radius: 10px;
+      text-align: center;
+      padding: 7px 6px;
+      font-size: 0.88rem;
+      color: #d7e4ff;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1rem;
+      color: #ffffff;
+    }
+
+    .story {
+      margin-top: 8px;
+      border-top: 1px dashed #2b456b;
+      padding-top: 8px;
+      color: var(--ink-muted);
+      font-size: 0.93rem;
+    }
+
+    .scene-flow {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .scene {
+      background: rgba(17, 31, 56, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .scene h4 {
+      margin: 0 0 6px;
+      color: #f5f8ff;
+      font-size: 1rem;
+    }
+
+    .scene .read {
+      margin: 0 0 10px;
+      color: #d6ebff;
+      font-style: italic;
+      background: rgba(9, 19, 34, 0.75);
+      border-left: 3px solid var(--accent-2);
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .scene img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid #3d5d86;
+      margin-bottom: 9px;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .table-wrap {
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+    }
+
+    th,
+    td {
+      border: 1px solid #2d4a72;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.93rem;
+    }
+
+    th {
+      background: #112643;
+      color: #d8ebff;
+      font-weight: 700;
+    }
+
+    td {
+      background: #0f1f37;
+      color: var(--ink-muted);
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: #9fb4d6;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .no-print {
+      display: initial;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .layout,
+      .roadmap-wrap,
+      .card-grid,
+      .scene-gallery,
+      .scene-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .portrait img {
+        height: 220px;
+      }
+
+      .encounter-art img {
+        height: 180px;
+      }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+      }
+
+      body {
+        background: #ffffff;
+        color: #111;
+        font-size: 11pt;
+      }
+
+      .shell {
+        max-width: none;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .hero,
+      .panel,
+      .scene,
+      .print-card,
+      .scene-tile {
+        background: #ffffff !important;
+        color: #111 !important;
+        border: 1px solid #333 !important;
+        box-shadow: none !important;
+      }
+
+      .hero p,
+      .panel ul,
+      .scene ul,
+      .tiny,
+      .story,
+      p,
+      li,
+      td {
+        color: #222 !important;
+      }
+
+      .pill,
+      .stat,
+      th {
+        background: #efefef !important;
+        color: #111 !important;
+        border-color: #666 !important;
+      }
+
+      img {
+        filter: grayscale(12%);
+      }
+
+      a {
+        color: #111 !important;
+        text-decoration: none !important;
+      }
+
+      body.print-mode-characters [data-print-block]:not([data-print-block="characters"]) {
+        display: none !important;
+      }
+
+      body.print-mode-adventure [data-print-block]:not([data-print-block="adventure"]) {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar no-print">
+      <div class="topbar-links">
+        <a class="back-link" href="index.html">Back to Life Guide Tool</a>
+        <a class="back-link" href="get-started.html">Story Map: Get Started</a>
+      </div>
+      <span class="tiny">Built to make Jasper's first game night easy, fast, and fun.</span>
+    </div>
+
+    <section class="hero" data-print-block="adventure">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">Beginner tabletop space</p>
+          <h1>Jasper's D&D Starter Table</h1>
+          <p>
+            Everything needed for session one is here: visuals, prebuilt heroes, read-aloud story text,
+            scene flow, and guided prompts for young players.
+          </p>
+          <div class="action-row no-print">
+            <button class="chip" onclick="printPacket('print-mode-characters')">Print Character Cards</button>
+            <button class="chip" onclick="printPacket('print-mode-adventure')">Print Adventure Packet</button>
+            <button onclick="printPacket()">Print Full Page</button>
+            <a href="#characters">Jump to Hero Cards</a>
+          </div>
+        </div>
+        <figure class="hero-media">
+          <img src="dnd-assets/cover-lantern-mossbrook.png" onerror="this.onerror=null;this.src='dnd-assets/cover-lantern-mossbrook.svg';" alt="Cover art for The Missing Lantern of Mossbrook">
+        </figure>
+      </div>
+    </section>
+
+    <section class="layout" data-print-block="adventure">
+      <article class="panel">
+        <h2>First 10 Minutes (Parent/DM Script)</h2>
+        <ul>
+          <li>Each player picks a hero card and reads the roleplay line out loud.</li>
+          <li>Teach one core rule: "Roll d20 + bonus when something is risky."</li>
+          <li>Use easy target numbers: 10 easy, 13 medium, 16 hard.</li>
+          <li>Tell players they can solve scenes with talking, planning, and creativity.</li>
+          <li>Start scene 1 with one question: "What does your hero do first?"</li>
+        </ul>
+      </article>
+      <article class="panel">
+        <h2>Simple Rule Reminder</h2>
+        <ul>
+          <li>Attack roll: <strong>d20 + attack bonus</strong>; hit if it meets enemy AC.</li>
+          <li>Damage roll: subtract from enemy HP.</li>
+          <li>If hero HP is 0, they drop but can be healed back up.</li>
+          <li>Creative plans can lower DC by 2 or grant advantage.</li>
+          <li>Session-one goal: confidence, teamwork, and story fun.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel cards" data-print-block="adventure">
+      <h2>Story Roadmap Snapshot</h2>
+      <div class="roadmap-wrap">
+        <img src="dnd-assets/story-roadmap.png" onerror="this.onerror=null;this.src='dnd-assets/story-roadmap.svg';" alt="Story roadmap for Mossbrook quest">
+        <div>
+          <ul>
+            <li><strong>Act 1:</strong> Lantern disappears before the festival.</li>
+            <li><strong>Act 2:</strong> Heroes investigate clues in town and forest.</li>
+            <li><strong>Act 3:</strong> Cave puzzle reveals goblin kids in need.</li>
+            <li><strong>Act 4:</strong> Party decides: negotiate, trade, or battle.</li>
+            <li><strong>Act 5:</strong> Festival finale and next-adventure hook.</li>
+          </ul>
+          <p class="tiny" style="margin-top:10px;">For full scene-by-scene version, open <a href="get-started.html">Get Started</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel cards" data-print-block="adventure">
+      <h2>Location and Scenery Pack</h2>
+      <div class="scene-gallery">
+        <article class="scene-tile">
+          <img src="dnd-assets/location-mossbrook-square.png" onerror="this.onerror=null;this.src='dnd-assets/location-mossbrook-square.svg';" alt="Mossbrook village square image">
+          <p><strong>Mossbrook Square:</strong> Bright market, worried mayor, empty lantern stand.</p>
+        </article>
+        <article class="scene-tile">
+          <img src="dnd-assets/location-whispertrail-woods.png" onerror="this.onerror=null;this.src='dnd-assets/location-whispertrail-woods.svg';" alt="Whispertrail woods image">
+          <p><strong>Whispertrail Woods:</strong> Tracks, bridge crossing, and playful mystery clues.</p>
+        </article>
+        <article class="scene-tile">
+          <img src="dnd-assets/location-glowmoss-cave.png" onerror="this.onerror=null;this.src='dnd-assets/location-glowmoss-cave.svg';" alt="Glowmoss cave image">
+          <p><strong>Glowmoss Cave:</strong> Rune door puzzle and final moral choice.</p>
+        </article>
+        <article class="scene-tile">
+          <img src="dnd-assets/location-festival-return.png" onerror="this.onerror=null;this.src='dnd-assets/location-festival-return.svg';" alt="Festival return image">
+          <p><strong>Festival Return:</strong> The town relights lanterns and celebrates teamwork.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="characters" class="cards" data-print-block="characters">
+      <h2>Prebuilt Hero Cards</h2>
+      <p class="tiny">Use these on a device or print character-only packets.</p>
+      <div class="card-grid">
+        <article class="print-card">
+          <figure class="portrait">
+            <img src="dnd-assets/char-borin.png" onerror="this.onerror=null;this.src='dnd-assets/char-borin.svg';" alt="Portrait of Borin Stonepath">
+          </figure>
+          <h4>Borin Stonepath</h4>
+          <div class="meta">
+            <span class="pill">Mountain Dwarf</span>
+            <span class="pill">Fighter (Level 1)</span>
+            <span class="pill">Tank / Protector</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><strong>16</strong>AC</div>
+            <div class="stat"><strong>14</strong>HP</div>
+            <div class="stat"><strong>+5</strong>Attack</div>
+            <div class="stat"><strong>25 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Battleaxe:</strong> +5 to hit, 1d8+3 damage.</li>
+            <li><strong>Throwing Axe:</strong> +5 to hit, 1d6+3 damage.</li>
+            <li><strong>Second Wind:</strong> Once per fight, heal 1d10+1 HP.</li>
+          </ul>
+          <p class="story"><strong>Backstory:</strong> Borin once guarded caravans, but one stormy night he lost supplies meant for Mossbrook families. He stayed in town to make things right, helping rebuild walls and teaching kids to stand brave when things go wrong.</p>
+          <p class="story"><strong>Roleplay line:</strong> "No one gets hurt while I am standing."</p>
+          <p class="story"><strong>Creative spotlight:</strong> Use Borin to block danger, lift heavy obstacles, and keep tense scenes calm.</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="portrait">
+            <img src="dnd-assets/char-pip.png" onerror="this.onerror=null;this.src='dnd-assets/char-pip.svg';" alt="Portrait of Pip Quickleaf">
+          </figure>
+          <h4>Pip Quickleaf</h4>
+          <div class="meta">
+            <span class="pill">Lightfoot Halfling</span>
+            <span class="pill">Rogue (Level 1)</span>
+            <span class="pill">Scout / Puzzle Solver</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><strong>14</strong>AC</div>
+            <div class="stat"><strong>10</strong>HP</div>
+            <div class="stat"><strong>+5</strong>Attack</div>
+            <div class="stat"><strong>30 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Shortbow:</strong> +5 to hit, 1d6+3 damage.</li>
+            <li><strong>Dagger:</strong> +5 to hit, 1d4+3 damage.</li>
+            <li><strong>Sneak Attack:</strong> Extra 1d6 once per turn with ally support.</li>
+          </ul>
+          <p class="story"><strong>Backstory:</strong> Pip grew up delivering messages between villages and learned to spot clues people miss. Pip secretly maps every hidden path around Mossbrook and dreams of becoming a legendary explorer.</p>
+          <p class="story"><strong>Roleplay line:</strong> "Give me ten seconds and I will find the trail."</p>
+          <p class="story"><strong>Creative spotlight:</strong> Scout ahead, decode symbols, distract foes, and create clever shortcuts.</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="portrait">
+            <img src="dnd-assets/char-sera.png" onerror="this.onerror=null;this.src='dnd-assets/char-sera.svg';" alt="Portrait of Sera Dawnwell">
+          </figure>
+          <h4>Sera Dawnwell</h4>
+          <div class="meta">
+            <span class="pill">Human</span>
+            <span class="pill">Cleric (Level 1)</span>
+            <span class="pill">Healer / Diplomat</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><strong>15</strong>AC</div>
+            <div class="stat"><strong>11</strong>HP</div>
+            <div class="stat"><strong>+4</strong>Attack</div>
+            <div class="stat"><strong>30 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Mace:</strong> +4 to hit, 1d6+2 damage.</li>
+            <li><strong>Sacred Flame:</strong> Enemy save, 1d8 radiant damage.</li>
+            <li><strong>Healing Word:</strong> Bonus action heal (1d4+3), 2 spell slots.</li>
+          </ul>
+          <p class="story"><strong>Backstory:</strong> Sera's grandmother was keeper of the old festival lights. After she passed, Sera promised to carry light to people in fear and to solve conflict before swords come out.</p>
+          <p class="story"><strong>Roleplay line:</strong> "We can be brave and kind at the same time."</p>
+          <p class="story"><strong>Creative spotlight:</strong> Guide peace talks, protect teammates, and inspire hopeful decisions.</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="portrait">
+            <img src="dnd-assets/char-rowan.png" onerror="this.onerror=null;this.src='dnd-assets/char-rowan.svg';" alt="Portrait of Rowan Sparkbloom">
+          </figure>
+          <h4>Rowan Sparkbloom</h4>
+          <div class="meta">
+            <span class="pill">High Elf</span>
+            <span class="pill">Wizard (Level 1)</span>
+            <span class="pill">Arcane Utility</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><strong>12</strong>AC</div>
+            <div class="stat"><strong>8</strong>HP</div>
+            <div class="stat"><strong>+5</strong>Attack</div>
+            <div class="stat"><strong>30 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Fire Bolt:</strong> +5 to hit, 1d10 fire damage.</li>
+            <li><strong>Ray of Frost:</strong> +5 to hit, 1d8 cold damage.</li>
+            <li><strong>Spell Slots (2):</strong> Magic Missile, Sleep, Shield.</li>
+          </ul>
+          <p class="story"><strong>Backstory:</strong> Rowan left a strict academy to test magic in real life. Rowan believes knowledge should help regular people and takes notes on every strange rune, creature, and weather pattern.</p>
+          <p class="story"><strong>Roleplay line:</strong> "Let me think this through. There is always another way."</p>
+          <p class="story"><strong>Creative spotlight:</strong> Use spells for puzzles, crowd control, and unusual solutions.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel cards" data-print-block="adventure">
+      <h2>Character-Based Discussion and Creative Prompts</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Character Type</th>
+              <th>Discussion Prompts (DM asks)</th>
+              <th>Creative Moves to Encourage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fighter (Borin)</td>
+              <td>"Who do you protect first?" "What is your safest plan?"</td>
+              <td>Use cover, hold doorways, carry teammates or NPCs, shield others.</td>
+            </tr>
+            <tr>
+              <td>Rogue (Pip)</td>
+              <td>"What clue do you notice?" "How can you trick the guard?"</td>
+              <td>Scout routes, stealth around threats, improvise tools from items.</td>
+            </tr>
+            <tr>
+              <td>Cleric (Sera)</td>
+              <td>"How can we solve this kindly?" "Who needs help now?"</td>
+              <td>Negotiate peace, heal at key moments, keep team focused.</td>
+            </tr>
+            <tr>
+              <td>Wizard (Rowan)</td>
+              <td>"What is another way to use this spell?" "What do the runes mean?"</td>
+              <td>Solve puzzles, control the field, create non-combat answers.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="cards" data-print-block="adventure">
+      <h2>Adventure Flow (Read-Aloud Ready)</h2>
+      <div class="scene-flow">
+        <article class="scene">
+          <img src="dnd-assets/location-mossbrook-square.png" onerror="this.onerror=null;this.src='dnd-assets/location-mossbrook-square.svg';" alt="Town square scene">
+          <h4>Scene 1: The Lantern Goes Dark</h4>
+          <p class="read">"Festival ribbons dance in the wind, but the great lantern stand is empty. Mayor Elira turns to you with worried eyes. 'Without that lantern, the whole town will lose heart tonight.'"</p>
+          <ul>
+            <li>Clue loop: blacksmith saw muddy boots, baker heard giggling, stable hand found blue moss.</li>
+            <li>Discussion point: should the team split up to gather clues faster?</li>
+            <li>Creative point: players can perform to calm the crowd and gain advantage on next social roll.</li>
+          </ul>
+        </article>
+
+        <article class="scene">
+          <img src="dnd-assets/location-whispertrail-woods.png" onerror="this.onerror=null;this.src='dnd-assets/location-whispertrail-woods.svg';" alt="Forest trail scene">
+          <h4>Scene 2: Whispertrail Challenge Path</h4>
+          <p class="read">"The trail narrows under whispering trees. Tiny glowing footprints skip across a creek, then vanish near carved arrows in old bark."</p>
+          <ul>
+            <li>Choose challenge order: log bridge, nervous pony, carved arrow puzzle.</li>
+            <li>Discussion point: who leads each challenge, and why that hero?</li>
+            <li>Creative point: reward teamwork plans with lower DC or a clue bonus.</li>
+          </ul>
+        </article>
+
+        <article class="scene">
+          <img src="dnd-assets/location-glowmoss-cave.png" onerror="this.onerror=null;this.src='dnd-assets/location-glowmoss-cave.svg';" alt="Cave entrance scene">
+          <h4>Scene 3: Rune Door and Cave Voices</h4>
+          <p class="read">"At the cave mouth, three symbols glow: star, moon, sun. From inside, you hear small voices arguing and one nervous scout whispering, 'Keep the light safe!'"</p>
+          <ul>
+            <li>Puzzle answer: Star -> Moon -> Sun (night to dawn).</li>
+            <li>Discussion point: are the goblins thieves, or kids in trouble?</li>
+            <li>Creative point: allow roleplay-first resolution before initiative is rolled.</li>
+          </ul>
+        </article>
+
+        <article class="scene">
+          <img src="dnd-assets/location-festival-return.png" onerror="this.onerror=null;this.src='dnd-assets/location-festival-return.svg';" alt="Festival celebration scene">
+          <h4>Scene 4: Final Choice and Festival Ending</h4>
+          <p class="read">"The goblin scout lowers his weapon. 'Our cave is black at night. We only wanted one warm light.' The village lantern glows between both groups as everyone waits for your decision."</p>
+          <ul>
+            <li>Resolution options: peace deal, shared lantern plan, quick combat then reconciliation.</li>
+            <li>Discussion point: what outcome feels most heroic for your character?</li>
+            <li>Creative point: end with each hero giving one festival speech line.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel cards" data-print-block="adventure">
+      <h2>Encounter Cards</h2>
+      <div class="card-grid">
+        <article class="print-card">
+          <figure class="encounter-art">
+            <img src="dnd-assets/monster-mudfoot-scout.png" alt="Mudfoot Scout encounter art" onerror="this.style.display='none';">
+          </figure>
+          <h4>Mudfoot Scout (1)</h4>
+          <div class="stat-row">
+            <div class="stat"><strong>13</strong>AC</div>
+            <div class="stat"><strong>11</strong>HP</div>
+            <div class="stat"><strong>+4</strong>Hit</div>
+            <div class="stat"><strong>30 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Sling:</strong> +4 to hit, 1d4+2 bludgeoning.</li>
+            <li><strong>Scimitar:</strong> +4 to hit, 1d6+2 slashing.</li>
+            <li><strong>Nimble Escape:</strong> Hide or disengage as bonus action.</li>
+          </ul>
+          <p class="story"><strong>Description:</strong> A nervous cave scout guarding younger goblin kids. Mudfoot is jumpy, loud, and defensive, but not cruel. This encounter works best when it begins as a warning scene and can become a negotiation.</p>
+          <p class="story"><strong>How to run:</strong> Start with shouted commands and one warning attack. If players respond with empathy or practical offers, lower aggression and shift to dialogue quickly.</p>
+          <p class="story"><strong>Roleplay cue:</strong> \"We are not raiders. We are trying to keep them from the dark.\"</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="encounter-art">
+            <img src="dnd-assets/monster-cave-bat-swarm.png" alt="Cave Bat Swarm encounter art" onerror="this.style.display='none';">
+          </figure>
+          <h4>Cave Bat Swarm</h4>
+          <div class="stat-row">
+            <div class="stat"><strong>12</strong>AC</div>
+            <div class="stat"><strong>18</strong>HP</div>
+            <div class="stat"><strong>+3</strong>Hit</div>
+            <div class="stat"><strong>Fly 30</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Bites:</strong> +3 to hit, 2d4 piercing.</li>
+            <li><strong>Distracting Flutter:</strong> First attack each round has disadvantage.</li>
+            <li><strong>Weakness:</strong> Loud-sound check DC 12 scatters swarm one round.</li>
+          </ul>
+          <p class="story"><strong>Description:</strong> A startled cloud of cave bats, drawn by sudden noise or bright movement. This is a pressure encounter, not a boss fight, and it should feel chaotic but survivable.</p>
+          <p class="story"><strong>How to run:</strong> Trigger when players force the cave entry or make loud noise. Let creative solutions end it fast: smoke, rhythmic sound, or calm movement.</p>
+          <p class="story"><strong>Roleplay cue:</strong> \"A rush of wings explodes from the ceiling and spins around your lanterns.\"</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="encounter-art">
+            <img src="dnd-assets/monster-bramble-wolf.png" alt="Bramble Wolf encounter art" onerror="this.style.display='none';">
+          </figure>
+          <h4>Bramble Wolf (Optional)</h4>
+          <div class="stat-row">
+            <div class="stat"><strong>13</strong>AC</div>
+            <div class="stat"><strong>16</strong>HP</div>
+            <div class="stat"><strong>+4</strong>Hit</div>
+            <div class="stat"><strong>40 ft</strong>Speed</div>
+          </div>
+          <ul>
+            <li><strong>Bite:</strong> +4 to hit, 1d6+2 piercing.</li>
+            <li><strong>Pack Tactics:</strong> Advantage if ally wolf is adjacent.</li>
+            <li><strong>Tame Option:</strong> Animal Handling DC 14 can calm it.</li>
+          </ul>
+          <p class="story"><strong>Description:</strong> A territorial forest wolf that warns intruders away from its den. Use this when you want a short action beat in the woods without turning the story darker.</p>
+          <p class="story"><strong>How to run:</strong> The wolf circles and growls first. Give players a chance to calm it before initiative. Reward patient choices and food offerings.</p>
+          <p class="story"><strong>Roleplay cue:</strong> \"The wolf steps sideways, watching your hands, waiting to see if you attack.\"</p>
+        </article>
+
+        <article class="print-card">
+          <figure class="encounter-art">
+            <img src="dnd-assets/encounter-festival-reward.png" alt="Festival reward card art" onerror="this.style.display='none';">
+          </figure>
+          <h4>Festival Reward Card</h4>
+          <ul>
+            <li><strong>Hero Medal:</strong> Each player gains one reroll token for next session.</li>
+            <li><strong>Town Gift:</strong> Healing potion x1 per hero.</li>
+            <li><strong>Story Seed:</strong> Map fragment points to "The Clocktower Ruins."</li>
+          </ul>
+          <p class="story"><strong>Description:</strong> This is the emotional payoff card. Present it dramatically at the end so kids feel their choices mattered, especially if they solved the conflict peacefully.</p>
+          <p class="story"><strong>How to run:</strong> Have each hero step forward, receive a medal, and say one sentence about what they learned. Keep this short and celebratory.</p>
+          <p class="story"><strong>Follow-up:</strong> Open `get-started.html` for session-two roadmap ideas.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel cards" data-print-block="adventure">
+      <h2>DM Quick Reference</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Situation</th>
+              <th>Suggested DC</th>
+              <th>If They Fail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Simple clue finding or obvious action</td>
+              <td>10</td>
+              <td>Give clue anyway, but they lose time.</td>
+            </tr>
+            <tr>
+              <td>Risky jump, stealth past guard, puzzle hint</td>
+              <td>13</td>
+              <td>Small complication (noise, scratch, separated item).</td>
+            </tr>
+            <tr>
+              <td>Heroic stunt, hard social turn, creative spell trick</td>
+              <td>16</td>
+              <td>Partial success with consequence instead of dead-end.</td>
+            </tr>
+            <tr>
+              <td>Great teamwork and roleplay</td>
+              <td>Lower by 2</td>
+              <td>Reward the team for collaboration and story thinking.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tiny" style="margin-top:10px;">Tip: with first-time 11-year-old players, keep turns quick and celebrate creative ideas more than exact rule precision.</p>
+    </section>
+
+    <p class="footer">Life Guide Tool tabletop page - family game night starter kit with art placeholders and print support.</p>
+  </main>
+
+  <script>
+    function clearPrintModes() {
+      document.body.classList.remove("print-mode-characters", "print-mode-adventure");
+    }
+
+    function printPacket(mode) {
+      clearPrintModes();
+      if (mode) {
+        document.body.classList.add(mode);
+      }
+      window.print();
+    }
+
+    window.addEventListener("afterprint", clearPrintModes);
+  </script>
+</body>
+</html>

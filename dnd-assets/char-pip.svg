@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" role="img" aria-label="Pip Quickleaf portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#20455a"/>
+      <stop offset="100%" stop-color="#0d1f2a"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#bg)"/>
+  <ellipse cx="320" cy="280" rx="130" ry="140" fill="#f3d2b6"/>
+  <path d="M190 260 Q320 116 450 260" fill="#5b2d1f"/>
+  <circle cx="268" cy="288" r="13" fill="#213247"/><circle cx="376" cy="288" r="13" fill="#213247"/>
+  <path d="M270 340 Q320 370 370 340" stroke="#723a32" stroke-width="8" fill="none"/>
+  <rect x="194" y="396" width="252" height="170" rx="36" fill="#3a5c46"/>
+  <circle cx="230" cy="470" r="24" fill="#d7efe2"/>
+  <circle cx="410" cy="470" r="24" fill="#d7efe2"/>
+  <rect x="150" y="560" width="340" height="175" rx="18" fill="#0d1f2a" opacity="0.93"/>
+  <text x="170" y="620" fill="#d9fff3" font-size="38" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Pip Quickleaf</text>
+  <text x="170" y="665" fill="#a8d9ce" font-size="24" font-family="Trebuchet MS, Arial, sans-serif">Halfling Rogue - Fast and Clever</text>
+</svg>

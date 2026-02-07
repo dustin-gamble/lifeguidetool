@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" role="img" aria-label="Rowan Sparkbloom portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b2d69"/>
+      <stop offset="100%" stop-color="#10122d"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="800" fill="url(#bg)"/>
+  <ellipse cx="320" cy="278" rx="125" ry="136" fill="#f5d8c5"/>
+  <path d="M188 262 Q320 80 452 262 L452 300 Q320 216 188 300 Z" fill="#d6e0f7"/>
+  <circle cx="270" cy="286" r="12" fill="#263353"/><circle cx="370" cy="286" r="12" fill="#263353"/>
+  <path d="M274 336 Q320 360 366 336" stroke="#6a3640" stroke-width="8" fill="none"/>
+  <rect x="190" y="392" width="260" height="188" rx="36" fill="#263063"/>
+  <circle cx="320" cy="468" r="42" fill="#86a9ff" opacity="0.85"/>
+  <circle cx="320" cy="468" r="22" fill="#d5e2ff" opacity="0.95"/>
+  <rect x="150" y="560" width="340" height="175" rx="18" fill="#10122d" opacity="0.93"/>
+  <text x="170" y="620" fill="#e7ecff" font-size="38" font-weight="700" font-family="Trebuchet MS, Arial, sans-serif">Rowan Sparkbloom</text>
+  <text x="170" y="665" fill="#b8c9f8" font-size="24" font-family="Trebuchet MS, Arial, sans-serif">Elf Wizard - Arcane Problem Solver</text>
+</svg>
