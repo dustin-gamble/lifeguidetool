@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canyon Noise Calculator | Life Guide Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 10%, #16203a 0%, #040814 45%, #03050b 100%);
+        }
+
+        .panel {
+            background: linear-gradient(155deg, rgba(15, 23, 42, 0.85) 0%, rgba(12, 18, 34, 0.92) 100%);
+            border: 1px solid rgba(71, 85, 105, 0.45);
+            box-shadow: 0 24px 80px rgba(2, 6, 23, 0.5);
+        }
+
+        input[type="range"] {
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 9999px;
+            background: linear-gradient(to right, #0ea5e9, #38bdf8);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #f8fafc;
+            border: 2px solid #0ea5e9;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #f8fafc;
+            border: 2px solid #0ea5e9;
+            cursor: pointer;
+        }
+
+        .pulse {
+            animation: pulseRing 1.8s ease-out infinite;
+            transform-origin: center;
+        }
+
+        .scale-btn {
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #e2e8f0;
+            transition: 140ms ease;
+        }
+
+        .scale-btn:hover {
+            background: #334155;
+        }
+
+        .scale-btn.active {
+            background: #67e8f9;
+            color: #082f49;
+            border-color: #a5f3fc;
+            box-shadow: 0 0 0 2px rgba(103, 232, 249, 0.18);
+        }
+
+        @keyframes pulseRing {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 0; transform: scale(2.4); }
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen">
+    <header class="border-b border-slate-700/40 backdrop-blur sticky top-0 z-20 bg-slate-950/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <div>
+                <p class="text-xs tracking-[0.2em] text-cyan-300/80 uppercase">D&D Helper</p>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Canyon Noise Calculator</h1>
+            </div>
+            <a href="index.html" class="text-sm font-semibold px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 transition">Back to Home</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-[30%_70%] gap-6">
+            <section class="panel rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24 h-fit">
+                <h2 class="text-xl font-bold text-white">Inputs</h2>
+                <p class="text-sm text-slate-400 mt-1">Adjust canyon size and dropped object to estimate loudness and visibility.</p>
+                <div class="mt-4">
+                    <p class="text-xs uppercase tracking-[0.18em] text-slate-400 mb-2">Scale Preset</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" class="scale-btn rounded-lg py-2 text-sm font-bold" data-scale="small" aria-pressed="false">Small</button>
+                        <button type="button" class="scale-btn active rounded-lg py-2 text-sm font-bold" data-scale="medium" aria-pressed="true">Med</button>
+                        <button type="button" class="scale-btn rounded-lg py-2 text-sm font-bold" data-scale="giant" aria-pressed="false">Giant</button>
+                    </div>
+                    <p id="rangeHint" class="text-xs text-cyan-200/90 mt-2">W 40-300 ft | L 250-1,600 ft | D 80-500 ft</p>
+                </div>
+
+                <div class="space-y-6 mt-6">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="width" class="text-sm font-medium text-slate-200">Canyon Width</label>
+                            <span id="widthValue" class="text-sm font-semibold text-cyan-300">80 ft</span>
+                        </div>
+                        <input id="width" type="range" min="10" max="300" value="80" step="1">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="length" class="text-sm font-medium text-slate-200">Canyon Length</label>
+                            <span id="lengthValue" class="text-sm font-semibold text-cyan-300">500 ft</span>
+                        </div>
+                        <input id="length" type="range" min="40" max="1600" value="500" step="10">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="depth" class="text-sm font-medium text-slate-200">Canyon Depth</label>
+                            <span id="depthValue" class="text-sm font-semibold text-cyan-300">160 ft</span>
+                        </div>
+                        <input id="depth" type="range" min="15" max="500" value="160" step="1">
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="object" class="text-sm font-medium text-slate-200">Object Size / Type</label>
+                            <span id="objectValue" class="text-sm font-semibold text-cyan-300">Travel Mug</span>
+                        </div>
+                        <input id="object" type="range" min="0" max="7" value="3" step="1">
+                        <p id="objectExample" class="text-xs text-slate-400 mt-2">Example: metal travel mug with some water.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 rounded-xl border border-cyan-800/50 bg-cyan-950/20 p-4 space-y-3">
+                    <div class="flex items-start justify-between gap-4">
+                        <p class="text-sm text-slate-300">Estimated loudness at the rim</p>
+                        <p id="dbValue" class="text-2xl font-extrabold text-cyan-300">62 dB</p>
+                    </div>
+                    <p id="soundExample" class="text-sm text-cyan-100">About as loud as a normal conversation.</p>
+                    <div class="h-px bg-cyan-800/50"></div>
+                    <p id="visibilityText" class="text-sm text-slate-200">Can you see the bottom? Maybe, with partial detail.</p>
+                    <p id="echoText" class="text-xs text-slate-400">Echo return time: 0.28s.</p>
+                    <p id="dndHint" class="text-xs text-amber-200">D&D prompt: The crack draws attention from nearby creatures.</p>
+                </div>
+            </section>
+
+            <section class="space-y-6">
+                <div class="panel rounded-2xl p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-white">Canyon Visualization</h2>
+                            <p class="text-sm text-slate-400">Right side scales with your sliders and updates in real time.</p>
+                        </div>
+                        <p id="quickSummary" class="text-sm font-semibold text-cyan-300">Travel Mug dropped 160 ft</p>
+                    </div>
+
+                    <div class="rounded-xl overflow-hidden border border-slate-700/70 bg-slate-900/60">
+                        <svg id="canyonSvg" viewBox="0 0 1000 620" class="w-full h-[420px] sm:h-[500px] lg:h-[560px]" role="img" aria-label="Canyon side view simulation">
+                            <defs>
+                                <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.28"></stop>
+                                    <stop offset="100%" stop-color="#0f172a" stop-opacity="0.04"></stop>
+                                </linearGradient>
+                                <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#334155"></stop>
+                                    <stop offset="100%" stop-color="#111827"></stop>
+                                </linearGradient>
+                            </defs>
+
+                            <rect x="0" y="0" width="1000" height="620" fill="url(#skyGrad)"></rect>
+                            <polygon id="leftWall" points="0,0 260,95 410,540 0,620" fill="url(#wallGrad)"></polygon>
+                            <polygon id="rightWall" points="1000,0 740,95 590,540 1000,620" fill="url(#wallGrad)"></polygon>
+                            <rect id="canyonFloor" x="410" y="540" width="180" height="80" fill="#1e293b"></rect>
+
+                            <line id="dropLine" x1="500" y1="120" x2="500" y2="536" stroke="#7dd3fc" stroke-width="3" stroke-dasharray="12 8" opacity="0.8"></line>
+                            <circle id="impactPulse" class="pulse" cx="500" cy="536" r="7" fill="#67e8f9"></circle>
+                            <circle id="objectCircle" cx="500" cy="120" r="16" fill="#f8fafc" stroke="#0284c7" stroke-width="5"></circle>
+
+                            <line id="depthGuide" x1="860" y1="95" x2="860" y2="540" stroke="#cbd5e1" stroke-width="2"></line>
+                            <polyline id="depthGuideTop" points="848,95 872,95" stroke="#cbd5e1" stroke-width="2" fill="none"></polyline>
+                            <polyline id="depthGuideBottom" points="848,540 872,540" stroke="#cbd5e1" stroke-width="2" fill="none"></polyline>
+                            <text id="depthLabel" x="875" y="330" fill="#e2e8f0" font-size="24">160 ft</text>
+
+                            <line id="widthGuide" x1="260" y1="66" x2="740" y2="66" stroke="#f0abfc" stroke-width="2"></line>
+                            <polyline id="widthGuideLeft" points="260,58 260,74" stroke="#f0abfc" stroke-width="2" fill="none"></polyline>
+                            <polyline id="widthGuideRight" points="740,58 740,74" stroke="#f0abfc" stroke-width="2" fill="none"></polyline>
+                            <text id="widthLabel" x="500" y="54" fill="#f5d0fe" font-size="22" text-anchor="middle">80 ft</text>
+
+                            <text id="objectLabel" x="500" y="165" fill="#e2e8f0" font-size="20" text-anchor="middle">Travel Mug</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="panel rounded-2xl p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="rounded-xl border border-slate-700/60 bg-slate-900/50 p-4">
+                        <h3 class="text-sm uppercase tracking-[0.2em] text-slate-400">Object Dynamics</h3>
+                        <p id="massText" class="text-lg font-bold text-white mt-2">Mass: 0.7 kg</p>
+                        <p id="energyText" class="text-sm text-slate-300 mt-1">Impact energy: 334 joules</p>
+                        <p class="text-xs text-slate-500 mt-2">This model is a game estimate, not a real safety calculation.</p>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-700/60 bg-slate-900/50 p-4">
+                        <h3 class="text-sm uppercase tracking-[0.2em] text-slate-400">Sound Benchmark</h3>
+                        <p id="dbBand" class="text-lg font-bold text-cyan-300 mt-2">Moderate (55-70 dB)</p>
+                        <p id="distanceHint" class="text-sm text-slate-300 mt-1">Likely heard clearly in nearby canyon paths.</p>
+                        <p id="visionHint" class="text-xs text-slate-500 mt-2">Visibility score: 58%</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const objects = [
+            { name: 'Pebble', massKg: 0.05, diameterM: 0.03, example: 'a grape-sized stone', flavor: 'tiny clack' },
+            { name: 'Apple', massKg: 0.18, diameterM: 0.08, example: 'a medium apple', flavor: 'soft thump' },
+            { name: 'Wooden Cup', massKg: 0.30, diameterM: 0.09, example: 'a carved campsite cup', flavor: 'hollow clonk' },
+            { name: 'Travel Mug', massKg: 0.70, diameterM: 0.10, example: 'metal travel mug with some water', flavor: 'sharp clang' },
+            { name: 'Backpack', massKg: 2.50, diameterM: 0.28, example: 'small adventurer backpack', flavor: 'heavy crash' },
+            { name: 'Supply Crate', massKg: 8.00, diameterM: 0.45, example: 'wooden crate of trail rations', flavor: 'booming slam' },
+            { name: 'Anvil', massKg: 50.00, diameterM: 0.50, example: 'a compact forge anvil', flavor: 'thunderous ring' },
+            { name: 'Boulder', massKg: 200.00, diameterM: 1.20, example: 'a shoulder-high boulder', flavor: 'ground-shaking impact' }
+        ];
+
+        const scalePresets = {
+            small: {
+                width: { min: 10, max: 120, step: 1, value: 45 },
+                length: { min: 80, max: 700, step: 10, value: 260 },
+                depth: { min: 15, max: 220, step: 1, value: 90 },
+                object: { min: 0, max: 4, step: 1, value: 2 },
+                label: 'Small'
+            },
+            medium: {
+                width: { min: 40, max: 300, step: 1, value: 80 },
+                length: { min: 250, max: 1600, step: 10, value: 500 },
+                depth: { min: 80, max: 500, step: 1, value: 160 },
+                object: { min: 1, max: 6, step: 1, value: 3 },
+                label: 'Med'
+            },
+            giant: {
+                width: { min: 120, max: 300, step: 1, value: 190 },
+                length: { min: 900, max: 1600, step: 10, value: 1250 },
+                depth: { min: 250, max: 500, step: 1, value: 350 },
+                object: { min: 3, max: 7, step: 1, value: 6 },
+                label: 'Giant'
+            }
+        };
+
+        const widthInput = document.getElementById('width');
+        const lengthInput = document.getElementById('length');
+        const depthInput = document.getElementById('depth');
+        const objectInput = document.getElementById('object');
+        const scaleButtons = document.querySelectorAll('[data-scale]');
+
+        const widthValue = document.getElementById('widthValue');
+        const lengthValue = document.getElementById('lengthValue');
+        const depthValue = document.getElementById('depthValue');
+        const objectValue = document.getElementById('objectValue');
+        const rangeHint = document.getElementById('rangeHint');
+        const objectExample = document.getElementById('objectExample');
+        const dbValue = document.getElementById('dbValue');
+        const soundExample = document.getElementById('soundExample');
+        const visibilityText = document.getElementById('visibilityText');
+        const echoText = document.getElementById('echoText');
+        const dndHint = document.getElementById('dndHint');
+        const quickSummary = document.getElementById('quickSummary');
+        const massText = document.getElementById('massText');
+        const energyText = document.getElementById('energyText');
+        const dbBand = document.getElementById('dbBand');
+        const distanceHint = document.getElementById('distanceHint');
+        const visionHint = document.getElementById('visionHint');
+
+        const leftWall = document.getElementById('leftWall');
+        const rightWall = document.getElementById('rightWall');
+        const canyonFloor = document.getElementById('canyonFloor');
+        const dropLine = document.getElementById('dropLine');
+        const objectCircle = document.getElementById('objectCircle');
+        const impactPulse = document.getElementById('impactPulse');
+        const depthGuide = document.getElementById('depthGuide');
+        const depthGuideTop = document.getElementById('depthGuideTop');
+        const depthGuideBottom = document.getElementById('depthGuideBottom');
+        const depthLabel = document.getElementById('depthLabel');
+        const widthGuide = document.getElementById('widthGuide');
+        const widthGuideLeft = document.getElementById('widthGuideLeft');
+        const widthGuideRight = document.getElementById('widthGuideRight');
+        const widthLabel = document.getElementById('widthLabel');
+        const objectLabel = document.getElementById('objectLabel');
+        let currentScale = 'medium';
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function mapRange(value, inMin, inMax, outMin, outMax) {
+            const ratio = (value - inMin) / (inMax - inMin);
+            return outMin + ratio * (outMax - outMin);
+        }
+
+        function applySliderConfig(input, config, useDefaultValue) {
+            input.min = String(config.min);
+            input.max = String(config.max);
+            input.step = String(config.step);
+            const current = Number(input.value);
+            const nextValue = useDefaultValue
+                ? config.value
+                : clamp(current, config.min, config.max);
+            input.value = String(nextValue);
+        }
+
+        function applyScalePreset(scaleName, useDefaultValue = true) {
+            const preset = scalePresets[scaleName];
+            if (!preset) return;
+
+            currentScale = scaleName;
+            applySliderConfig(widthInput, preset.width, useDefaultValue);
+            applySliderConfig(lengthInput, preset.length, useDefaultValue);
+            applySliderConfig(depthInput, preset.depth, useDefaultValue);
+            applySliderConfig(objectInput, preset.object, useDefaultValue);
+
+            const minObjectName = objects[preset.object.min].name;
+            const maxObjectName = objects[preset.object.max].name;
+            rangeHint.textContent = `W ${preset.width.min}-${preset.width.max} ft | L ${preset.length.min.toLocaleString()}-${preset.length.max.toLocaleString()} ft | D ${preset.depth.min}-${preset.depth.max} ft | ${minObjectName} to ${maxObjectName}`;
+
+            scaleButtons.forEach((button) => {
+                const isActive = button.dataset.scale === scaleName;
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+
+            updateSimulation();
+        }
+
+        function describeDb(db) {
+            if (db < 35) return { example: 'Very quiet, like rustling leaves.', band: 'Very Quiet (<35 dB)', reach: 'Only creatures nearby will notice.' };
+            if (db < 50) return { example: 'Similar to a quiet library.', band: 'Quiet (35-50 dB)', reach: 'Heard within short range of the rim.' };
+            if (db < 65) return { example: 'About as loud as a normal conversation.', band: 'Moderate (50-65 dB)', reach: 'Noticeable by parties in nearby paths.' };
+            if (db < 80) return { example: 'Like city traffic or a busy workshop.', band: 'Loud (65-80 dB)', reach: 'Likely heard throughout much of the canyon.' };
+            if (db < 95) return { example: 'Comparable to a motorcycle or power saw.', band: 'Very Loud (80-95 dB)', reach: 'Can alert creatures across a wide area.' };
+            if (db < 110) return { example: 'Thunder-level impact crack.', band: 'Extreme (95-110 dB)', reach: 'The entire canyon is on alert.' };
+            return { example: 'Near jet-engine intensity.', band: 'Dangerous (110+ dB)', reach: 'This is a dramatic, campaign-level event.' };
+        }
+
+        function describeVisibility(score) {
+            if (score >= 0.95) return { text: 'Can you see the bottom? Yes, clearly from the rim.', certainty: 'High visibility' };
+            if (score >= 0.7) return { text: 'Can you see the bottom? Mostly, but fine details are hard.', certainty: 'Moderate visibility' };
+            if (score >= 0.5) return { text: 'Can you see the bottom? Maybe. Shapes are visible, details are fuzzy.', certainty: 'Limited visibility' };
+            return { text: 'Can you see the bottom? Usually no from this rim angle.', certainty: 'Low visibility' };
+        }
+
+        function describeDnD(db, visibilityScore, objectName) {
+            if (db < 50) {
+                return `D&D prompt: The ${objectName.toLowerCase()} makes a faint echo. Ask for Passive Perception 10 to notice.`;
+            }
+            if (db < 75) {
+                return `D&D prompt: The ${objectName.toLowerCase()} cracks against stone. Nearby creatures may investigate in 1d4 rounds.`;
+            }
+            if (db < 95) {
+                return `D&D prompt: Loud report through the canyon. Roll group Stealth with disadvantage if enemies are close.`;
+            }
+            if (visibilityScore < 0.6) {
+                return 'D&D prompt: Boom plus poor visibility. Trigger tension: unseen movement or a possible ambush below.';
+            }
+            return 'D&D prompt: Thunderous impact. Treat this as a major noise event that can draw monsters from the whole area.';
+        }
+
+        function updateSimulation() {
+            const widthFt = Number(widthInput.value);
+            const lengthFt = Number(lengthInput.value);
+            const depthFt = Number(depthInput.value);
+            const object = objects[Number(objectInput.value)];
+
+            widthValue.textContent = `${widthFt} ft`;
+            lengthValue.textContent = `${lengthFt} ft`;
+            depthValue.textContent = `${depthFt} ft`;
+            objectValue.textContent = object.name;
+            objectExample.textContent = `Example: ${object.example}.`;
+
+            const widthM = widthFt * 0.3048;
+            const lengthM = lengthFt * 0.3048;
+            const depthM = depthFt * 0.3048;
+            const widthMin = Number(widthInput.min);
+            const widthMax = Number(widthInput.max);
+            const lengthMin = Number(lengthInput.min);
+            const lengthMax = Number(lengthInput.max);
+            const depthMin = Number(depthInput.min);
+            const depthMax = Number(depthInput.max);
+
+            const widthRatio = (widthFt - widthMin) / Math.max(widthMax - widthMin, 1);
+            const depthRatio = (depthFt - depthMin) / Math.max(depthMax - depthMin, 1);
+
+            const impactEnergy = object.massKg * 9.81 * depthM;
+            const canyonBoost = clamp(6 + depthRatio * 14 + (1 - widthRatio) * 10, 3, 22);
+            const sourceDb = 38 + 15 * Math.log10(impactEnergy + 1) + canyonBoost;
+            const distanceLoss = 20 * Math.log10(Math.max(depthM, 1));
+            const rimDb = clamp(Math.round(sourceDb - distanceLoss), 20, 130);
+
+            const visibilityScore = clamp((widthM / Math.max(depthM, 0.1)) * 1.3 + (24 / Math.max(lengthM, 1)), 0.05, 1.2);
+            const visibility = describeVisibility(visibilityScore);
+            const dbInfo = describeDb(rimDb);
+            const echoTime = (2 * depthM) / 343;
+
+            dbValue.textContent = `${rimDb} dB`;
+            soundExample.textContent = dbInfo.example;
+            visibilityText.textContent = visibility.text;
+            echoText.textContent = `Echo return time: ${echoTime.toFixed(2)}s.`;
+            dndHint.textContent = describeDnD(rimDb, visibilityScore, object.name);
+
+            quickSummary.textContent = `${object.name} dropped ${depthFt} ft`;
+            massText.textContent = `Mass: ${object.massKg.toFixed(object.massKg >= 10 ? 0 : 2)} kg`;
+            energyText.textContent = `Impact energy: ${Math.round(impactEnergy).toLocaleString()} joules`;
+            dbBand.textContent = dbInfo.band;
+            distanceHint.textContent = dbInfo.reach;
+            visionHint.textContent = `Visibility score: ${Math.round(clamp(visibilityScore * 100, 5, 99))}% (${visibility.certainty})`;
+
+            const centerX = 500;
+            const topY = 95;
+            const bottomY = Math.round(mapRange(depthFt, depthMin, depthMax, 250, 560));
+            const halfGap = Math.round(mapRange(widthFt, widthMin, widthMax, 65, 340));
+            const taper = Math.round(mapRange(lengthFt, lengthMin, lengthMax, 145, 40));
+
+            const leftTopX = centerX - halfGap;
+            const rightTopX = centerX + halfGap;
+            const leftBottomX = centerX - Math.max(halfGap * 0.35, 60) - taper;
+            const rightBottomX = centerX + Math.max(halfGap * 0.35, 60) + taper;
+
+            leftWall.setAttribute('points', `0,0 ${leftTopX},${topY} ${leftBottomX},${bottomY} 0,620`);
+            rightWall.setAttribute('points', `1000,0 ${rightTopX},${topY} ${rightBottomX},${bottomY} 1000,620`);
+
+            canyonFloor.setAttribute('x', String(leftBottomX));
+            canyonFloor.setAttribute('y', String(bottomY));
+            canyonFloor.setAttribute('width', String(rightBottomX - leftBottomX));
+            canyonFloor.setAttribute('height', String(620 - bottomY));
+
+            const objectRadius = Math.round(mapRange(object.diameterM, 0.03, 1.2, 7, 34));
+            const objectY = topY + 28;
+            const impactY = bottomY - 4;
+
+            objectCircle.setAttribute('cx', String(centerX));
+            objectCircle.setAttribute('cy', String(objectY));
+            objectCircle.setAttribute('r', String(objectRadius));
+            dropLine.setAttribute('x1', String(centerX));
+            dropLine.setAttribute('x2', String(centerX));
+            dropLine.setAttribute('y1', String(objectY + objectRadius + 6));
+            dropLine.setAttribute('y2', String(impactY));
+            impactPulse.setAttribute('cx', String(centerX));
+            impactPulse.setAttribute('cy', String(impactY));
+
+            depthGuide.setAttribute('x1', '860');
+            depthGuide.setAttribute('x2', '860');
+            depthGuide.setAttribute('y1', String(topY));
+            depthGuide.setAttribute('y2', String(bottomY));
+            depthGuideTop.setAttribute('points', `848,${topY} 872,${topY}`);
+            depthGuideBottom.setAttribute('points', `848,${bottomY} 872,${bottomY}`);
+            depthLabel.setAttribute('x', '875');
+            depthLabel.setAttribute('y', String(Math.round((topY + bottomY) / 2)));
+            depthLabel.textContent = `${depthFt} ft`;
+
+            widthGuide.setAttribute('x1', String(leftTopX));
+            widthGuide.setAttribute('x2', String(rightTopX));
+            widthGuide.setAttribute('y1', '66');
+            widthGuide.setAttribute('y2', '66');
+            widthGuideLeft.setAttribute('points', `${leftTopX},58 ${leftTopX},74`);
+            widthGuideRight.setAttribute('points', `${rightTopX},58 ${rightTopX},74`);
+            widthLabel.setAttribute('x', String(centerX));
+            widthLabel.textContent = `${widthFt} ft`;
+
+            objectLabel.setAttribute('x', String(centerX));
+            objectLabel.setAttribute('y', String(objectY + objectRadius + 26));
+            objectLabel.textContent = `${object.name} (${object.flavor})`;
+        }
+
+        [widthInput, lengthInput, depthInput, objectInput].forEach((input) => {
+            input.addEventListener('input', updateSimulation);
+        });
+
+        scaleButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                applyScalePreset(button.dataset.scale, true);
+            });
+        });
+
+        applyScalePreset(currentScale, false);
+    </script>
+</body>
+</html>
